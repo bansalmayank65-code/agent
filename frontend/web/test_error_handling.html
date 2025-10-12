@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Import Task API Error Handling</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>Test Import Task API Error Handling</h1>
+    
+    <button onclick="testImportWithValidData()">Test Valid Import</button>
+    <button onclick="testImportWith404()">Test 404 Error (wrong endpoint)</button>
+    <button onclick="testImportWithInvalidData()">Test Invalid Data</button>
+    
+    <div id="results" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; white-space: pre-wrap; font-family: monospace; max-height: 400px; overflow-y: auto;"></div>
+
+    <script>
+        const baseUrl = 'http://localhost:8080';
+        const resultsDiv = document.getElementById('results');
+        
+        function logResult(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            resultsDiv.textContent += `[${timestamp}] ${message}\n`;
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+        
+        async function testImportWithValidData() {
+            logResult('Testing valid import to correct endpoint...');
+            try {
+                const response = await fetch(`${baseUrl}/api/tasks/import-task`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: 'mayank',
+                        taskId: 'test-task-123',
+                        taskJsonContent: {
+                            instruction: 'Test instruction',
+                            actions: [
+                                { name: 'action1', arguments: {} }
+                            ]
+                        }
+                    })
+                });
+                
+                const result = await response.json();
+                logResult(`SUCCESS: ${response.status} - ${JSON.stringify(result, null, 2)}`);
+            } catch (error) {
+                logResult(`ERROR: ${error.message}`);
+            }
+        }
+        
+        async function testImportWith404() {
+            logResult('Testing import to wrong endpoint (should get 404)...');
+            try {
+                const response = await fetch(`${baseUrl}/import-task`, {  // Wrong URL - missing /api/tasks
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: 'mayank',
+                        taskId: 'test-task-456',
+                        taskJsonContent: {
+                            instruction: 'Test instruction',
+                            actions: [
+                                { name: 'action1', arguments: {} }
+                            ]
+                        }
+                    })
+                });
+                
+                if (!response.ok) {
+                    logResult(`HTTP ERROR: ${response.status} ${response.statusText}`);
+                } else {
+                    const result = await response.json();
+                    logResult(`UNEXPECTED SUCCESS: ${response.status} - ${JSON.stringify(result, null, 2)}`);
+                }
+            } catch (error) {
+                logResult(`NETWORK ERROR: ${error.message}`);
+            }
+        }
+        
+        async function testImportWithInvalidData() {
+            logResult('Testing import with invalid data...');
+            try {
+                const response = await fetch(`${baseUrl}/api/tasks/import-task`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: 'mayank',
+                        taskId: 'test-task-789',
+                        taskJsonContent: {
+                            // Missing required fields like instruction and actions
+                        }
+                    })
+                });
+                
+                const result = await response.json();
+                if (!response.ok) {
+                    logResult(`HTTP ERROR: ${response.status} - ${JSON.stringify(result, null, 2)}`);
+                } else {
+                    logResult(`SUCCESS: ${response.status} - ${JSON.stringify(result, null, 2)}`);
+                }
+            } catch (error) {
+                logResult(`ERROR: ${error.message}`);
+            }
+        }
+        
+        // Initial message
+        logResult('Test page loaded. Click buttons to test different scenarios.');
+        logResult(`Server should be running at: ${baseUrl}`);
+    </script>
+</body>
+</html>

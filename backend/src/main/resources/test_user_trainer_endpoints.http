@@ -1,0 +1,90 @@
+### User-Trainer Relationship API Tests
+### Base URL: http://localhost:8080
+
+### 1. Create a new user-trainer relationship
+POST http://localhost:8080/api/user-trainer-links?userId=admin&trainerId=trainer1
+Content-Type: application/json
+
+###
+
+### 2. Get active trainers for a user
+GET http://localhost:8080/api/user-trainer-links/user/admin/trainers
+Content-Type: application/json
+
+###
+
+### 3. Get active users for a trainer
+GET http://localhost:8080/api/user-trainer-links/trainer/trainer1/users
+Content-Type: application/json
+
+###
+
+### 4. Check if user has access to trainer
+GET http://localhost:8080/api/user-trainer-links/check-access?userId=admin&trainerId=trainer1
+Content-Type: application/json
+
+###
+
+### 5. Get specific relationship
+GET http://localhost:8080/api/user-trainer-links/relationship?userId=admin&trainerId=trainer1
+Content-Type: application/json
+
+###
+
+### 6. Get all active relationships
+GET http://localhost:8080/api/user-trainer-links/all-active
+Content-Type: application/json
+
+###
+
+### 7. Assign multiple trainers to a user (bulk operation)
+POST http://localhost:8080/api/user-trainer-links/bulk/user/demo/trainers
+Content-Type: application/json
+
+["trainer1", "trainer2"]
+
+###
+
+### 8. Assign multiple users to a trainer (bulk operation)
+POST http://localhost:8080/api/user-trainer-links/bulk/trainer/trainer3/users
+Content-Type: application/json
+
+["admin", "demo"]
+
+###
+
+### 9. Deactivate a relationship (soft delete)
+DELETE http://localhost:8080/api/user-trainer-links?userId=demo&trainerId=trainer2
+Content-Type: application/json
+
+###
+
+### 10. Activate a relationship
+PUT http://localhost:8080/api/user-trainer-links/activate?userId=demo&trainerId=trainer2
+Content-Type: application/json
+
+###
+
+### 11. Update relationship status by ID (example with linkId=1)
+PATCH http://localhost:8080/api/user-trainer-links/1?isActive=false
+Content-Type: application/json
+
+###
+
+### Authentication endpoints (for context)
+### Login first to get session
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "userId": "admin",
+  "password": "admin123"
+}
+
+###
+
+### Health check
+GET http://localhost:8080/actuator/health
+Content-Type: application/json
+
+###

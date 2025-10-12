@@ -1,0 +1,23 @@
+{
+  "instruction": "Process customer data and generate analytics report",
+  "actions": [
+    "validate_input_data",
+    "clean_customer_records", 
+    "calculate_metrics",
+    "generate_visualizations",
+    "create_summary_report"
+  ],
+  "userId": "user_analytics_001",
+  "outputs": [
+    "cleaned_data.csv",
+    "analytics_report.pdf",
+    "metrics_dashboard.html",
+    "summary.json"
+  ],
+  "edges": [
+    {"from": "validate_input_data", "to": "clean_customer_records"},
+    {"from": "clean_customer_records", "to": "calculate_metrics"},
+    {"from": "calculate_metrics", "to": "generate_visualizations"},
+    {"from": "generate_visualizations", "to": "create_summary_report"}
+  ]
+}

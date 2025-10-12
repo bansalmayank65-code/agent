@@ -1,0 +1,320 @@
+{
+    "env": "hr_experts",
+    "model_provider": "fireworks",
+    "model": "qwen3-coder-480b-a35b-instruct",
+    "num_trials": 3,
+    "temperature": 1,
+    "interface_num": 1,
+    "task": {
+        "user_id": "25",
+        "instruction": "You are Christopher Roach (christopher.roach@yahoo.com), an Hiring Manager. You want to create a new contract based Senior UX Designer open job position with active Figma skills for the Marketing department paying minimum 80 USD and maximum 100 USD per hour.",
+        "actions": [
+            {
+                "name": "discover_user_employee_entities",
+                "arguments": {
+                    "entity_type": "users",
+                    "filters": {
+                        "first_name": "Christopher",
+                        "last_name": "Roach",
+                        "email": "christopher.roach@yahoo.com"
+                    }
+                },
+                "output": {
+                    "count": 1,
+                    "entity_type": "users",
+                    "results": [
+                        {
+                            "created_at": "2024-04-19T05:51:19",
+                            "email": "christopher.roach@yahoo.com",
+                            "first_name": "Christopher",
+                            "last_name": "Roach",
+                            "mfa_enabled": false,
+                            "phone_number": "+19386718784",
+                            "role": "hiring_manager",
+                            "status": "active",
+                            "updated_at": "2024-07-19T18:26:26",
+                            "user_id": "25"
+                        }
+                    ],
+                    "success": true
+                }
+            },
+            {
+                "name": "check_approval",
+                "arguments": {
+                    "action": "create_job_position",
+                    "requester_email": "christopher.roach@yahoo.com"
+                },
+                "output": {
+                    "approval_valid": true,
+                    "approved_by": "hiring_manager",
+                    "message": "Approved by authorized role: hiring_manager"
+                }
+            },
+            {
+                "name": "discover_department_entities",
+                "arguments": {
+                    "entity_type": "departments",
+                    "filters": {
+                        "department_name": "Marketing"
+                    }
+                },
+                "output": {
+                    "count": 1,
+                    "entity_type": "departments",
+                    "results": [
+                        {
+                            "budget": 439492.33,
+                            "created_at": "2022-07-14T01:37:16",
+                            "department_id": "2",
+                            "department_name": "Marketing",
+                            "manager_id": "51",
+                            "status": "active",
+                            "updated_at": "2023-11-05T07:11:03"
+                        }
+                    ],
+                    "success": true
+                }
+            },
+            {
+                "name": "manage_job_position",
+                "arguments": {
+                    "action": "create",
+                    "department_id": "2",
+                    "employment_type": "contract",
+                    "hourly_rate_max": 100.0,
+                    "hourly_rate_min": 80.0,
+                    "job_level": "senior",
+                    "status": "open",
+                    "title": "UX Designer"
+                },
+                "output": {
+                    "message": "Job position created successfully with ID 461",
+                    "position_data": {
+                        "created_at": "2025-10-01T12:00:00",
+                        "department_id": "2",
+                        "employment_type": "contract",
+                        "hourly_rate_max": 100,
+                        "hourly_rate_min": 80,
+                        "job_level": "senior",
+                        "position_id": "461",
+                        "status": "open",
+                        "title": "UX Designer",
+                        "updated_at": "2025-10-01T12:00:00"
+                    },
+                    "position_id": "461",
+                    "success": true
+                }
+            },
+            {
+                "name": "manage_audit_logs",
+                "arguments": {
+                    "action": "create",
+                    "operation": "create",
+                    "reference_id": "461",
+                    "reference_type": "position",
+                    "user_id": "25"
+                },
+                "output": {
+                    "action": "create",
+                    "field_name": null,
+                    "log_id": "2885",
+                    "new_value": null,
+                    "old_value": null,
+                    "reference_id": "461",
+                    "reference_type": "position",
+                    "timestamp": "2025-10-01T12:00:00",
+                    "user_id": "25"
+                }
+            },
+            {
+                "name": "discover_job_entities",
+                "arguments": {
+                    "entity_type": "skills",
+                    "filters": {
+                        "skill_name": "Figma",
+                        "status": "active"
+                    }
+                },
+                "output": {
+                    "count": 1,
+                    "entity_type": "skills",
+                    "results": [
+                        {
+                            "skill_id": "37",
+                            "skill_name": "Figma",
+                            "status": "active"
+                        }
+                    ],
+                    "success": true
+                }
+            },
+            {
+                "name": "check_approval",
+                "arguments": {
+                    "action": "job_position_skills_management",
+                    "requester_email": "christopher.roach@yahoo.com"
+                },
+                "output": {
+                    "approval_valid": true,
+                    "approved_by": "hiring_manager",
+                    "message": "Approved by authorized role: hiring_manager"
+                }
+            },
+            {
+                "name": "manage_job_position_skills",
+                "arguments": {
+                    "action": "add",
+                    "position_id": "461",
+                    "skill_id": "37"
+                },
+                "output": {
+                    "association_data": {
+                        "position_id": "461",
+                        "skill_id": "37"
+                    },
+                    "association_id": "1359",
+                    "message": "Skill 37 added to position 461 successfully",
+                    "success": true
+                }
+            },
+            {
+                "name": "manage_audit_logs",
+                "arguments": {
+                    "action": "create",
+                    "operation": "create",
+                    "reference_id": "1359",
+                    "reference_type": "association",
+                    "user_id": "25"
+                },
+                "output": {
+                    "action": "create",
+                    "field_name": null,
+                    "log_id": "2886",
+                    "new_value": null,
+                    "old_value": null,
+                    "reference_id": "1359",
+                    "reference_type": "association",
+                    "timestamp": "2025-10-01T12:00:00",
+                    "user_id": "25"
+                }
+            }
+        ],
+        "edges": [
+            {
+                "from": "instruction",
+                "to": "discover_user_employee_entities",
+                "connection": {
+                    "output": "entity_type, email, first_name, last_name",
+                    "input": "entity_type, filters.email, filters.first_name, filters.last_name"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "check_approval",
+                "connection": {
+                    "output": "action",
+                    "input": "action"
+                }
+            },
+            {
+                "from": "discover_user_employee_entities",
+                "to": "check_approval",
+                "connection": {
+                    "output": "results[0].email",
+                    "input": "requester_email"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "discover_department_entities",
+                "connection": {
+                    "output": "entity_type, department_name",
+                    "input": "entity_type, filters.department_name"
+                }
+            },
+            {
+                "from": "discover_department_entities",
+                "to": "manage_job_position",
+                "connection": {
+                    "output": "results[0].department_id",
+                    "input": "department_id"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "manage_job_position",
+                "connection": {
+                    "output": "action, employment_type, hourly_rate_max, hourly_rate_min, job_level, status, title",
+                    "input": "action, employment_type, hourly_rate_max, hourly_rate_min, job_level, status, title"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "manage_audit_logs",
+                "connection": {
+                    "output": "action, operation, reference_type",
+                    "input": "action, operation, reference_type"
+                }
+            },
+            {
+                "from": "manage_job_position",
+                "to": "manage_audit_logs",
+                "connection": {
+                    "output": "position_id",
+                    "input": "reference_id"
+                }
+            },
+            {
+                "from": "discover_user_employee_entities",
+                "to": "manage_audit_logs",
+                "connection": {
+                    "output": "results[0].user_id",
+                    "input": "user_id"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "discover_job_entities",
+                "connection": {
+                    "output": "entity_type, skill_name, status",
+                    "input": "entity_type, filters.skill_name, filters.status"
+                }
+            },
+            {
+                "from": "manage_job_position",
+                "to": "manage_job_position_skills",
+                "connection": {
+                    "output": "position_id",
+                    "input": "position_id"
+                }
+            },
+            {
+                "from": "discover_job_entities",
+                "to": "manage_job_position_skills",
+                "connection": {
+                    "output": "results[0].skill_id",
+                    "input": "skill_id"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "manage_job_position_skills",
+                "connection": {
+                    "output": "action",
+                    "input": "action"
+                }
+            },
+            {
+                "from": "manage_job_position_skills",
+                "to": "manage_audit_logs",
+                "connection": {
+                    "output": "association_id",
+                    "input": "reference_id"
+                }
+            }
+        ],
+        "outputs": [],
+        "num_edges": 15
+    }
+}

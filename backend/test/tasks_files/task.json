@@ -1,0 +1,348 @@
+{
+  "env": "fund_finance",
+  "model_provider": "fireworks",
+  "model": "qwen3-coder-480b-a35b-instruct",
+  "num_trials": 3,
+  "temperature": 1,
+  "interface_num": 1,
+  "task": {
+    "user_id": "114",
+    "instruction": "You are Richard Bass (email: richard.bass@yahoo.com), fund manager for Gilmore-Washington Balanced Fund. You want a performance report dated 13 August 2025 using 13 August 2025 as the period end for Gilmore-Washington Balanced Fund, produced under your role authority and avoiding duplicate reports for that date. Store the finalized report as a PDF named 'GW_Balanced_Performance_2025-08-13.pdf' with internal confidentiality.",
+    "actions": [
+      {
+        "name": "discover_user_entities",
+        "arguments": {
+          "entity_type": "users",
+          "filters": {
+            "email": "richard.bass@yahoo.com"
+          }
+        },
+        "output": {
+          "count": 1,
+          "entity_type": "users",
+          "results": [
+            {
+              "created_at": "2023-12-02T04:31:19",
+              "email": "richard.bass@yahoo.com",
+              "first_name": "Richard",
+              "last_name": "Bass",
+              "role": "fund_manager",
+              "status": "active",
+              "timezone": "America/Chicago",
+              "updated_at": "2024-07-12T00:58:52",
+              "user_id": "114"
+            }
+          ],
+          "success": true
+        }
+      },
+      {
+        "name": "discover_fund_entities",
+        "arguments": {
+          "entity_type": "funds",
+          "filters": {
+            "name": "Gilmore-Washington Balanced Fund",
+            "status": "open",
+            "manager_id": "114"
+          }
+        },
+        "output": {
+          "count": 1,
+          "entity_type": "funds",
+          "results": [
+            {
+              "created_at": "2023-03-08T15:46:11",
+              "fund_id": "80",
+              "fund_type": "hedge_funds",
+              "manager_id": "114",
+              "name": "Gilmore-Washington Balanced Fund",
+              "size": 208336043.62,
+              "status": "open",
+              "updated_at": "2024-05-29T02:16:28"
+            }
+          ],
+          "success": true
+        }
+      },
+      {
+        "name": "discover_reporting_entities",
+        "arguments": {
+          "entity_type": "reports",
+          "filters": {
+            "fund_id": "80",
+            "report_type": "performance",
+            "report_date": "2025-08-13"
+          }
+        },
+        "output": {
+          "count": 0,
+          "entity_type": "reports",
+          "results": [],
+          "success": true
+        }
+      },
+      {
+        "name": "discover_valuation_entities",
+        "arguments": {
+          "entity_type": "nav_records",
+          "filters": {
+            "fund_id": "80",
+            "nav_date": "2025-08-13"
+          }
+        },
+        "output": {
+          "count": 1,
+          "entity_type": "nav_records",
+          "results": [
+            {
+              "fund_id": "80",
+              "nav_date": "2025-08-13",
+              "nav_id": "1012",
+              "nav_value": 172.1152,
+              "updated_at": "2025-08-14T07:07:21"
+            }
+          ],
+          "success": true
+        }
+      },
+      {
+        "name": "generate_report",
+        "arguments": {
+          "export_period_end": "2025-08-13",
+          "fund_id": "80",
+          "generated_by": "114",
+          "report_date": "2025-08-13",
+          "report_type": "performance"
+        },
+        "output": {
+          "created_at": "2025-10-01T00:00:00",
+          "export_period_end": "2025-08-13",
+          "fund_id": "80",
+          "generated_by": "114",
+          "investor_id": null,
+          "report_date": "2025-08-13",
+          "report_id": "1001",
+          "report_type": "performance",
+          "status": "pending"
+        }
+      },
+      {
+        "name": "discover_reporting_entities",
+        "arguments": {
+          "entity_type": "documents",
+          "filters": {
+            "name": "GW_Balanced_Performance_2025-08-13.pdf"
+          }
+        },
+        "output": {
+          "count": 0,
+          "entity_type": "documents",
+          "results": [],
+          "success": true
+        }
+      },
+      {
+        "name": "upload_document",
+        "arguments": {
+          "confidentiality_level": "internal",
+          "format": "pdf",
+          "name": "GW_Balanced_Performance_2025-08-13.pdf",
+          "report_id": "1001",
+          "uploaded_by": "114"
+        },
+        "output": {
+          "confidentiality_level": "internal",
+          "document_id": "1001",
+          "format": "pdf",
+          "name": "GW_Balanced_Performance_2025-08-13.pdf",
+          "report_id": "1001",
+          "size_bytes": null,
+          "status": "available",
+          "upload_date": "2025-10-01T00:00:00",
+          "uploaded_by": "114"
+        }
+      },
+      {
+        "name": "create_new_audit_trail",
+        "arguments": {
+          "action": "create",
+          "reference_id": "1001",
+          "reference_type": "report"
+        },
+        "output": {
+          "action": "create",
+          "audit_trail_id": "3501",
+          "created_at": "2025-10-01T00:00:00",
+          "field_name": null,
+          "new_value": null,
+          "old_value": null,
+          "reference_id": "1001",
+          "reference_type": "report"
+        }
+      },
+      {
+        "name": "create_new_audit_trail",
+        "arguments": {
+          "action": "create",
+          "reference_id": "1001",
+          "reference_type": "document"
+        },
+        "output": {
+          "action": "create",
+          "audit_trail_id": "3502",
+          "created_at": "2025-10-01T00:00:00",
+          "field_name": null,
+          "new_value": null,
+          "old_value": null,
+          "reference_id": "1001",
+          "reference_type": "document"
+        }
+      }
+    ],
+    "outputs": [
+            "114",
+            "80",
+            "1012",
+            "1001"
+        ],
+    "edges": [
+      {
+      "from": "instruction",
+      "to": "discover_user_entities",
+      "connection": {
+        "output": "email, entity_type",
+        "input": "filters.email, entity_type"
+      }
+    },
+    {
+      "from": "instruction",
+      "to": "discover_fund_entities",
+      "connection": {
+        "output": "name, status, entity_type",
+        "input": "filters.name, filters.status, entity_type"
+      }
+    },
+    {
+      "from": "discover_user_entities",
+      "to": "discover_fund_entities",
+      "connection": {
+        "output": "results[0].user_id",
+        "input": "filters.manager_id"
+      }
+    },
+    {
+      "from": "discover_fund_entities",
+      "to": "discover_reporting_entities",
+      "connection": {
+        "output": "results[0].fund_id",
+        "input": "filters.fund_id"
+      }
+    },
+    {
+      "from": "instruction",
+      "to": "discover_reporting_entities",
+      "connection": {
+        "output": "report_type, report_date, entity_type",
+        "input": "filters.report_type, filters.report_date, entity_type"
+      }
+    },
+    {
+      "from": "discover_fund_entities",
+      "to": "discover_valuation_entities",
+      "connection": {
+        "output": "results[0].fund_id",
+        "input": "filters.fund_id"
+      }
+    },
+    {
+      "from": "instruction",
+      "to": "discover_valuation_entities",
+      "connection": {
+        "output": "nav_date",
+        "input": "filters.nav_date"
+      }
+    },
+    {
+      "from": "instruction",
+      "to": "generate_report",
+      "connection": {
+        "output": "export_period_end, report_date, report_type",
+        "input": "export_period_end, report_date, report_type"
+      }
+    },
+    {
+      "from": "discover_fund_entities",
+      "to": "generate_report",
+      "connection": {
+        "output": "results[0].fund_id",
+        "input": "fund_id"
+      }
+    },
+    {
+      "from": "discover_user_entities",
+      "to": "generate_report",
+      "connection": {
+        "output": "results[0].user_id",
+        "input": "generated_by"
+      }
+    },
+    {
+      "from": "instruction",
+      "to": "discover_reporting_entities",
+      "connection": {
+        "output": "entity_type, name",
+        "input": "entity_type, filters.name"
+      }
+    },
+    {
+      "from": "instruction",
+      "to": "upload_document",
+      "connection": {
+        "output": "confidentiality_level, format, name",
+        "input": "confidentiality_level, format, name"
+      }
+    },
+    {
+      "from": "generate_report",
+      "to": "upload_document",
+      "connection": {
+        "output": "report_id",
+        "input": "report_id"
+      }
+    },
+    {
+      "from": "discover_user_entities",
+      "to": "upload_document",
+      "connection": {
+        "output": "results[0].user_id",
+        "input": "uploaded_by"
+      }
+    },
+    {
+      "from": "instruction",
+      "to": "create_new_audit_trail",
+      "connection": {
+        "output": "action, reference_type",
+        "input": "action, reference_type"
+      }
+    },
+    {
+      "from": "generate_report",
+      "to": "create_new_audit_trail",
+      "connection": {
+        "output": "report_id",
+        "input": "reference_id"
+      }
+    },
+    {
+      "from": "upload_document",
+      "to": "create_new_audit_trail",
+      "connection": {
+        "output": "document_id",
+        "input": "reference_id"
+      }
+    }
+  ],
+  "num_edges": 17
+  }
+}

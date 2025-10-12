@@ -1,0 +1,22 @@
+{
+  "userId": "admin",
+  "taskId": "test_import_123", 
+  "taskJsonContent": {
+    "env": "finance",
+    "interface_num": 4,
+    "task": {
+      "instruction": "Test import task from UI",
+      "actions": [
+        {
+          "name": "fetch_data",
+          "arguments": {
+            "param1": "value1"
+          }
+        }
+      ],
+      "user_id": "admin",
+      "outputs": ["result"],
+      "edges": []
+    }
+  }
+}

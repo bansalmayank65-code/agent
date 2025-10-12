@@ -1,0 +1,283 @@
+{
+    "env": "fund_finance",
+    "model_provider": "fireworks",
+    "model": "qwen3-coder-480b-a35b-instruct",
+    "num_trials": 3,
+    "temperature": 1,
+    "interface_num": 4,
+    "task": {
+        "user_id": "4",
+        "instruction": "You are Anthony Robinson (anthonyrobinson734@outlook.com), a fund manager. You want to add a portfolio holding for the 'Lane LLC Income Fund' to the active portfolio of investor 'Griffith, Hampton and James' with a quantity of 56 units and cost basis of 72000.",
+        "actions": [
+            {
+                "name": "lookup_user_entities",
+                "arguments": {
+                    "entity_type": "users",
+                    "filters": {
+                        "email": "anthonyrobinson734@outlook.com",
+                        "first_name": "Anthony",
+                        "last_name": "Robinson"
+                    }
+                },
+                "output": {
+                    "count": 1,
+                    "entity_type": "users",
+                    "results": [
+                        {
+                            "created_at": "2024-10-10T04:15:12",
+                            "email": "anthonyrobinson734@outlook.com",
+                            "first_name": "Anthony",
+                            "last_name": "Robinson",
+                            "role": "fund_manager",
+                            "status": "active",
+                            "timezone": "America/Los_Angeles",
+                            "updated_at": "2025-05-31T23:28:28",
+                            "user_id": "4"
+                        }
+                    ],
+                    "success": true
+                }
+            },
+            {
+                "name": "verify_approval",
+                "arguments": {
+                    "action": "portfolio_holding_management",
+                    "requester_email": "anthonyrobinson734@outlook.com"
+                },
+                "output": {
+                    "approval_valid": true,
+                    "message": "Role 'fund_manager' is directly authorized for action 'portfolio_holding_management'"
+                }
+            },
+            {
+                "name": "lookup_investor_entities",
+                "arguments": {
+                    "entity_type": "investors",
+                    "filters": {
+                        "name": "Griffith, Hampton and James"
+                    }
+                },
+                "output": {
+                    "count": 1,
+                    "entity_type": "investors",
+                    "results": [
+                        {
+                            "accreditation_status": "accredited",
+                            "address": "07562 Vaughn Loop, Salaston, VT 18599",
+                            "contact_email": "griffith5322@gmail.com",
+                            "country": "Australia",
+                            "created_at": "2025-07-08T21:18:03",
+                            "date_of_incorporation": "1996-09-11",
+                            "investor_id": "35",
+                            "name": "Griffith, Hampton and James",
+                            "registration_number": 260156579,
+                            "source_of_funds": "external_investment",
+                            "status": "onboarded",
+                            "tax_id": "938-57-8652"
+                        }
+                    ],
+                    "success": true
+                }
+            },
+            {
+                "name": "lookup_portfolio_entities",
+                "arguments": {
+                    "entity_type": "portfolios",
+                    "filters": {
+                        "investor_id": "35",
+                        "status": "active"
+                    }
+                },
+                "output": {
+                    "count": 1,
+                    "entity_type": "portfolios",
+                    "results": [
+                        {
+                            "created_at": "2023-07-16T02:30:28",
+                            "investor_id": "35",
+                            "portfolio_id": "35",
+                            "status": "active",
+                            "updated_at": "2025-06-03T18:54:06"
+                        }
+                    ],
+                    "success": true
+                }
+            },
+            {
+                "name": "lookup_fund_entities",
+                "arguments": {
+                    "entity_type": "funds",
+                    "filters": {
+                        "name": "Lane LLC Income Fund"
+                    }
+                },
+                "output": {
+                    "count": 1,
+                    "entity_type": "funds",
+                    "results": [
+                        {
+                            "created_at": "2023-04-28T12:52:28",
+                            "fund_id": "26",
+                            "fund_type": "private_equity_funds",
+                            "manager_id": "20",
+                            "name": "Lane LLC Income Fund",
+                            "size": 272736626.98,
+                            "status": "open",
+                            "updated_at": "2024-08-23T17:14:45"
+                        }
+                    ],
+                    "success": true
+                }
+            },
+            {
+                "name": "address_portfolio_holdings",
+                "arguments": {
+                    "action": "create",
+                    "holding_data": {
+                        "cost_basis": 72000,
+                        "fund_id": "26",
+                        "fund_manager_approval": true,
+                        "portfolio_id": "35",
+                        "quantity": 56
+                    }
+                },
+                "output": {
+                    "action": "create",
+                    "holding_data": {
+                        "cost_basis": 72000,
+                        "created_at": "2025-10-01T12:00:00",
+                        "fund_id": "26",
+                        "holding_id": "1211",
+                        "portfolio_id": "35",
+                        "quantity": 56
+                    },
+                    "holding_id": "1211",
+                    "message": "Portfolio holding 1211 created successfully for portfolio 35 with fund 26",
+                    "success": true
+                }
+            },
+            {
+                "name": "record_new_audit_trail",
+                "arguments": {
+                    "action": "create",
+                    "reference_id": "1211",
+                    "reference_type": "holding"
+                },
+                "output": {
+                    "action": "create",
+                    "audit_trail_id": "3501",
+                    "created_at": "2025-10-01T00:00:00",
+                    "field_name": null,
+                    "new_value": null,
+                    "old_value": null,
+                    "reference_id": "1211",
+                    "reference_type": "holding"
+                }
+            }
+        ],
+        "outputs": [
+            "4",
+            "35",
+            "26"
+        ],
+        "edges": [
+            {
+                "from": "instruction",
+                "to": "lookup_user_entities",
+                "connection": {
+                    "output": "entity_type, email, first_name, last_name",
+                    "input": "entity_type, filters.email, filters.first_name, filters.last_name"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "verify_approval",
+                "connection": {
+                    "output": "action, email",
+                    "input": "action, requester_email"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "lookup_investor_entities",
+                "connection": {
+                    "output": "entity_type, name",
+                    "input": "entity_type, filters.name"
+                }
+            },
+            {
+                "from": "lookup_investor_entities",
+                "to": "lookup_portfolio_entities",
+                "connection": {
+                    "output": "results[0].investor_id",
+                    "input": "filters.investor_id"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "lookup_portfolio_entities",
+                "connection": {
+                    "output": "entity_type, status",
+                    "input": "entity_type, filters.status"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "lookup_fund_entities",
+                "connection": {
+                    "output": "entity_type, name",
+                    "input": "entity_type, filters.name"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "address_portfolio_holdings",
+                "connection": {
+                    "output": "action, cost_basis, quantity",
+                    "input": "action, holding_data.cost_basis, holding_data.quantity"
+                }
+            },
+            {
+                "from": "verify_approval",
+                "to": "address_portfolio_holdings",
+                "connection": {
+                    "output": "approval_valid",
+                    "input": "holding_data.fund_manager_approval"
+                }
+            },
+            {
+                "from": "lookup_fund_entities",
+                "to": "address_portfolio_holdings",
+                "connection": {
+                    "output": "results[0].fund_id",
+                    "input": "holding_data.fund_id"
+                }
+            },
+            {
+                "from": "lookup_portfolio_entities",
+                "to": "address_portfolio_holdings",
+                "connection": {
+                    "output": "results[0].portfolio_id",
+                    "input": "holding_data.portfolio_id"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "record_new_audit_trail",
+                "connection": {
+                    "output": "action, reference_type",
+                    "input": "action, reference_type"
+                }
+            },
+            {
+                "from": "address_portfolio_holdings",
+                "to": "record_new_audit_trail",
+                "connection": {
+                    "output": "holding_id",
+                    "input": "reference_id"
+                }
+            }
+        ],
+        "num_edges": 12
+    }
+}

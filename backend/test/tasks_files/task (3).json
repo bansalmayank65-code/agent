@@ -1,0 +1,224 @@
+{
+    "env": "fund_finance",
+    "model_provider": "fireworks",
+    "model": "qwen3-coder-480b-a35b-instruct",
+    "num_trials": 1,
+    "temperature": 1,
+    "interface_num": 4,
+    "task": {
+        "user_id": "8",
+        "instruction": "You are Matthew Moore, a finance officer (matthew.moore@investment.com). You want to record a NAV value of $275 for the 'Martinez Ltd Income Fund' as of August 31, 2025.",
+        "actions": [
+            {
+                "name": "lookup_user_entities",
+                "arguments": {
+                    "entity_type": "users",
+                    "filters": {
+                        "first_name": "Matthew",
+                        "last_name": "Moore",
+                        "email": "matthew.moore@investment.com"
+                    }
+                },
+                "output": {
+                    "count": 1,
+                    "entity_type": "users",
+                    "results": [
+                        {
+                            "created_at": "2024-01-22T00:23:49",
+                            "email": "matthew.moore@investment.com",
+                            "first_name": "Matthew",
+                            "last_name": "Moore",
+                            "role": "finance_officer",
+                            "status": "active",
+                            "timezone": "UTC",
+                            "updated_at": "2024-04-10T09:44:04",
+                            "user_id": "8"
+                        }
+                    ],
+                    "success": true
+                }
+            },
+            {
+                "name": "verify_approval",
+                "arguments": {
+                    "action": "nav_record_creation",
+                    "requester_email": "matthew.moore@investment.com"
+                },
+                "output": {
+                    "approval_valid": true,
+                    "message": "Role 'finance_officer' is directly authorized for action 'nav_record_creation'"
+                }
+            },
+            {
+                "name": "lookup_fund_entities",
+                "arguments": {
+                    "entity_type": "funds",
+                    "filters": {
+                        "name": "Martinez Ltd Income Fund"
+                    }
+                },
+                "output": {
+                    "count": 1,
+                    "entity_type": "funds",
+                    "results": [
+                        {
+                            "created_at": "2025-04-08T08:18:54",
+                            "fund_id": "23",
+                            "fund_type": "money_market_funds",
+                            "manager_id": "112",
+                            "name": "Martinez Ltd Income Fund",
+                            "size": 297311786.36,
+                            "status": "open",
+                            "updated_at": "2025-05-07T22:28:05"
+                        }
+                    ],
+                    "success": true
+                }
+            },
+            {
+                "name": "lookup_valuation_entities",
+                "arguments": {
+                    "entity_type": "nav_records",
+                    "filters": {
+                        "fund_id": "23",
+                        "nav_date_from": "2025-08-31",
+                        "nav_date_to": "2025-08-31"
+                    }
+                },
+                "output": {
+                    "count": 0,
+                    "entity_type": "nav_records",
+                    "results": [],
+                    "success": true
+                }
+            },
+            {
+                "name": "address_nav_record",
+                "arguments": {
+                    "action": "create",
+                    "nav_data": {
+                        "fund_id": "23",
+                        "nav_date": "2025-08-31",
+                        "nav_value": 275,
+                        "finance_officer_approval": true
+                    }
+                },
+                "output": {
+                    "action": "create",
+                    "message": "NAV record 1286 created successfully for fund 23 on 2025-08-31",
+                    "nav_data": {
+                        "fund_id": "23",
+                        "nav_date": "2025-08-31",
+                        "nav_id": "1286",
+                        "nav_value": 275,
+                        "updated_at": "2025-10-01T12:00:00"
+                    },
+                    "nav_id": "1286",
+                    "success": true
+                }
+            },
+            {
+                "name": "record_new_audit_trail",
+                "arguments": {
+                    "action": "create",
+                    "reference_id": "1286",
+                    "reference_type": "nav"
+                },
+                "output": {
+                    "action": "create",
+                    "audit_trail_id": "3501",
+                    "created_at": "2025-10-01T00:00:00",
+                    "field_name": null,
+                    "new_value": null,
+                    "old_value": null,
+                    "reference_id": "1286",
+                    "reference_type": "nav"
+                }
+            }
+        ],
+        "edges": [
+            {
+                "from": "instruction",
+                "to": "lookup_user_entities",
+                "connection": {
+                    "output": "entity_type, email, first_name, last_name",
+                    "input": "entity_type, filters.email, filters.first_name, filters.last_name"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "verify_approval",
+                "connection": {
+                    "output": "action, email",
+                    "input": "action, requester_email"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "lookup_fund_entities",
+                "connection": {
+                    "output": "entity_type, name",
+                    "input": "entity_type, filters.name"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "lookup_valuation_entities",
+                "connection": {
+                    "output": "entity_type, nav_date_from, nav_date_to",
+                    "input": "entity_type, filters.nav_date_from, filters.nav_date_to"
+                }
+            },
+            {
+                "from": "lookup_fund_entities",
+                "to": "lookup_valuation_entities",
+                "connection": {
+                    "output": "results[0].fund_id",
+                    "input": "filters.fund_id"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "address_nav_record",
+                "connection": {
+                    "output": "action, nav_date, nav_value",
+                    "input": "action, nav_data.nav_date, nav_data.nav_value"
+                }
+            },
+            {
+                "from": "lookup_fund_entities",
+                "to": "address_nav_record",
+                "connection": {
+                    "output": "results[0].fund_id",
+                    "input": "nav_data.fund_id"
+                }
+            },
+            {
+                "from": "verify_approval",
+                "to": "address_nav_record",
+                "connection": {
+                    "output": "approval_valid",
+                    "input": "nav_data.finance_officer_approval"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "record_new_audit_trail",
+                "connection": {
+                    "output": "reference_type, action",
+                    "input": "reference_type, action"
+                }
+            },
+            {
+                "from": "address_nav_record",
+                "to": "record_new_audit_trail",
+                "connection": {
+                    "output": "nav_id",
+                    "input": "reference_id"
+                }
+            }
+        ],
+        "num_edges": 10,
+        "outputs": []
+    }
+}

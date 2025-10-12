@@ -1,0 +1,59 @@
+{
+    "task_id": "comprehensive_test",
+    "env": "ecommerce",
+    "model_provider": "openai",
+    "model": "gpt-4o-mini",
+    "instruction": "Navigate to an e-commerce website and find a laptop computer under $1000",
+    "actions": [
+        {
+            "type": "navigate",
+            "target": "homepage",
+            "description": "Navigate to the e-commerce homepage"
+        },
+        {
+            "type": "click",
+            "target": "electronics_category",
+            "description": "Click on electronics category"
+        },
+        {
+            "type": "click",
+            "target": "laptops_subcategory", 
+            "description": "Click on laptops subcategory"
+        },
+        {
+            "type": "filter",
+            "target": "price_filter",
+            "value": "max_1000",
+            "description": "Set price filter to maximum $1000"
+        }
+    ],
+    "outputs": [
+        {
+            "type": "screenshot",
+            "description": "Screenshot showing filtered laptop results"
+        },
+        {
+            "type": "product_list",
+            "description": "List of laptops under $1000"
+        }
+    ],
+    "edges": [
+        {
+            "from": 0,
+            "to": 1,
+            "condition": "homepage_loaded"
+        },
+        {
+            "from": 1,
+            "to": 2,
+            "condition": "electronics_page_loaded"
+        },
+        {
+            "from": 2,
+            "to": 3,
+            "condition": "laptops_page_loaded"
+        }
+    ],
+    "max_concurrency": 2,
+    "max_num_failed_results": 5
+}

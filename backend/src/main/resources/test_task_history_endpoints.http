@@ -1,0 +1,99 @@
+### Task History API Tests
+### Base URL: http://localhost:8080
+
+### 1. Test authentication first (get session token)
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "userId": "admin",
+  "password": "admin123"
+}
+
+###
+
+### 2. Get all tasks for admin user
+GET http://localhost:8080/api/tasks-history/user/admin
+Content-Type: application/json
+
+###
+
+### 3. Get task statistics for admin user
+GET http://localhost:8080/api/tasks-history/user/admin/statistics
+Content-Type: application/json
+
+###
+
+### 4. Get recent tasks for admin user
+GET http://localhost:8080/api/tasks-history/user/admin/recent
+Content-Type: application/json
+
+###
+
+### 5. Get tasks by status (DRAFT) for admin user
+GET http://localhost:8080/api/tasks-history/user/admin/status/DRAFT
+Content-Type: application/json
+
+###
+
+### 6. Get tasks by status (SUBMITTED) for admin user
+GET http://localhost:8080/api/tasks-history/user/admin/status/SUBMITTED
+Content-Type: application/json
+
+###
+
+### 7. Get tasks by status (APPROVED) for admin user
+GET http://localhost:8080/api/tasks-history/user/admin/status/APPROVED
+Content-Type: application/json
+
+###
+
+### 8. Get specific task details (using sample task ID)
+GET http://localhost:8080/api/tasks-history/user/admin/task/TASK_001
+Content-Type: application/json
+
+###
+
+### 9. Get all tasks for trainer1 user
+GET http://localhost:8080/api/tasks-history/user/trainer1
+Content-Type: application/json
+
+###
+
+### 10. Get task statistics for trainer1 user
+GET http://localhost:8080/api/tasks-history/user/trainer1/statistics
+Content-Type: application/json
+
+###
+
+### 11. Test user with no trainer relationships (should return empty)
+GET http://localhost:8080/api/tasks-history/user/nonexistent
+Content-Type: application/json
+
+###
+
+### 12. Test invalid task access (admin trying to access task they shouldn't have access to)
+GET http://localhost:8080/api/tasks-history/user/admin/task/INVALID_TASK
+Content-Type: application/json
+
+###
+
+### Validation endpoints for context
+
+### 13. Check user-trainer relationships
+GET http://localhost:8080/api/user-trainer-links/user/admin/trainers
+Content-Type: application/json
+
+###
+
+### 14. Check all active relationships
+GET http://localhost:8080/api/user-trainer-links/all-active
+Content-Type: application/json
+
+###
+
+### 15. Health check
+GET http://localhost:8080/actuator/health
+Content-Type: application/json
+
+###

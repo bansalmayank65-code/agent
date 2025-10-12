@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
+    <title>Task Validation Utilities - Turing Tooling</title>
+    <link rel="stylesheet" href="/static/css/instruction_validation.css">
+</head>
+<body>
+    <header class="dashboard-header">
+        <a href='/'> 
+            <div class="logo">
+                <img src="/static/images/turing_logo.svg" alt="turing image" style="width: 100px; scale: 1.5; display: block; margin: 0 auto;">
+            </div>
+        </a>
+    </header>
+
+    <!-- Task Validation Section -->
+    <section class="task-tracker-section">
+        <div class="tracker-header">
+            <div class="header-visual">
+                <div class="validation-icon">
+                    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="validationGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                            </linearGradient>
+                            <filter id="glow">
+                                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                <feMerge> 
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <!-- Checkmark inside shield -->
+                        <path d="M45 55 L55 65 L75 40" 
+                              stroke="white" 
+                              stroke-width="4" 
+                              fill="none" 
+                              stroke-linecap="round" 
+                              stroke-linejoin="round"
+                              opacity="0.9"/>
+                        <!-- Decorative elements -->
+                        <circle cx="60" cy="25" r="3" fill="url(#validationGradient)" opacity="0.6"/>
+                        <circle cx="35" cy="40" r="2" fill="url(#validationGradient)" opacity="0.5"/>
+                        <circle cx="85" cy="40" r="2" fill="url(#validationGradient)" opacity="0.5"/>
+                    </svg>
+                </div>
+            </div>
+            <h1>Instruction Validation</h1>
+            <div class="subtitle-container">
+                <div class="subtitle-line"></div>
+                <span class="subtitle">Validation & Quality Assurance</span>
+                <div class="subtitle-line"></div>
+            </div>
+            <p class="tracker-description">
+                Ensure your instructions meet the highest standards. 
+            </p>
+        </div>
+
+        <div id="content">
+            <h2 id="content-header">Instruction Validation</h2>
+            <h3 class="content-subheader">Select Anthropic Model</h3>
+            <select id="model-select" class="model-dropdown">
+                <option value="claude-sonnet-4-20250514">claude-4-sonnet</option>
+                <!-- <option value="claude-3-5-sonnet-20241022">claude-3-5-sonnet</option>
+                <option value="claude-3-5-haiku-20241022">claude-3-5-haiku</option> -->
+            </select>
+
+            <h3 class="content-subheader">Initial Prompt</h3>
+            <textarea readonly id="initial-prompt" placeholder="Enter the initial task prompt here..."></textarea>
+
+            <h3 class="content-subheader">Examples</h3>
+            <textarea id="examples" placeholder="Enter examples for validation..."></textarea>
+
+            <h3 class="content-subheader">Instruction</h3>
+            <textarea id="instruction" placeholder="Enter the instruction to validate..."></textarea>
+
+            <h3 class="content-subheader">Policy</h3>
+            <textarea id="policy" placeholder="Enter the policy to validate against..."></textarea>
+
+            <div style="display: flex; justify-content: center; align-items: center; margin-top: 1rem;">
+                <button id="callButton" class="validation-button">Validate Instruction</button>
+            </div>
+        </div>
+    </section>
+
+    <script src="/static/scripts/instruction_validation.js"></script>
+</body>
+</html>

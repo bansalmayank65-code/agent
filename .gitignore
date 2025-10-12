@@ -1,0 +1,108 @@
+# Java/Maven
+target/
+*.jar
+*.war
+*.ear
+*.class
+*.log
+.mvn/
+mvnw
+mvnw.cmd
+
+# Spring Boot
+*.pid
+*.pid.lock
+application-*.yml
+application-*.properties
+
+# IDE Files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+
+# Flutter/Dart
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+frontend/build/
+/coverage/
+
+# Build outputs
+build/
+target/
+dist/
+out/
+
+# Cache and temp files
+cache/
+*.tmp
+*.temp
+*.cache
+
+# Environment and configuration
+.env
+.env.local
+.env.production
+local.properties
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+h2.mv.db
+h2.trace.db
+
+# Logs
+logs/
+*.log
+log4j.properties
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Python (for notebook integration)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node modules (if any)
+node_modules/
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Test outputs
+test-results/
+test-output/
+
+# Security
+*.key
+*.pem
+*.p12
+*.jks
