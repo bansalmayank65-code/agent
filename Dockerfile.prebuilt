@@ -1,12 +1,9 @@
 # Alternative Dockerfile - Uses pre-built Flutter web files
 # This assumes you've already built Flutter web locally and committed the files
 
-FROM eclipse-temurin:17-jdk-alpine AS java-builder
+FROM eclipse-temurin:17-jdk AS java-builder
 
 WORKDIR /app
-
-# Install build dependencies
-RUN apk add --no-cache wget dumb-init
 
 # Copy entire backend directory
 COPY backend/ ./
@@ -14,24 +11,26 @@ COPY backend/ ./
 # Use pre-built Flutter files (from backend/src/main/resources/static/)
 # These should be built locally and committed to git
 
-# Build Spring Boot application
-RUN chmod +x mvnw && \
-    ./mvnw dependency:go-offline -B && \
+# Verify Maven wrapper and build Spring Boot application
+RUN ls -la && \
+    ls -la mvnw && \
+    chmod +x mvnw && \
+    ./mvnw --version && \
     ./mvnw clean package -DskipTests
 
 # Production stage
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 
 # Add metadata
 LABEL maintainer="bansalmayank65@gmail.com"
 LABEL description="Amazon Agentic Workstation - Task orchestration web app"
 
 # Install runtime dependencies
-RUN apk add --no-cache dumb-init wget
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security
-RUN addgroup -g 1001 -S appuser && \
-    adduser -S appuser -u 1001 -G appuser
+RUN groupadd -g 1001 appuser && \
+    useradd -r -u 1001 -g appuser appuser
 
 # Set working directory
 WORKDIR /app
