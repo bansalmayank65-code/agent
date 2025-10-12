@@ -1,0 +1,60 @@
+# Git and version control
+.git
+.gitignore
+.github
+
+# Documentation
+README.md
+*.md
+docs/
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+*.log
+
+# Node modules (if any)
+node_modules/
+
+# Build artifacts (will be built in container)
+backend/target/
+frontend/build/
+
+# Cache directories
+.dart_tool/
+.pub-cache/
+.flutter-plugins-dependencies
+
+# Test files
+**/test/
+**/*_test.dart
+**/*_test.java
+
+# Local environment files
+.env
+.env.local
+.env.production
+
+# Temporary files
+*.tmp
+*.temp
+
+# Scripts not needed in container
+*.bat
+setup-dev.sh
+build-*.sh
+build-*.bat
+
+# Test and development files
+test_*.json
+test_*.http
+
+# Cache
+cache/
