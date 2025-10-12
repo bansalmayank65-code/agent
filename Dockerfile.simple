@@ -1,15 +1,25 @@
-# Simple single-stage Dockerfile (fallback option)
-FROM eclipse-temurin:17-jdk-alpine
+# Simple single-stage Dockerfile (fallback option) - Use Ubuntu for better Flutter support  
+FROM ubuntu:22.04
 
-# Install dependencies
-RUN apk add --no-cache curl git wget dumb-init
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    openjdk-17-jdk \
+    curl \
+    git \
+    wget \
+    unzip \
+    xz-utils \
+    dumb-init \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Flutter
-WORKDIR /flutter
-RUN curl -fsSL https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.24.3-stable.tar.xz | tar -xJ --strip-components=1
+WORKDIR /opt
+RUN curl -fsSL https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.24.3-stable.tar.xz | tar -xJ
+ENV PATH="/opt/flutter/bin:$PATH"
 
-# Set Flutter in PATH
-ENV PATH="/flutter/bin:$PATH"
+# Configure Flutter
+RUN flutter config --enable-web --no-analytics && \
+    flutter precache --web
 
 # Set working directory
 WORKDIR /app

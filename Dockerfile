@@ -1,10 +1,30 @@
-# Flutter build stage
-FROM ghcr.io/cirruslabs/flutter:3.24.3 AS flutter-builder
+# Flutter build stage - Use Ubuntu base for better compatibility
+FROM ubuntu:22.04 AS flutter-builder
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    unzip \
+    xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Flutter
+WORKDIR /opt
+RUN curl -fsSL https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.24.3-stable.tar.xz | tar -xJ
+ENV PATH="/opt/flutter/bin:$PATH"
+
+# Set up Flutter
+RUN flutter config --enable-web --no-analytics && \
+    flutter precache --web
 
 WORKDIR /app
 COPY frontend/ ./
-RUN flutter pub get && \
-    flutter build web --release --base-href="/"
+
+# Build Flutter web app with verbose output for debugging
+RUN flutter doctor -v && \
+    flutter pub get && \
+    flutter build web --release --base-href="/" --verbose
 
 # Java build stage
 FROM eclipse-temurin:17-jdk-alpine AS java-builder
