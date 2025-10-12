@@ -1,0 +1,56 @@
+# Simple single-stage Dockerfile (fallback option)
+FROM eclipse-temurin:17-jdk-alpine
+
+# Install dependencies
+RUN apk add --no-cache curl git wget dumb-init
+
+# Install Flutter
+WORKDIR /flutter
+RUN curl -fsSL https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.24.3-stable.tar.xz | tar -xJ --strip-components=1
+
+# Set Flutter in PATH
+ENV PATH="/flutter/bin:$PATH"
+
+# Set working directory
+WORKDIR /app
+
+# Copy entire project
+COPY . .
+
+# Build Flutter web
+RUN cd frontend && \
+    flutter pub get && \
+    flutter build web --release --base-href="/"
+
+# Copy Flutter build to Spring Boot static resources
+RUN mkdir -p backend/src/main/resources/static && \
+    cp -r frontend/build/web/* backend/src/main/resources/static/
+
+# Build Spring Boot application
+RUN cd backend && \
+    chmod +x mvnw && \
+    ./mvnw clean package -DskipTests
+
+# Create non-root user
+RUN addgroup -g 1001 -S appuser && \
+    adduser -S appuser -u 1001 -G appuser
+
+# Switch to app directory and change ownership
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+
+# Set JVM options for containerized environment
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["sh", "-c", "java $JAVA_OPTS -Dserver.port=${PORT:-8080} -jar backend/target/agenticworkstation-0.0.1-SNAPSHOT.jar"]

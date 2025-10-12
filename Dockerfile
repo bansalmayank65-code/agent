@@ -11,21 +11,16 @@ FROM eclipse-temurin:17-jdk-alpine AS java-builder
 
 WORKDIR /app
 
-# Copy Maven wrapper and dependencies for better layer caching
-COPY backend/mvnw backend/mvnw.cmd backend/pom.xml ./
-COPY backend/.mvn ./.mvn
-
-# Make mvnw executable and download dependencies
-RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
-
-# Copy source code
-COPY backend/src ./src
+# Copy entire backend directory to avoid path issues
+COPY backend/ ./
 
 # Copy Flutter build from previous stage
-COPY --from=flutter-builder /app/build/web ./src/main/resources/static
+COPY --from=flutter-builder /app/build/web ./src/main/resources/static/
 
-# Build Spring Boot application
-RUN ./mvnw clean package -DskipTests
+# Make mvnw executable and build
+RUN chmod +x mvnw && \
+    ./mvnw dependency:go-offline -B && \
+    ./mvnw clean package -DskipTests
 
 # Production stage
 FROM eclipse-temurin:17-jre-alpine
@@ -34,8 +29,8 @@ FROM eclipse-temurin:17-jre-alpine
 LABEL maintainer="bansalmayank65@gmail.com"
 LABEL description="Amazon Agentic Workstation - Task orchestration web app"
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Install dumb-init and wget for proper signal handling and health checks
+RUN apk add --no-cache dumb-init wget
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S appuser && \
