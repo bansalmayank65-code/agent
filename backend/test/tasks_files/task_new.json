@@ -282,147 +282,115 @@
     "edges": [
       {
         "from": "instruction",
+        "to": "discover_user_employee_entities",
         "connection": {
           "output": "entity_type, email, first_name, last_name",
           "input": "entity_type, filters.email, filters.first_name, filters.last_name"
-        },
-        "to": "discover_user_employee_entities"
+        }
       },
       {
         "from": "instruction",
+        "to": "discover_recruitment_entities",
         "connection": {
-          "output": "entity_type, email, first_name, last_name",
-          "input": "entity_type, filters.email, filters.first_name, filters.last_name"
-        },
-        "to": "discover_recruitment_entities"
+          "output": "entity_type, email, first_name, last_name, interview_type",
+          "input": "entity_type, filters.email, filters.first_name, filters.last_name, filters.interview_type"
+        }
       },
       {
         "from": "instruction",
+        "to": "discover_department_entities",
         "connection": {
           "output": "entity_type, department_name",
           "input": "entity_type, filters.department_name"
-        },
-        "to": "discover_department_entities"
+        }
       },
       {
         "from": "discover_department_entities",
+        "to": "discover_job_entities",
         "connection": {
           "output": "results[0].department_id",
           "input": "filters.department_id"
-        },
-        "to": "discover_job_entities"
+        }
       },
       {
         "from": "instruction",
+        "to": "discover_job_entities",
         "connection": {
           "output": "entity_type, status, employment_type, job_level, title",
           "input": "entity_type, filters.status, filters.employment_type, filters.job_level, filters.title"
-        },
-        "to": "discover_job_entities"
+        }
       },
       {
-        "from": "discover_recruitment_entities",
+        "from": "discover_job_entities",
+        "to": "discover_recruitment_entities",
         "connection": {
-          "output": "results[0].status, results[0].candidate_id",
-          "input": "filters.status, filters.candidate_id"
-        },
-        "to": "discover_recruitment_entities"
-      },
-      {
-        "from": "discover_user_employee_entities",
-        "connection": {
-          "output": "results[0].user_id",
+          "output": "results[0].position_id",
           "input": "filters.position_id"
-        },
-        "to": "discover_recruitment_entities"
-      },
-      {
-        "from": "instruction",
-        "connection": {
-          "output": "entity_type",
-          "input": "entity_type"
-        },
-        "to": "discover_recruitment_entities"
+        }
       },
       {
         "from": "discover_recruitment_entities",
+        "to": "discover_recruitment_entities",
         "connection": {
-          "output": "results[0].application_id",
-          "input": "filters.application_id"
-        },
-        "to": "discover_recruitment_entities"
-      },
-      {
-        "from": "instruction",
-        "connection": {
-          "output": "entity_type, interview_type",
-          "input": "entity_type, filters.interview_type"
-        },
-        "to": "discover_recruitment_entities"
+          "output": "results[0].status, results[0].candidate_id, results[0].application_id",
+          "input": "filters.status, filters.candidate_id, filters.application_id"
+        }
       },
       {
         "from": "discover_recruitment_entities",
+        "to": "manage_interview",
         "connection": {
           "output": "results[0].interview_id",
           "input": "interview_id"
-        },
-        "to": "manage_interview"
+        }
       },
       {
         "from": "instruction",
+        "to": "manage_interview",
         "connection": {
           "output": "action, status, communication_score, cultural_fit_score, overall_rating, recommendation, technical_score",
           "input": "action, interview_data.status, interview_data.communication_score, interview_data.cultural_fit_score, interview_data.overall_rating, interview_data.recommendation, interview_data.technical_score"
-        },
-        "to": "manage_interview"
+        }
       },
       {
         "from": "discover_recruitment_entities",
+        "to": "manage_job_application",
         "connection": {
           "output": "results[0].application_id",
           "input": "application_id"
-        },
-        "to": "manage_job_application"
-      },
-      {
-        "from": "manage_interview",
-        "connection": {
-          "output": "interview_data.recommendation",
-          "input": "application_data.final_decision"
-        },
-        "to": "manage_job_application"
+        }
       },
       {
         "from": "instruction",
+        "to": "manage_job_application",
         "connection": {
-          "output": "action, status",
-          "input": "action, application_data.status"
-        },
-        "to": "manage_job_application"
+          "output": "action, status, final_decision",
+          "input": "action, application_data.status, application_data.final_decision"
+        }
       },
       {
         "from": "discover_recruitment_entities",
+        "to": "manage_audit_logs",
         "connection": {
           "output": "results[0].interview_id",
           "input": "reference_id"
-        },
-        "to": "manage_audit_logs"
+        }
       },
       {
         "from": "discover_user_employee_entities",
+        "to": "manage_audit_logs",
         "connection": {
           "output": "results[0].user_id",
           "input": "user_id"
-        },
-        "to": "manage_audit_logs"
+        }
       },
       {
         "from": "instruction",
+        "to": "manage_audit_logs",
         "connection": {
           "output": "action, operation, reference_type, field_name, new_value",
           "input": "action, operation, reference_type, field_name, new_value"
-        },
-        "to": "manage_audit_logs"
+        }
       }
     ],
     "outputs": [],

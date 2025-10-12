@@ -193,7 +193,30 @@ public final class EdgeGenerator {
 			}
 		}
 
-		return deduplicatedEdges;
+		// Merge edges with same "from" and "to" values
+		List<TaskDto.EdgeDto> mergedEdges = new ArrayList<>();
+		
+		for (TaskDto.EdgeDto edge : deduplicatedEdges) {
+			boolean merged = false;
+			
+			// Check if we already have an edge with the same from and to
+			for (TaskDto.EdgeDto existingEdge : mergedEdges) {
+				if (java.util.Objects.equals(edge.getFrom(), existingEdge.getFrom()) &&
+					java.util.Objects.equals(edge.getTo(), existingEdge.getTo())) {
+					// Merge the connections
+					mergeConnections(existingEdge, edge);
+					merged = true;
+					break;
+				}
+			}
+			
+			// If not merged, add as new edge
+			if (!merged) {
+				mergedEdges.add(edge);
+			}
+		}
+
+		return mergedEdges;
 	}
 
 	/**
@@ -549,5 +572,63 @@ public final class EdgeGenerator {
 		}
 
 		return cleaned;
+	}
+
+	/**
+	 * Merge connections from the second edge into the first edge by combining their inputs and outputs
+	 */
+	private static void mergeConnections(TaskDto.EdgeDto targetEdge, TaskDto.EdgeDto sourceEdge) {
+		TaskDto.ConnectionDto targetConnection = targetEdge.getConnection();
+		TaskDto.ConnectionDto sourceConnection = sourceEdge.getConnection();
+		
+		if (targetConnection == null) {
+			targetEdge.setConnection(sourceConnection);
+			return;
+		}
+		
+		if (sourceConnection == null) {
+			return;
+		}
+		
+		// Merge outputs
+		String mergedOutput = mergeFields(targetConnection.getOutput(), sourceConnection.getOutput());
+		targetConnection.setOutput(mergedOutput);
+		
+		// Merge inputs
+		String mergedInput = mergeFields(targetConnection.getInput(), sourceConnection.getInput());
+		targetConnection.setInput(mergedInput);
+	}
+	
+	/**
+	 * Merge two comma-separated field strings, avoiding duplicates
+	 */
+	private static String mergeFields(String field1, String field2) {
+		if (field1 == null || field1.trim().isEmpty()) {
+			return field2 == null ? "" : field2.trim();
+		}
+		if (field2 == null || field2.trim().isEmpty()) {
+			return field1.trim();
+		}
+		
+		// Parse existing fields
+		List<String> allFields = new ArrayList<>();
+		
+		// Add fields from first string
+		for (String field : field1.split(",")) {
+			String trimmed = field.trim();
+			if (!trimmed.isEmpty()) {
+				allFields.add(trimmed);
+			}
+		}
+		
+		// Add fields from second string, avoiding duplicates
+		for (String field : field2.split(",")) {
+			String trimmed = field.trim();
+			if (!trimmed.isEmpty() && !allFields.contains(trimmed)) {
+				allFields.add(trimmed);
+			}
+		}
+		
+		return String.join(", ", allFields);
 	}
 }
