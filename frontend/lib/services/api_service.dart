@@ -4,7 +4,9 @@ import 'package:http/http.dart' as http;
 import '../models/task_model.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8080';
+  // Use relative path for same-origin requests in production
+  // This will work both locally (with proxy) and in production (single service)
+  static const String baseUrl = '';
   
   // Singleton pattern
   static final ApiService _instance = ApiService._internal();

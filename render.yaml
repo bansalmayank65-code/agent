@@ -1,10 +1,10 @@
 services:
-  # Backend API Service
+  # Single Service - Spring Boot with embedded Flutter Web
   - type: web
-    name: agentic-workstation-backend
-    env: docker
+    name: agentic-workstation
+    env: java
     plan: starter
-    buildCommand: cd backend && ./mvnw clean package -DskipTests
+    buildCommand: chmod +x build-single-service.sh && ./build-single-service.sh
     startCommand: java -Dserver.port=$PORT -jar backend/target/agenticworkstation-0.0.1-SNAPSHOT.jar
     envVars:
       - key: SPRING_PROFILES_ACTIVE
@@ -12,24 +12,12 @@ services:
       - key: JPA_SHOW_SQL
         value: false
       - key: JAVA_OPTS
-        value: "-Xmx512m -Xms256m"
+        value: "-Xmx512m -Xms256m -XX:+UseG1GC"
       - key: DATABASE_URL
         fromDatabase:
           name: agentic-workstation-db
           property: connectionString
-    healthCheckPath: /health
-
-  # Frontend Static Site
-  - type: web
-    name: agentic-workstation-frontend
-    env: static
-    buildCommand: cd frontend && flutter build web --web-renderer html --release
-    staticPublishPath: frontend/build/web
-    envVars:
-      - key: FLUTTER_WEB_RENDERER
-        value: html
-      - key: FLUTTER_BUILD_MODE
-        value: release
+    healthCheckPath: /actuator/health
 
 databases:
   - name: agentic-workstation-db

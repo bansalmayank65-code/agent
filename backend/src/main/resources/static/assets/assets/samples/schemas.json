@@ -1,0 +1,62 @@
+{
+  "actions_schema": [
+    {
+      "name": "action_name_here",
+      "arguments": {
+        "key1": "value1",
+        "key2": "value2"
+      },
+      "output": {
+        "field1": "result_value1",
+        "field2": "result_value2"
+      }
+    }
+  ],
+  "edges_schema": [
+    {
+      "from": "source_action_name",
+      "to": "target_action_name",
+      "connection": {
+        "output": "field_from_source",
+        "input": "field_for_target"
+      }
+    }
+  ],
+  "task_schema": {
+    "env": "environment_name",
+    "model_provider": "provider_name",
+    "model": "model_identifier",
+    "num_trials": 1,
+    "temperature": 1,
+    "interface_num": 1,
+    "task": {
+      "user_id": "user_identifier",
+      "instruction": "text_description_of_overall_goal",
+      "actions": [
+        {
+          "name": "action_name_here",
+          "arguments": {
+            "key1": "value1",
+            "key2": "value2"
+          },
+          "output": {
+            "field1": "result_value1",
+            "field2": "result_value2"
+          }
+        }
+      ],
+      "outputs": ["output_id_1", "output_id_2"],
+      "edges": [
+        {
+          "from": "source_action_name",
+          "to": "target_action_name",
+          "connection": {
+            "output": "field_from_source",
+            "input": "field_for_target"
+          }
+        }
+      ],
+      "num_edges": 0
+    }
+  }
+}
