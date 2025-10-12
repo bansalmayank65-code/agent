@@ -169,7 +169,9 @@ class _RepositorySectionWidgetState extends State<RepositorySectionWidget> {
       
       if (result != null) {
         final authProvider = context.read<AuthProvider>();
-        final importResult = await widget.provider.importTaskJson(result['data'], loggedInUserId: authProvider.userId);
+        // Import without overriding the user ID from JSON - let users edit it in step 4
+        // But pass the logged-in user ID separately for database foreign key constraint
+        final importResult = await widget.provider.importTaskJson(result['data'], dbUserId: authProvider.userId);
         if (importResult['success'] == true) {
           widget.provider.setImportedJsonPath(importedPath);
           if (mounted) {

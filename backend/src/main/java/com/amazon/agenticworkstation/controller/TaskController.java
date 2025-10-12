@@ -116,17 +116,18 @@ public class TaskController {
     public ResponseEntity<Map<String, Object>> importTask(@RequestBody TaskImportRequest request) {
         try {
             String userId = request.getUserId();
+            String dbUserId = request.getDbUserId() != null ? request.getDbUserId() : userId; // Use dbUserId for DB constraint, fallback to userId
             String taskJsonContent = request.getTaskJsonContent().toString();
             
             // Generate unique task ID
             String taskId = java.util.UUID.randomUUID().toString();
             
-            logger.info("Importing task {} for user {} with content size: {}", taskId, userId, taskJsonContent.length());
+            logger.info("Importing task {} for user {} (dbUserId: {}) with content size: {}", taskId, userId, dbUserId, taskJsonContent.length());
             
-            boolean success = taskCacheService.importTaskFromJson(userId, taskId, taskJsonContent);
+            boolean success = taskCacheService.importTaskFromJson(dbUserId, taskId, taskJsonContent);
             
             if (success) {
-                logger.info("Successfully imported task {} for user {} into database", taskId, userId);
+                logger.info("Successfully imported task {} for user {} (dbUserId: {}) into database", taskId, userId, dbUserId);
                 return ResponseEntity.ok(Map.of(
                     "success", true,
                     "message", "Task imported successfully and saved to database",
@@ -134,7 +135,7 @@ public class TaskController {
                     "taskId", taskId
                 ));
             } else {
-                logger.warn("Failed to import task {} for user {} - invalid format", taskId, userId);
+                logger.warn("Failed to import task {} for user {} (dbUserId: {}) - invalid format", taskId, userId, dbUserId);
                 return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", "Failed to import task - invalid task format",

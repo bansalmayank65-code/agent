@@ -9,6 +9,7 @@ public class TaskImportRequest {
     
     private String userId;
     private JsonNode taskJsonContent;
+    private String dbUserId; // For database foreign key constraint
     
     // Default constructor
     public TaskImportRequest() {}
@@ -17,6 +18,13 @@ public class TaskImportRequest {
     public TaskImportRequest(String userId, JsonNode taskJsonContent) {
         this.userId = userId;
         this.taskJsonContent = taskJsonContent;
+    }
+    
+    // Constructor with dbUserId
+    public TaskImportRequest(String userId, JsonNode taskJsonContent, String dbUserId) {
+        this.userId = userId;
+        this.taskJsonContent = taskJsonContent;
+        this.dbUserId = dbUserId;
     }
     
     // Getters and setters
@@ -36,11 +44,20 @@ public class TaskImportRequest {
         this.taskJsonContent = taskJsonContent;
     }
     
+    public String getDbUserId() {
+        return dbUserId;
+    }
+    
+    public void setDbUserId(String dbUserId) {
+        this.dbUserId = dbUserId;
+    }
+    
     @Override
     public String toString() {
         return "TaskImportRequest{" +
                 "userId='" + userId + '\'' +
                 ", taskJsonContent=" + taskJsonContent +
+                ", dbUserId='" + dbUserId + '\'' +
                 '}';
     }
 }

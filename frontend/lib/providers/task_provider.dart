@@ -710,8 +710,9 @@ class TaskProvider extends ChangeNotifier {
 
   /// Import a task.json file content (web upload) and create it in backend database.
   /// Returns a map with 'success' bool and 'message' string for detailed error reporting.
-  /// loggedInUserId: The ID of the currently logged-in user (will override any user_id from the JSON)
-  Future<Map<String, dynamic>> importTaskJson(Map<String,dynamic> root, {String? loggedInUserId}) async {
+  /// loggedInUserId: Optional - The ID of the currently logged-in user (will override any user_id from the JSON if provided)
+  /// dbUserId: Optional - The database user ID for foreign key constraint (should be logged-in user)
+  Future<Map<String, dynamic>> importTaskJson(Map<String,dynamic> root, {String? loggedInUserId, String? dbUserId}) async {
     try {
       final env = root['env'] as String? ?? _task.env;
       final iface = (root['interface_num'] is int) ? root['interface_num'] as int : _task.interfaceNum;
@@ -798,7 +799,7 @@ class TaskProvider extends ChangeNotifier {
         }
         
         final taskJsonString = jsonEncode(root);
-        final response = await _apiService.importTask(userId, taskJsonString);
+        final response = await _apiService.importTask(userId, taskJsonString, dbUserId: dbUserId);
         
         if (response['success'] != true) {
           final errorMsg = response['message'] ?? 'Unknown backend error';

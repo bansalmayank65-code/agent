@@ -1243,7 +1243,9 @@ class _LeftNavHomeScreenState extends State<LeftNavHomeScreen> {
     
     final provider = context.read<TaskProvider>();
     final authProvider = context.read<AuthProvider>();
-    final importResult = await provider.importTaskJson(decoded, loggedInUserId: authProvider.userId);
+    // Import without overriding the user ID from JSON - let users edit it in step 4
+    // But pass the logged-in user ID separately for database foreign key constraint
+    final importResult = await provider.importTaskJson(decoded, dbUserId: authProvider.userId);
     
     if (importResult['success'] == true && fileName != null) {
       setState(() {

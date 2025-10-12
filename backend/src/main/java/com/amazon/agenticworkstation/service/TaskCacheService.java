@@ -520,15 +520,17 @@ public class TaskCacheService {
             // Set number of edges from the cache entry
             taskEntity.setNumOfEdges(entry.edges.size());
             
-            // For updates to existing tasks, preserve original taskJson (contains model config)
-            // For new tasks, require original JSON to be provided via overloaded method
-            if (!taskEntityOpt.isPresent()) {
+            // Update taskJson with current cache data while preserving model configuration
+            if (taskEntityOpt.isPresent()) {
+                // Update existing task - reconstruct JSON with current cache data
+                updateTaskJsonWithCacheData(taskEntity, entry);
+            } else {
+                // For new tasks, require original JSON to be provided via overloaded method
                 throw new IllegalStateException(
                     "Cannot create new task " + taskId + " without original JSON content. " +
                     "Use the overloaded saveTaskToDatabase method with original JSON content."
                 );
             }
-            // Note: For existing tasks, we keep the original taskJson to preserve model configuration
             
             // Save to database
             taskRepository.save(taskEntity);
@@ -538,6 +540,94 @@ public class TaskCacheService {
             logger.error("Error saving task {} to database for user {}: {}", taskId, userId, e.getMessage());
             // Propagate with a clear message so callers can surface it to clients/UI
             throw new IllegalStateException("Failed to save task " + taskId + " for user " + userId + ": " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Update taskJson field with current cache data while preserving model configuration
+     */
+    private void updateTaskJsonWithCacheData(TaskEntity taskEntity, TaskCacheEntry entry) {
+        try {
+            String currentJson = taskEntity.getTaskJson();
+            if (currentJson == null || currentJson.trim().isEmpty()) {
+                logger.warn("No existing taskJson found for task {}, cannot update", taskEntity.getTaskId());
+                return;
+            }
+            
+            // Parse existing JSON to preserve model configuration
+            TaskDto taskDto = mapper.readValue(currentJson, TaskDto.class);
+            
+            // Update task data with current cache values
+            if (taskDto.getTask() != null) {
+                taskDto.getTask().setInstruction(entry.instruction);
+                taskDto.getTask().setUserId(entry.userId);
+                
+                // Update actions - convert from actionObjects if available, otherwise use action names
+                if (!entry.actionObjects.isEmpty()) {
+                    List<TaskDto.ActionDto> actions = new ArrayList<>();
+                    for (Map<String, Object> actionObj : entry.actionObjects) {
+                        TaskDto.ActionDto actionDto = new TaskDto.ActionDto();
+                        actionDto.setName((String) actionObj.get("name"));
+                        if (actionObj.containsKey("arguments")) {
+                            Object args = actionObj.get("arguments");
+                            if (args instanceof Map) {
+                                @SuppressWarnings("unchecked")
+                                Map<String, Object> argsMap = (Map<String, Object>) args;
+                                actionDto.setArguments(argsMap);
+                            }
+                        }
+                        if (actionObj.containsKey("output")) {
+                            actionDto.setOutput((String) actionObj.get("output"));
+                        }
+                        actions.add(actionDto);
+                    }
+                    taskDto.getTask().setActions(actions);
+                } else if (!entry.actions.isEmpty()) {
+                    // Fallback to simple action names
+                    List<TaskDto.ActionDto> actions = new ArrayList<>();
+                    for (String actionName : entry.actions) {
+                        TaskDto.ActionDto actionDto = new TaskDto.ActionDto();
+                        actionDto.setName(actionName);
+                        actions.add(actionDto);
+                    }
+                    taskDto.getTask().setActions(actions);
+                }
+                
+                // Update outputs
+                taskDto.getTask().setOutputs(new ArrayList<>(entry.outputs));
+                
+                // Update edges
+                List<TaskDto.EdgeDto> edges = new ArrayList<>();
+                for (Map<String, Object> edgeObj : entry.edges) {
+                    TaskDto.EdgeDto edgeDto = new TaskDto.EdgeDto();
+                    edgeDto.setFrom((String) edgeObj.get("from"));
+                    edgeDto.setTo((String) edgeObj.get("to"));
+                    
+                    // Handle connection object
+                    Object connectionObj = edgeObj.get("connection");
+                    if (connectionObj instanceof Map) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> connMap = (Map<String, Object>) connectionObj;
+                        TaskDto.ConnectionDto connDto = new TaskDto.ConnectionDto();
+                        connDto.setOutput((String) connMap.get("output"));
+                        connDto.setInput((String) connMap.get("input"));
+                        edgeDto.setConnection(connDto);
+                    }
+                    edges.add(edgeDto);
+                }
+                taskDto.getTask().setEdges(edges);
+                taskDto.getTask().setNumEdges(edges.size());
+            }
+            
+            // Update the taskJson with modified data
+            String updatedJson = mapper.writeValueAsString(taskDto);
+            taskEntity.setTaskJson(updatedJson);
+            
+            logger.debug("Updated taskJson for task {} with current cache data", taskEntity.getTaskId());
+            
+        } catch (Exception e) {
+            logger.error("Failed to update taskJson for task {}: {}", taskEntity.getTaskId(), e.getMessage());
+            // Don't throw here, just log the error so the basic task fields are still saved
         }
     }
 

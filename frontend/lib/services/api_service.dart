@@ -549,11 +549,10 @@ class ApiService {
   /// Task verification using user ID and task ID
   Future<Map<String, dynamic>> taskVerificationById(String userId, String taskId, [int numTrials = 1]) async {
     try {
-      final uri = Uri.parse('$baseUrl/api/tau-bench/execute-by-id');
+      final uri = Uri.parse('$baseUrl/api/tau-bench/validate-by-id');
       final queryParams = <String, String>{
         'userId': userId,
         'taskId': taskId,
-        'endpoint': 'task_verification',
       };
       final uriWithParams = uri.replace(queryParameters: queryParams);
 
@@ -737,7 +736,7 @@ class ApiService {
   }
 
   /// Import task JSON and create it in the database
-  Future<Map<String, dynamic>> importTask(String userId, String taskJsonContent) async {
+  Future<Map<String, dynamic>> importTask(String userId, String taskJsonContent, {String? dbUserId}) async {
     try {
       final uri = Uri.parse('$baseUrl/api/tasks/import-task');
       
@@ -747,6 +746,7 @@ class ApiService {
       final requestBody = {
         'userId': userId,
         'taskJsonContent': taskJsonObject,
+        if (dbUserId != null) 'dbUserId': dbUserId,
       };
 
       final response = await http.post(uri, 
