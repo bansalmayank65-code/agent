@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 
 class InstructionValidationProvider extends ChangeNotifier {
   static const String externalUrl =
-      'https://turing-amazon-tooling.vercel.app/instruction_validation';
+      'https://turing-amazon-toolings.vercel.app/instruction_validation';
 
   void redirect({String? policy}) {
     html.window.location.href = externalUrl;

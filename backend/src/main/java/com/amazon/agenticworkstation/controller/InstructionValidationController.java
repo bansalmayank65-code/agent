@@ -71,8 +71,8 @@ public class InstructionValidationController {
             headers.set("Accept", "*/*");
             headers.set("Accept-Encoding", "gzip, deflate, br, zstd");
             headers.set("Accept-Language", "en-US,en;q=0.9");
-            headers.set("Origin", "https://turing-amazon-tooling.vercel.app");
-            headers.set("Referer", "https://turing-amazon-tooling.vercel.app/instruction_validation");
+            headers.set("Origin", "https://turing-amazon-toolings.vercel.app");
+            headers.set("Referer", "https://turing-amazon-toolings.vercel.app/instruction_validation");
             headers.set("Sec-Ch-Ua", "\"Chromium\";v=\"140\", \"Not=A?Brand\";v=\"24\", \"Google Chrome\";v=\"140\"");
             headers.set("Sec-Ch-Ua-Mobile", "?0");
             headers.set("Sec-Ch-Ua-Platform", "\"Windows\"");

@@ -81,7 +81,7 @@ public final class EdgeGenerator {
 							continue;
 						}
 						Map<String, Object> previousOutputs = extractOutputs(previousAction.getOutput());
-						String matchKey = findBestMatch(inputKey, inputValue, previousOutputs);
+						String matchKey = findKeyWithValueMatch(inputKey, inputValue, previousOutputs);
 						if (matchKey != null) {
 							canComeFromAction = true;
 
@@ -123,7 +123,7 @@ public final class EdgeGenerator {
 
 					String previousName = previousAction.getName();
 					Map<String, Object> previousOutputs = extractOutputs(previousAction.getOutput());
-					String outputKey = findBestMatch(inputKey, inputValue, previousOutputs);
+					String outputKey = findKeyWithValueMatch(inputKey, inputValue, previousOutputs);
 
 					if (outputKey != null) {
 						// Check if this is a value match (Priority 1)
@@ -191,15 +191,6 @@ public final class EdgeGenerator {
 			if (!isDuplicate) {
 				deduplicatedEdges.add(edge);
 			}
-			// else{
-			// try {
-			// System.out.println("Duplicate edge removed: " +
-			// mapper.writeValueAsString(edge));
-			// } catch (JsonProcessingException e) {
-			// // TODO Auto-generated catch block
-			// e.printStackTrace();
-			// }
-			// }
 		}
 
 		return deduplicatedEdges;
@@ -221,197 +212,21 @@ public final class EdgeGenerator {
 		return false;
 	}
 
-	/**
-	 * Find the best matching output key for a given input key and value
-	 */
-	private static String findBestMatch(String inputKey, Object inputValue, Map<String, Object> outputs) {
-		String inputFieldName = getFieldName(inputKey);
-
-		// Priority 1: Exact value match with compatible field names
+	private static String findKeyWithValueMatch(String inputKey, Object inputValue, Map<String, Object> outputs) {
+		// Exact value match with compatible field names
 		if (inputValue != null) {
 			for (Map.Entry<String, Object> outputEntry : outputs.entrySet()) {
 				String outputKey = outputEntry.getKey();
 				Object outputValue = outputEntry.getValue();
 
 				// Ensure both values are not null and match exactly
-				if (outputValue != null && inputValue.toString().equals(outputValue.toString())) {
-					String outputFieldName = getFieldName(outputKey);
-
-					// Check if field names are compatible for value matching
-					if (areFieldsCompatible(outputFieldName, inputFieldName)) {
-						return outputKey;
-					}
+				if (outputValue != null
+						&& inputValue.toString().toLowerCase().equals(outputValue.toString().toLowerCase())) {
+					return outputKey;
 				}
 			}
 		}
-
-		// Priority 2: Exact field name match
-		for (String outputKey : outputs.keySet()) {
-			String outputFieldName = getFieldName(outputKey);
-			if (outputFieldName.equals(inputFieldName)) {
-				return outputKey;
-			}
-		}
-
-		// Priority 3: Semantic field name match - use scoring to find best match
-		String bestMatch = null;
-		int bestScore = 0;
-
-		for (String outputKey : outputs.keySet()) {
-			String outputFieldName = getFieldName(outputKey);
-			int score = getSemanticMatchScore(outputFieldName, inputFieldName);
-			if (score > bestScore) {
-				bestMatch = outputKey;
-				bestScore = score;
-			}
-		}
-
-		if (bestMatch != null && bestScore > 0) {
-			return bestMatch;
-		}
-
 		return null;
-	}
-
-	/**
-	 * Check if two field names are compatible for value matching. Uses value-based
-	 * compatibility: if fields have the same value, they are considered compatible.
-	 * For example: skill_id=78 and reference_id=78 are compatible because they
-	 * share the same value.
-	 */
-	private static boolean areFieldsCompatible(String outputField, String inputField) {
-		if (outputField == null || inputField == null) {
-			return false;
-		}
-
-		String out = outputField.toLowerCase();
-		String in = inputField.toLowerCase();
-
-		// Exact field name match is always compatible
-		if (out.equals(in)) {
-			return true;
-		}
-
-		// Value-based compatibility for ID fields:
-		// Allow specific ID patterns that make semantic sense
-
-		// Any ID field can match reference_id (common audit/logging pattern)
-		if (out.endsWith("_id") && in.equals("reference_id")) {
-			return true; // skill_id=78 can match reference_id=78
-		}
-
-		// Same-type ID fields are compatible
-		if (out.endsWith("_id") && in.endsWith("_id")) {
-			// Allow exact matches always
-			if (out.equals(in)) {
-				return true;
-			}
-			// Allow compatible ID types based on domain logic
-			// Prioritize holding_id -> reference_id over other ID mappings
-			if (out.equals("holding_id") && in.equals("reference_id")) {
-				return true;
-			}
-			if ((out.equals("skill_id") && in.equals("reference_id"))
-					|| (out.equals("fund_id") && in.equals("reference_id"))
-					|| (out.equals("portfolio_id") && in.equals("reference_id"))) {
-				return true;
-			}
-			// Be more restrictive with user_id -> reference_id to avoid conflicts
-			if (out.equals("user_id") && in.equals("reference_id")) {
-				return true;
-			}
-			// Prevent incompatible cross-domain matches like investor_id -> portfolio_id
-			// unless they're the exact same field name
-			return false;
-		}
-
-		// Email fields (email from results matches requester_email input)
-		if ((out.contains("email") && in.contains("email"))) {
-			return true;
-		}
-
-		// Specific email mapping: results email can map to requester_email
-		if (out.equals("email") && in.equals("requester_email")) {
-			return true;
-		}
-
-		// Approval/validation fields
-		if ((out.contains("approval") || out.contains("valid")) && (in.contains("approval") || in.contains("valid"))) {
-			return true;
-		}
-
-		// Entity type matching
-		if (out.equals("entity_type") && in.equals("entity_type")) {
-			return true;
-		}
-
-		// Name fields
-		if (out.equals("name") && in.equals("name")) {
-			return true;
-		}
-
-		// Status fields
-		if (out.equals("status") && in.equals("status")) {
-			return true;
-		}
-
-		return false;
-	}
-
-	/**
-	 * Get semantic match score for field compatibility (higher is better)
-	 */
-	private static int getSemanticMatchScore(String outputField, String inputField) {
-		if (outputField == null || inputField == null) {
-			return 0;
-		}
-
-		String out = outputField.toLowerCase();
-		String in = inputField.toLowerCase();
-
-		// Exact match gets highest score
-		if (out.equals(in)) {
-			return 100;
-		}
-
-		// Handle specific high-priority mappings
-		if (in.equals("reference_id")) {
-			if (out.equals("holding_id"))
-				return 95; // Highest priority for holding_id -> reference_id
-			if (out.equals("fund_id") || out.equals("portfolio_id") || out.equals("skill_id"))
-				return 60;
-			if (out.equals("investor_id"))
-				return 20;
-			if (out.equals("user_id"))
-				return 5; // Very low priority for user_id -> reference_id
-		}
-
-		// For portfolio_id, heavily favor exact matches and block incorrect mappings
-		if (in.equals("portfolio_id") || in.contains("portfolio_id")) {
-			if (out.equals("portfolio_id"))
-				return 100; // Exact match is best
-			if (out.equals("investor_id"))
-				return 0; // Block investor_id -> portfolio_id mapping
-		}
-
-		if (out.equals("investor_id") && in.equals("investor_id"))
-			return 100;
-		if (out.equals("fund_id") && in.contains("fund_id"))
-			return 80;
-		if (out.equals("user_id") && in.equals("user_id"))
-			return 100;
-
-		// Approval/validation fields
-		if ((out.contains("approval") || out.contains("valid")) && (in.contains("approval") || in.contains("valid"))) {
-			return 70;
-		}
-
-		// Email field mappings
-		if (out.equals("email") && in.equals("requester_email")) {
-			return 85; // High priority for email -> requester_email mapping
-		}
-
-		return 0;
 	}
 
 	/**

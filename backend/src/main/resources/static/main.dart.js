@@ -46848,7 +46848,7 @@ A.atn.prototype={
 $0(){var s=0,r=A.F(t.H),q=this
 var $async$$0=A.B(function(a,b){if(a===1)return A.C(b,r)
 while(true)switch(s){case 0:s=2
-return A.G(A.aFz(A.d1("https://turing-amazon-tooling.vercel.app/instruction_validation",0,null),B.Lx),$async$$0)
+return A.G(A.aFz(A.d1("https://turing-amazon-toolings.vercel.app/instruction_validation",0,null),B.Lx),$async$$0)
 case 2:if(!b)q.a.TV("Could not open validation tool")
 return A.D(null,r)}})
 return A.E($async$$0,r)},

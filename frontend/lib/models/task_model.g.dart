@@ -14,6 +14,7 @@ TaskModel _$TaskModelFromJson(Map<String, dynamic> json) => TaskModel(
           ?.map((e) => e as Map<String, dynamic>)
           .toList(),
       userId: json['userId'] as String,
+      originalUserId: json['originalUserId'] as String?,
       outputs:
           (json['outputs'] as List<dynamic>).map((e) => e as String).toList(),
       edges: (json['edges'] as List<dynamic>)
@@ -30,6 +31,7 @@ Map<String, dynamic> _$TaskModelToJson(TaskModel instance) => <String, dynamic>{
       'actions': instance.actions,
       'actionObjects': instance.actionObjects,
       'userId': instance.userId,
+      'originalUserId': instance.originalUserId,
       'outputs': instance.outputs,
       'edges': instance.edges,
       'env': instance.env,

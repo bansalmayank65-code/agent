@@ -4,9 +4,16 @@ import 'package:http/http.dart' as http;
 import '../models/task_model.dart';
 
 class ApiService {
-  // Use relative path for same-origin requests in production
-  // This will work both locally (with proxy) and in production (single service)
-  static const String baseUrl = '';
+  // Auto-detect environment: use localhost:8080 for development, relative path for production
+  static String get baseUrl {
+    // Check if we're running in development mode (Flutter debug) or on localhost with different port
+    if (const bool.fromEnvironment('dart.vm.product') == false) {
+      // Development mode - point to backend server
+      return 'http://localhost:8080';
+    }
+    // Production mode - use relative path for same-origin requests
+    return '';
+  }
   
   // Singleton pattern
   static final ApiService _instance = ApiService._internal();

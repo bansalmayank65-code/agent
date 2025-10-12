@@ -908,6 +908,9 @@ class TaskProvider extends ChangeNotifier {
             );
             
             print('Successfully loaded and imported task $taskId from database');
+            print('Task instruction: ${_task.instruction}');
+            print('Task actions: ${_task.actions}');
+            print('Task outputs: ${_task.outputs}');
           } else {
             // Task exists but has no JSON content - create minimal task
             _currentTaskId = taskId;

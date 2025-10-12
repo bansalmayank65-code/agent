@@ -427,7 +427,7 @@ class _LeftNavHomeScreenState extends State<LeftNavHomeScreen> {
         ),
         OutlinedButton.icon(
           onPressed: provider.task.instruction.isEmpty ? null : () async {
-            final uri = Uri.parse('https://turing-amazon-tooling.vercel.app/instruction_validation');
+            final uri = Uri.parse('https://turing-amazon-toolings.vercel.app/instruction_validation');
             if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
               _toast('Could not open validation tool');
             }

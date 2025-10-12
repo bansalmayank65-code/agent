@@ -10,6 +10,7 @@ class TaskModel extends Equatable {
   // Full action objects including arguments/output if available
   final List<Map<String, dynamic>>? actionObjects;
   final String userId;
+  final String? originalUserId; // Original user_id from imported JSON
   final List<String> outputs;
   final List<Map<String, String>> edges;
   final String env;
@@ -22,6 +23,7 @@ class TaskModel extends Equatable {
     required this.actions,
     this.actionObjects,
     required this.userId,
+    this.originalUserId,
     required this.outputs,
     required this.edges,
     this.env = 'finance',
@@ -40,6 +42,7 @@ class TaskModel extends Equatable {
     List<String>? actions,
     List<Map<String, dynamic>>? actionObjects,
     String? userId,
+    String? originalUserId,
     List<String>? outputs,
     List<Map<String, String>>? edges,
     String? env,
@@ -52,6 +55,7 @@ class TaskModel extends Equatable {
       actions: actions ?? this.actions,
       actionObjects: actionObjects ?? this.actionObjects,
       userId: userId ?? this.userId,
+      originalUserId: originalUserId ?? this.originalUserId,
       outputs: outputs ?? this.outputs,
       edges: edges ?? this.edges,
       env: env ?? this.env,
@@ -62,7 +66,7 @@ class TaskModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [instruction, actions, actionObjects, userId, outputs, edges, env, interfaceNum, repositoryPath, taskId];
+  List<Object?> get props => [instruction, actions, actionObjects, userId, originalUserId, outputs, edges, env, interfaceNum, repositoryPath, taskId];
 }
 
 @JsonSerializable()

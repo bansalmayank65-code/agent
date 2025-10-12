@@ -507,8 +507,8 @@ class _TaskHistoryScreenState extends State<TaskHistoryScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              // Navigate to task workflow screen
-              Navigator.pushNamed(context, '/task/${task.taskId}');
+              // Navigate to task workflow screen starting at Instruction step
+              Navigator.pushNamed(context, '/task/${task.taskId}/step/3');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange.shade600,

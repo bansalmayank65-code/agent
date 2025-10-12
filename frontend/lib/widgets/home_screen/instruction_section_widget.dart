@@ -32,9 +32,13 @@ class _InstructionSectionWidgetState extends State<InstructionSectionWidget> {
   Widget build(BuildContext context) {
     final provider = context.watch<TaskProvider>();
     
-    // Sync controller with provider data
-    if (_instructionController.text.isEmpty && provider.task.instruction.isNotEmpty) {
+    // Sync controller with provider data - update whenever provider data changes
+    if (_instructionController.text != provider.task.instruction) {
       _instructionController.text = provider.task.instruction;
+      // Move cursor to end to avoid jarring user experience during typing
+      _instructionController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _instructionController.text.length),
+      );
     }
     
     return Column(
@@ -67,7 +71,7 @@ class _InstructionSectionWidgetState extends State<InstructionSectionWidget> {
             ),
             OutlinedButton.icon(
               onPressed: provider.task.instruction.isEmpty ? null : () async {
-                final uri = Uri.parse('https://turing-amazon-tooling.vercel.app/instruction_validation');
+                final uri = Uri.parse('https://turing-amazon-toolings.vercel.app/instruction_validation');
                 if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
                   _showToast('Could not open validation tool');
                 }

@@ -1,0 +1,423 @@
+{
+  "env": "hr_experts",
+  "model_provider": "fireworks",
+  "model": "qwen3-coder-480b-a35b-instruct",
+  "num_trials": 3,
+  "temperature": 1,
+  "interface_num": 1,
+  "task": {
+    "user_id": "10",
+    "instruction": "You are Harold Gates (harold.gates@company.com), a Recruiter. You want to submit the panel interview results for Ryan Stephens's (ryan47@protonmail.com) for full time Infrastructure Manager open position in the Marketing department. He performed strongly with an overall rating is Good (technical: 7.5, communication: 9.0, cultural fit: 8.0), so you want to mark his interview as completed and recommend him for hire and move his application forward to the offer stage.",
+    "actions": [
+      {
+        "name": "discover_user_employee_entities",
+        "arguments": {
+          "entity_type": "users",
+          "filters": {
+            "email": "harold.gates@company.com",
+            "first_name": "Harold",
+            "last_name": "Gates"
+          }
+        },
+        "output": {
+          "count": 1,
+          "entity_type": "users",
+          "results": [
+            {
+              "created_at": "2023-08-17T13:25:06",
+              "email": "harold.gates@company.com",
+              "first_name": "Harold",
+              "last_name": "Gates",
+              "mfa_enabled": true,
+              "phone_number": "+12127236267",
+              "role": "recruiter",
+              "status": "active",
+              "updated_at": "2024-02-03T13:00:39",
+              "user_id": "10"
+            }
+          ],
+          "success": true
+        }
+      },
+      {
+        "name": "discover_recruitment_entities",
+        "arguments": {
+          "entity_type": "candidates",
+          "filters": {
+            "email": "ryan47@protonmail.com",
+            "first_name": "Ryan",
+            "last_name": "Stephens"
+          }
+        },
+        "output": {
+          "count": 1,
+          "entity_type": "candidates",
+          "results": [
+            {
+              "address": "87735 Deborah Cape, Lisastad, NC 56364",
+              "candidate_id": "114",
+              "created_at": "2023-11-26T12:58:38",
+              "email": "ryan47@protonmail.com",
+              "first_name": "Ryan",
+              "last_name": "Stephens",
+              "phone_number": "+17705228365",
+              "source": "social_media",
+              "status": "interviewing",
+              "updated_at": "2024-03-25T04:19:52"
+            }
+          ],
+          "success": true
+        }
+      },
+      {
+        "name": "discover_department_entities",
+        "arguments": {
+          "entity_type": "departments",
+          "filters": {
+            "department_name": "Marketing"
+          }
+        },
+        "output": {
+          "count": 1,
+          "entity_type": "departments",
+          "results": [
+            {
+              "budget": 439492.33,
+              "created_at": "2022-07-14T01:37:16",
+              "department_id": "2",
+              "department_name": "Marketing",
+              "manager_id": "51",
+              "status": "active",
+              "updated_at": "2023-11-05T07:11:03"
+            }
+          ],
+          "success": true
+        }
+      },
+      {
+        "name": "discover_job_entities",
+        "arguments": {
+          "entity_type": "job_positions",
+          "filters": {
+            "title": "Infrastructure Manager",
+            "department_id": "2",
+            "job_level": "manager",
+            "employment_type": "full_time",
+            "status": "open"
+          }
+        },
+        "output": {
+          "count": 1,
+          "entity_type": "job_positions",
+          "results": [
+            {
+              "created_at": "2024-11-22T21:56:30",
+              "department_id": "2",
+              "employment_type": "full_time",
+              "hourly_rate_max": 125.0,
+              "hourly_rate_min": 85.0,
+              "job_level": "manager",
+              "position_id": "10",
+              "status": "open",
+              "title": "Infrastructure Manager",
+              "updated_at": "2025-01-02T10:51:42"
+            }
+          ],
+          "success": true
+        }
+      },
+      {
+        "name": "discover_recruitment_entities",
+        "arguments": {
+          "entity_type": "job_applications",
+          "filters": {
+            "candidate_id": "114",
+            "position_id": "10",
+            "status": "interviewing"
+          }
+        },
+        "output": {
+          "count": 1,
+          "entity_type": "job_applications",
+          "results": [
+            {
+              "ai_screening_score": 81.09,
+              "application_date": "2023-12-31",
+              "application_id": "220",
+              "candidate_id": "114",
+              "created_at": "2023-12-31T06:29:38",
+              "final_decision": null,
+              "position_id": "10",
+              "recruiter_id": "10",
+              "status": "interviewing",
+              "updated_at": "2025-05-28T10:31:24"
+            }
+          ],
+          "success": true
+        }
+      },
+      {
+        "name": "discover_recruitment_entities",
+        "arguments": {
+          "entity_type": "interviews",
+          "filters": {
+            "application_id": "220",
+            "interview_type": "panel"
+          }
+        },
+        "output": {
+          "count": 1,
+          "entity_type": "interviews",
+          "results": [
+            {
+              "application_id": "220",
+              "communication_score": null,
+              "created_at": "2024-01-10T22:35:54",
+              "cultural_fit_score": null,
+              "duration_minutes": 90,
+              "interview_id": "208",
+              "interview_type": "panel",
+              "interviewer_id": "30",
+              "overall_rating": null,
+              "recommendation": null,
+              "scheduled_date": "2024-01-10T20:56:18",
+              "status": "scheduled",
+              "technical_score": null,
+              "updated_at": "2025-04-20T17:45:04"
+            }
+          ],
+          "success": true
+        }
+      },
+      {
+        "name": "manage_interview",
+        "arguments": {
+          "action": "update",
+          "interview_data": {
+            "status": "completed",
+            "overall_rating": "good",
+            "technical_score": 7.5,
+            "communication_score": 9.0,
+            "cultural_fit_score": 8.0,
+            "recommendation": "hire"
+          },
+          "interview_id": "208"
+        },
+        "output": {
+          "action": "update",
+          "interview_data": {
+            "application_id": "220",
+            "communication_score": 9.0,
+            "created_at": "2024-01-10T22:35:54",
+            "cultural_fit_score": 8.0,
+            "duration_minutes": 90,
+            "interview_id": "208",
+            "interview_type": "panel",
+            "interviewer_id": "30",
+            "overall_rating": "good",
+            "recommendation": "hire",
+            "scheduled_date": "2024-01-10T20:56:18",
+            "status": "completed",
+            "technical_score": 7.5,
+            "updated_at": "2025-10-01T12:00:00"
+          },
+          "interview_id": "208",
+          "message": "Interview 208 outcome recorded successfully",
+          "success": true
+        }
+      },
+      {
+        "name": "manage_job_application",
+        "arguments": {
+          "action": "update",
+          "application_data": {
+            "status": "offer_made",
+            "final_decision": "hire"
+          },
+          "application_id": "220"
+        },
+        "output": {
+          "action": "update",
+          "application_data": {
+            "ai_screening_score": 81.09,
+            "application_date": "2023-12-31",
+            "application_id": "220",
+            "candidate_id": "114",
+            "created_at": "2023-12-31T06:29:38",
+            "final_decision": "hire",
+            "position_id": "10",
+            "recruiter_id": "10",
+            "status": "offer_made",
+            "updated_at": "2025-10-01T12:00:00"
+          },
+          "application_id": "220",
+          "message": "Job application 220 updated successfully",
+          "success": true
+        }
+      },
+      {
+        "name": "manage_audit_logs",
+        "arguments": {
+          "action": "create",
+          "field_name": "communication_score, cultural_fit_score, overall_rating, recommendation ,technical_score",
+          "new_value": "9.0,8.0,good,hire,7.5",
+          "operation": "create",
+          "reference_id": "208",
+          "reference_type": "interview",
+          "user_id": "10"
+        },
+        "output": {
+          "action": "create",
+          "field_name": "communication_score, cultural_fit_score, overall_rating, recommendation ,technical_score",
+          "log_id": "2887",
+          "new_value": "9.0,8.0,good,hire,7.5",
+          "old_value": null,
+          "reference_id": "208",
+          "reference_type": "interview",
+          "timestamp": "2025-10-01T12:00:00",
+          "user_id": "10"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "instruction",
+        "connection": {
+          "output": "entity_type, email, first_name, last_name",
+          "input": "entity_type, filters.email, filters.first_name, filters.last_name"
+        },
+        "to": "discover_user_employee_entities"
+      },
+      {
+        "from": "instruction",
+        "connection": {
+          "output": "entity_type, email, first_name, last_name",
+          "input": "entity_type, filters.email, filters.first_name, filters.last_name"
+        },
+        "to": "discover_recruitment_entities"
+      },
+      {
+        "from": "instruction",
+        "connection": {
+          "output": "entity_type, department_name",
+          "input": "entity_type, filters.department_name"
+        },
+        "to": "discover_department_entities"
+      },
+      {
+        "from": "discover_department_entities",
+        "connection": {
+          "output": "results[0].department_id",
+          "input": ", filters.department_id"
+        },
+        "to": "discover_job_entities"
+      },
+      {
+        "from": "instruction",
+        "connection": {
+          "output": "entity_type, employment_type, job_level, title, status",
+          "input": "entity_type, filters.employment_type, filters.job_level, filters.title, filters.status"
+        },
+        "to": "discover_job_entities"
+      },
+      {
+        "from": "discover_job_entities",
+        "connection": {
+          "output": "results[0].status, results[0].position_id",
+          "input": "filters.status, filters.position_id"
+        },
+        "to": "discover_recruitment_entities"
+      },
+      {
+        "from": "instruction",
+        "connection": {
+          "output": "entity_type, candidate_id",
+          "input": "entity_type, filters.candidate_id"
+        },
+        "to": "discover_recruitment_entities"
+      },
+      {
+        "from": "discover_recruitment_entities",
+        "connection": {
+          "output": "results[0].application_id",
+          "input": "filters.application_id"
+        },
+        "to": "discover_recruitment_entities"
+      },
+      {
+        "from": "instruction",
+        "connection": {
+          "output": "entity_type, interview_type",
+          "input": "entity_type, filters.interview_type"
+        },
+        "to": "discover_recruitment_entities"
+      },
+      {
+        "from": "discover_recruitment_entities",
+        "connection": {
+          "output": "results[0].status, results[0].technical_score, results[0].communication_score, results[0].recommendation, results[0].overall_rating, results[0].interview_id, results[0].cultural_fit_score",
+          "input": "interview_data.status, interview_data.technical_score, interview_data.communication_score, interview_data.recommendation, interview_data.overall_rating, interview_id, interview_data.cultural_fit_score"
+        },
+        "to": "manage_interview"
+      },
+      {
+        "from": "instruction",
+        "connection": {
+          "output": "action",
+          "input": "action"
+        },
+        "to": "manage_interview"
+      },
+      {
+        "from": "discover_recruitment_entities",
+        "connection": {
+          "output": "results[0].final_decision, results[0].application_id",
+          "input": "application_data.final_decision, application_id"
+        },
+        "to": "manage_job_application"
+      },
+      {
+        "from": "manage_interview",
+        "connection": {
+          "output": "interview_data.status",
+          "input": "application_data.status"
+        },
+        "to": "manage_job_application"
+      },
+      {
+        "from": "instruction",
+        "connection": {
+          "output": "action",
+          "input": "action"
+        },
+        "to": "manage_job_application"
+      },
+      {
+        "from": "discover_recruitment_entities",
+        "connection": {
+          "output": "results[0].interview_id",
+          "input": "reference_id"
+        },
+        "to": "manage_audit_logs"
+      },
+      {
+        "from": "discover_user_employee_entities",
+        "connection": {
+          "output": "results[0].user_id",
+          "input": "user_id"
+        },
+        "to": "manage_audit_logs"
+      },
+      {
+        "from": "instruction",
+        "connection": {
+          "output": "action, operation, reference_type, field_name, new_value",
+          "input": "action, operation, reference_type, field_name, new_value"
+        },
+        "to": "manage_audit_logs"
+      }
+    ],
+    "outputs": [],
+    "num_edges": 0
+  }
+}
