@@ -81,7 +81,7 @@ public final class EdgeGenerator {
 							continue;
 						}
 						Map<String, Object> previousOutputs = extractOutputs(previousAction.getOutput());
-						String matchKey = findKeyWithValueMatch(inputKey, inputValue, previousOutputs);
+						String matchKey = findBestMatch(inputKey, inputValue, previousOutputs);
 						if (matchKey != null) {
 							canComeFromAction = true;
 
@@ -123,7 +123,7 @@ public final class EdgeGenerator {
 
 					String previousName = previousAction.getName();
 					Map<String, Object> previousOutputs = extractOutputs(previousAction.getOutput());
-					String outputKey = findKeyWithValueMatch(inputKey, inputValue, previousOutputs);
+					String outputKey = findBestMatch(inputKey, inputValue, previousOutputs);
 
 					if (outputKey != null) {
 						// Check if this is a value match (Priority 1)
@@ -212,9 +212,16 @@ public final class EdgeGenerator {
 		return false;
 	}
 
-	private static String findKeyWithValueMatch(String inputKey, Object inputValue, Map<String, Object> outputs) {
+	/**
+	 * Find the best matching output key for a given input key and value
+	 */
+	private static String findBestMatch(String inputKey, Object inputValue, Map<String, Object> outputs) {
+		String inputFieldName = getFieldName(inputKey);
+
 		// Exact value match with compatible field names
 		if (inputValue != null) {
+			String valueMatchedOutputKey = null;
+			String valueMatchedInputKey = null;
 			for (Map.Entry<String, Object> outputEntry : outputs.entrySet()) {
 				String outputKey = outputEntry.getKey();
 				Object outputValue = outputEntry.getValue();
@@ -222,11 +229,49 @@ public final class EdgeGenerator {
 				// Ensure both values are not null and match exactly
 				if (outputValue != null
 						&& inputValue.toString().toLowerCase().equals(outputValue.toString().toLowerCase())) {
-					return outputKey;
+					String outputFieldName = getFieldName(outputKey);
+
+					valueMatchedOutputKey = outputKey;
+					valueMatchedInputKey = inputKey;
+
+					// Check if field names are compatible for value matching
+					if (areFieldsCompatible(outputFieldName, inputFieldName)) {
+						return outputKey;
+					}
 				}
 			}
+
+			// audit logs show that value matches with incompatible field names are
+			// sometimes valid
+			if (valueMatchedOutputKey != null && valueMatchedInputKey != null
+					&& (valueMatchedInputKey.equalsIgnoreCase("reference_id")
+							|| valueMatchedOutputKey.equalsIgnoreCase("reference_id"))) {
+				return valueMatchedOutputKey; // Return the value match even if field names aren't compatible
+			}
 		}
-		return null;
+		return null;// return null if no match found
+	}
+
+	/**
+	 * Check if two field names are compatible for value matching. Uses value-based
+	 * compatibility: if fields have the same value, they are considered compatible.
+	 * For example: skill_id=78 and reference_id=78 are compatible because they
+	 * share the same value.
+	 */
+	private static boolean areFieldsCompatible(String outputField, String inputField) {
+		if (outputField == null || inputField == null) {
+			return false;
+		}
+
+		String out = outputField.toLowerCase();
+		String in = inputField.toLowerCase();
+
+		// Exact field name match is always compatible
+		if (out.equals(in)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
