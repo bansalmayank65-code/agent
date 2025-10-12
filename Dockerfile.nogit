@@ -1,27 +1,24 @@
-# Simple single-stage Dockerfile (fallback option) - Use Ubuntu for better Flutter support  
+# No-Git Dockerfile - Avoids Git ownership issues entirely
 FROM ubuntu:22.04
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     openjdk-17-jdk \
     curl \
-    git \
     wget \
     unzip \
     xz-utils \
     dumb-init \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Flutter
+# Install Flutter without using Git
 WORKDIR /opt
 RUN curl -fsSL https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.24.3-stable.tar.xz | tar -xJ
 ENV PATH="/opt/flutter/bin:$PATH"
 
-# Fix Git ownership issue and configure Flutter
-RUN git config --global --add safe.directory /opt/flutter && \
-    git config --global --add safe.directory /opt/flutter/.pub-cache && \
-    flutter config --enable-web --no-analytics && \
-    flutter precache --web
+# Configure Flutter without Git operations
+ENV FLUTTER_ROOT="/opt/flutter"
+ENV PUB_CACHE="/opt/flutter/.pub-cache"
 
 # Set working directory
 WORKDIR /app
@@ -29,10 +26,14 @@ WORKDIR /app
 # Copy entire project
 COPY . .
 
-# Build Flutter web
-RUN git config --global --add safe.directory /app && \
-    cd frontend && \
-    flutter pub get && \
+# Set environment to avoid Git checks
+ENV GIT_DISCOVERY_ACROSS_FILESYSTEM=1
+ENV FLUTTER_SUPPRESS_ANALYTICS=true
+
+# Build Flutter web without Git operations
+RUN cd frontend && \
+    flutter config --no-analytics --enable-web && \
+    flutter pub get --offline || flutter pub get && \
     flutter build web --release --base-href="/"
 
 # Copy Flutter build to Spring Boot static resources
@@ -45,10 +46,10 @@ RUN cd backend && \
     ./mvnw clean package -DskipTests
 
 # Create non-root user
-RUN addgroup -g 1001 -S appuser && \
-    adduser -S appuser -u 1001 -G appuser
+RUN addgroup --gid 1001 appuser && \
+    adduser --uid 1001 --gid 1001 --disabled-password --gecos "" appuser
 
-# Switch to app directory and change ownership
+# Change ownership
 RUN chown -R appuser:appuser /app
 
 # Switch to non-root user

@@ -14,15 +14,18 @@ WORKDIR /opt
 RUN curl -fsSL https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.24.3-stable.tar.xz | tar -xJ
 ENV PATH="/opt/flutter/bin:$PATH"
 
-# Set up Flutter
-RUN flutter config --enable-web --no-analytics && \
+# Fix Git ownership issue and set up Flutter
+RUN git config --global --add safe.directory /opt/flutter && \
+    git config --global --add safe.directory /opt/flutter/.pub-cache && \
+    flutter config --enable-web --no-analytics && \
     flutter precache --web
 
 WORKDIR /app
 COPY frontend/ ./
 
-# Build Flutter web app with verbose output for debugging
-RUN flutter doctor -v && \
+# Fix ownership for current directory and build Flutter web app
+RUN git config --global --add safe.directory /app && \
+    flutter doctor -v && \
     flutter pub get && \
     flutter build web --release --base-href="/" --verbose
 
