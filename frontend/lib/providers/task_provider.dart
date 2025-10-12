@@ -1275,12 +1275,33 @@ class TaskProvider extends ChangeNotifier {
           throw Exception('Unknown validation step: $step');
       }
       
+      // Check if the API response indicates failure
+      if (result['success'] == false) {
+        String errorMsg = result['message'] ?? result['error'] ?? 'API request failed';
+        throw Exception(errorMsg);
+      }
+      
       return result;
     } catch (e) {
-      // Provide more user-friendly error messages for common issues
+      // Extract meaningful error messages from the tau-bench service
       String errorMessage = e.toString();
       
-      if (errorMessage.contains('Invalid model provider and model combination')) {
+      // Try to extract the detailed error from nested tau-bench response
+      if (errorMessage.contains('Verification errors:')) {
+        // Extract the verification error details
+        final regex = RegExp(r'Verification errors: (.+?)(?:\"}|$)');
+        final match = regex.firstMatch(errorMessage);
+        if (match != null) {
+          errorMessage = 'Task verification failed: ${match.group(1)}';
+        }
+      } else if (errorMessage.contains('Action order violation:')) {
+        // Extract action order violation details
+        final regex = RegExp(r'Action order violation: (.+?)(?:\"}|$)');
+        final match = regex.firstMatch(errorMessage);
+        if (match != null) {
+          errorMessage = 'Action order violation: ${match.group(1)}';
+        }
+      } else if (errorMessage.contains('Invalid model provider and model combination')) {
         errorMessage = 'Validation step failed: The configured AI model (openai:gpt-4o) is not supported by the tau-bench service. Please contact your administrator to update the model configuration.';
       } else if (errorMessage.contains('400 Bad Request')) {
         errorMessage = 'Validation step failed: Invalid request sent to tau-bench service. Please check your task configuration and try again.';

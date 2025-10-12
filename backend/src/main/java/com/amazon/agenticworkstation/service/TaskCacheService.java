@@ -243,7 +243,16 @@ public class TaskCacheService {
             String originalJson = taskEntity.getTaskJson();
             if (originalJson != null && !originalJson.trim().isEmpty()) {
                 try {
-                    return mapper.readValue(originalJson, TaskDto.class);
+                    TaskDto taskDto = mapper.readValue(originalJson, TaskDto.class);
+                    
+                    // Fix num_edges field to reflect actual number of edges
+                    if (taskDto.getTask() != null && taskDto.getTask().getEdges() != null) {
+                        int actualEdgeCount = taskDto.getTask().getEdges().size();
+                        taskDto.getTask().setNumEdges(actualEdgeCount);
+                        logger.debug("Fixed num_edges for task {}: {} edges", taskId, actualEdgeCount);
+                    }
+                    
+                    return taskDto;
                 } catch (Exception e) {
                     // If original JSON parsing fails, fall back to reconstructing from cache
                     // but this will lack model configuration
@@ -557,10 +566,24 @@ public class TaskCacheService {
             taskEntity.setInstruction(entry.instruction);
             
             // Set number of edges from the cache entry
-            taskEntity.setNumOfEdges(entry.edges.size());
+            int actualEdgeCount = entry.edges.size();
+            taskEntity.setNumOfEdges(actualEdgeCount);
             
-            // Use original JSON content to preserve model configuration
-            taskEntity.setTaskJson(originalJsonContent);
+            // Fix the num_edges field in the JSON content before storing
+            String correctedJsonContent = originalJsonContent;
+            try {
+                TaskDto taskDto = mapper.readValue(originalJsonContent, TaskDto.class);
+                if (taskDto.getTask() != null) {
+                    taskDto.getTask().setNumEdges(actualEdgeCount);
+                    correctedJsonContent = mapper.writeValueAsString(taskDto);
+                    logger.debug("Corrected num_edges in JSON for task {}: {} edges", taskId, actualEdgeCount);
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to correct num_edges in JSON for task {}, using original: {}", taskId, e.getMessage());
+            }
+            
+            // Use corrected JSON content to preserve model configuration
+            taskEntity.setTaskJson(correctedJsonContent);
             
             // Save to database
             taskRepository.save(taskEntity);

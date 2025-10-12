@@ -26,6 +26,27 @@ class ApiService {
     'Accept': 'application/json',
   };
 
+  // Helper method to extract error message from API response
+  String _extractErrorMessage(http.Response response) {
+    try {
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      // Try to extract error message from common backend response patterns
+      if (body.containsKey('message')) {
+        return body['message'] as String;
+      } else if (body.containsKey('error')) {
+        return body['error'] as String;
+      } else if (body.containsKey('details')) {
+        return body['details'] as String;
+      } else {
+        // If no specific error field, return the whole response body
+        return response.body;
+      }
+    } catch (e) {
+      // If JSON parsing fails, return the raw response body
+      return response.body.isEmpty ? 'HTTP ${response.statusCode}' : response.body;
+    }
+  }
+
   // Headers with authorization
   Map<String, String> _authHeaders(String sessionId) => {
     'Content-Type': 'application/json',
@@ -491,9 +512,14 @@ class ApiService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
       } else {
-        throw Exception('Failed to compute complexity: ${response.statusCode} - ${response.body}');
+        final errorMessage = _extractErrorMessage(response);
+        throw Exception('Compute complexity failed: $errorMessage');
       }
     } catch (e) {
+      // Re-throw if it's already our formatted exception
+      if (e.toString().contains('Compute complexity failed:')) {
+        rethrow;
+      }
       throw Exception('Error computing complexity: $e');
     }
   }
@@ -536,9 +562,14 @@ class ApiService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
       } else {
-        throw Exception('Failed to verify task: ${response.statusCode} - ${response.body}');
+        final errorMessage = _extractErrorMessage(response);
+        throw Exception('Task verification failed: $errorMessage');
       }
     } catch (e) {
+      // Re-throw if it's already our formatted exception
+      if (e.toString().contains('Task verification failed:')) {
+        rethrow;
+      }
       throw Exception('Error verifying task: $e');
     }
   }
@@ -725,9 +756,14 @@ class ApiService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
       } else {
-        throw Exception('Failed to import task: ${response.statusCode} - ${response.body}');
+        final errorMessage = _extractErrorMessage(response);
+        throw Exception('Import task failed: $errorMessage');
       }
     } catch (e) {
+      // Re-throw if it's already our formatted exception
+      if (e.toString().contains('Import task failed:')) {
+        rethrow;
+      }
       throw Exception('Error importing task: $e');
     }
   }
