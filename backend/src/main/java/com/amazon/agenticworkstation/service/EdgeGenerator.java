@@ -55,7 +55,7 @@ public final class EdgeGenerator {
 			TaskDto.ActionDto currentAction = actions.get(i);
 			if (currentAction == null || currentAction.getName() == null) {
 				continue;
-			} 
+			}
 
 			String currentName = currentAction.getName();
 			Map<String, Object> currentInputs = extractInputs(currentAction.getArguments());
@@ -81,7 +81,8 @@ public final class EdgeGenerator {
 							continue;
 						}
 						Map<String, Object> previousOutputs = extractOutputs(previousAction.getOutput());
-						String matchKey = findBestMatch(inputKey, inputValue, previousOutputs);
+						String matchKey = findBestMatch(inputKey, inputValue, previousOutputs, currentAction.getName(),
+								previousAction.getName());
 						if (matchKey != null) {
 							canComeFromAction = true;
 
@@ -101,8 +102,10 @@ public final class EdgeGenerator {
 						instructionInputs.add(inputKey);
 					}
 				}
-			} // Second pass: try to match action inputs with previous actions
-				// Use a map to maintain output-input pairs in order
+			}
+
+			// Second pass: try to match action inputs with previous actions
+			// Use a map to maintain output-input pairs in order
 			Map<String, List<String>> actionToOutputs = new HashMap<>();
 			Map<String, List<String>> actionToInputs = new HashMap<>();
 
@@ -123,7 +126,8 @@ public final class EdgeGenerator {
 
 					String previousName = previousAction.getName();
 					Map<String, Object> previousOutputs = extractOutputs(previousAction.getOutput());
-					String outputKey = findBestMatch(inputKey, inputValue, previousOutputs);
+					String outputKey = findBestMatch(inputKey, inputValue, previousOutputs, currentAction.getName(),
+							previousAction.getName());
 
 					if (outputKey != null) {
 						// Check if this is a value match (Priority 1)
@@ -228,7 +232,7 @@ public final class EdgeGenerator {
 
 		// Fields that MUST come from instruction based on expected output analysis
 		if (fieldName.equals("entity_type") || fieldName.equals("action") || fieldName.equals("operation")
-				|| fieldName.equals("reference_type")) {
+				|| fieldName.equals("reference_type") || fieldName.equals("field_name")) {
 			return true;
 		}
 
@@ -238,43 +242,69 @@ public final class EdgeGenerator {
 	/**
 	 * Find the best matching output key for a given input key and value
 	 */
-	private static String findBestMatch(String inputKey, Object inputValue, Map<String, Object> outputs) {
+	private static String findBestMatch(String inputKey, Object inputValue, Map<String, Object> prevOutputs,
+			String currentAction, String previousAction) {
 		String inputFieldName = getFieldName(inputKey);
+		boolean isAuditCurrentAction = isAuditAction(currentAction);
+		boolean isAuditPreviousAction = isAuditAction(previousAction);
 
 		// Exact value match with compatible field names
 		if (inputValue != null) {
 			String valueMatchedOutputKey = null;
 			String valueMatchedInputKey = null;
-			for (Map.Entry<String, Object> outputEntry : outputs.entrySet()) {
+			for (Map.Entry<String, Object> outputEntry : prevOutputs.entrySet()) {
 				String outputKey = outputEntry.getKey();
 				Object outputValue = outputEntry.getValue();
+				String outputFieldName = getFieldName(outputKey);
 
 				// Ensure both values are not null and match exactly
 				if (outputValue != null
 						&& inputValue.toString().toLowerCase().equals(outputValue.toString().toLowerCase())) {
-					String outputFieldName = getFieldName(outputKey);
 
 					valueMatchedOutputKey = outputKey;
 					valueMatchedInputKey = inputKey;
 
 					// Check if field names are compatible for value matching
-					if (areFieldsCompatible(outputFieldName, inputFieldName)) {
-						return outputKey;
+					if (areFieldsCompatible(outputFieldName, inputFieldName, outputKey, inputKey)) {
+						if (!(isAuditCurrentAction && isAuditPreviousAction)) {// Avoid matching audit->audit actions
+							return outputKey; // *Case1: fieldName-fieldName and value-value match
+						}
+					}
+				}
+				if (isAuditCurrentAction) {
+					if (outputValue != null
+							&& ("field_name".equalsIgnoreCase(inputFieldName)
+									|| "field_name".equalsIgnoreCase(outputFieldName))
+							&& (inputValue.toString().toLowerCase().equals(outputFieldName.toLowerCase())
+									|| outputValue.toString().toLowerCase().equals(inputFieldName.toLowerCase()))) {
+						return "field_name"; // *Case3: For audit - if fieldName = field_name then - value
+												// (currentAction) - fieldName(Previous Actions) match and vice versa
 					}
 				}
 			}
 
 			// audit logs show that value matches with incompatible field names are
 			// sometimes valid
-			if (valueMatchedOutputKey != null && valueMatchedInputKey != null
-					&& (valueMatchedInputKey.equalsIgnoreCase("reference_id")
-							|| valueMatchedOutputKey.equalsIgnoreCase("reference_id")
-							|| valueMatchedInputKey.equalsIgnoreCase("old_value")
-							|| valueMatchedOutputKey.equalsIgnoreCase("old_value"))) {
-				return valueMatchedOutputKey; // Return the value match even if field names aren't compatible
+			if (isAuditCurrentAction) {
+				if (valueMatchedOutputKey != null && valueMatchedInputKey != null
+						&& (valueMatchedInputKey.equalsIgnoreCase("reference_id")
+								|| valueMatchedOutputKey.equalsIgnoreCase("reference_id")
+								|| valueMatchedInputKey.equalsIgnoreCase("old_value")
+								|| valueMatchedOutputKey.equalsIgnoreCase("old_value"))) {
+					return valueMatchedOutputKey; // Return the value match even if field names aren't compatible
+					// *Case2: action and fieldName is audit related and value-value match
+				}
 			}
 		}
-		return null;// return null if no match found
+		return null;// *Case4: No match found - fallback to instruction
+	}
+
+	private static boolean isAuditAction(String currentAction) {
+		return currentAction != null && List
+				.of("manage_audit_logs", "handle_audit_logs", "process_audit_logs", "administer_audit_logs",
+						"execute_audit_logs", "generate_new_audit_trail", "create_new_audit_trail",
+						"add_new_audit_trail", "register_new_audit_trail", "record_new_audit_trail")
+				.contains(currentAction.toLowerCase());
 	}
 
 	/**
@@ -283,16 +313,30 @@ public final class EdgeGenerator {
 	 * For example: skill_id=78 and reference_id=78 are compatible because they
 	 * share the same value.
 	 */
-	private static boolean areFieldsCompatible(String outputField, String inputField) {
-		if (outputField == null || inputField == null) {
+	private static boolean areFieldsCompatible(String outputFieldCleaned, String inputFieldCleaned, String outputField,
+			String inputField) {
+		if (outputFieldCleaned == null || inputFieldCleaned == null) {
 			return false;
 		}
 
-		String out = outputField.toLowerCase();
-		String in = inputField.toLowerCase();
+		String out = outputFieldCleaned.toLowerCase();
+		String in = inputFieldCleaned.toLowerCase();
 
 		// Exact field name match is always compatible
 		if (out.equals(in)) {
+			return true;
+		}
+
+		// Check if fields are semantically compatible based on known mappings
+		String outOrg = outputField.toLowerCase();
+		String inOrg = inputField.toLowerCase();
+
+		Map<String, String> compatibleFields = new HashMap<>();
+		compatibleFields.put("results[0].contact_email", "notification_data.email");
+		compatibleFields.put("results[0].subscription_id", "notification_data.reference_id");
+		compatibleFields.put("results[0].status", "filters.employment_status");
+		if ((compatibleFields.containsKey(outOrg) && compatibleFields.get(outOrg).equals(inOrg))
+				|| (compatibleFields.containsKey(inOrg) && compatibleFields.get(inOrg).equals(outOrg))) {
 			return true;
 		}
 
@@ -596,21 +640,21 @@ public final class EdgeGenerator {
 		// Parse existing input-output pairs from target connection
 		List<String> targetOutputs = parseFields(targetConnection.getOutput());
 		List<String> targetInputs = parseFields(targetConnection.getInput());
-		
+
 		// Parse input-output pairs from source connection
 		List<String> sourceOutputs = parseFields(sourceConnection.getOutput());
 		List<String> sourceInputs = parseFields(sourceConnection.getInput());
-		
+
 		// Merge pairs while maintaining input-output correspondence
 		List<String> mergedOutputs = new ArrayList<>(targetOutputs);
 		List<String> mergedInputs = new ArrayList<>(targetInputs);
-		
+
 		// Add source pairs, avoiding duplicates based on input-output combination
 		int sourceSize = Math.min(sourceOutputs.size(), sourceInputs.size());
 		for (int i = 0; i < sourceSize; i++) {
 			String sourceOutput = sourceOutputs.get(i);
 			String sourceInput = sourceInputs.get(i);
-			
+
 			// Check if this input-output pair already exists
 			boolean pairExists = false;
 			int targetSize = Math.min(mergedOutputs.size(), mergedInputs.size());
@@ -620,14 +664,14 @@ public final class EdgeGenerator {
 					break;
 				}
 			}
-			
+
 			// Add the pair if it doesn't exist
 			if (!pairExists) {
 				mergedOutputs.add(sourceOutput);
 				mergedInputs.add(sourceInput);
 			}
 		}
-		
+
 		// Set the merged results, ensuring equal lengths
 		targetConnection.setOutput(String.join(", ", mergedOutputs));
 		targetConnection.setInput(String.join(", ", mergedInputs));
@@ -641,16 +685,15 @@ public final class EdgeGenerator {
 		if (fieldString == null || fieldString.trim().isEmpty()) {
 			return fields;
 		}
-		
+
 		for (String field : fieldString.split(",")) {
 			String trimmed = field.trim();
 			if (!trimmed.isEmpty()) {
 				fields.add(trimmed);
 			}
 		}
-		
+
 		return fields;
 	}
-
 
 }

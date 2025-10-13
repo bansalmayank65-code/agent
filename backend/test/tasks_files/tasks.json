@@ -1,0 +1,367 @@
+{
+    "env": "hr_experts",
+    "model_provider": "fireworks",
+    "model": "qwen3-coder-480b-a35b-instruct",
+    "num_trials": 3,
+    "temperature": 1,
+    "interface_num": 1,
+    "task": {
+        "user_id": "1",
+        "instruction": "You are Johnny Jones (johnny.jones@protonmail.com), an HR Director managing employee benefits. Today is October 13, 2025. You want to create a new active life insurance plan called 'Kaiser Permanente Life Insurance' effective from today and enroll Jessica Duran (jduran@outlook.com) in this plan with family coverage for herself, her spouse Michael Martinez (primary beneficiary), and their two children, with coverage starting today.",
+        "actions": [
+            {
+                "name": "discover_user_employee_entities",
+                "arguments": {
+                    "entity_type": "users",
+                    "filters": {
+                        "first_name": "Johnny",
+                        "last_name": "Jones",
+                        "email": "johnny.jones@protonmail.com"
+                    }
+                },
+                "output": {
+                    "count": 1,
+                    "entity_type": "users",
+                    "results": [
+                        {
+                            "created_at": "2021-01-23T23:36:28",
+                            "email": "johnny.jones@protonmail.com",
+                            "first_name": "Johnny",
+                            "last_name": "Jones",
+                            "mfa_enabled": false,
+                            "phone_number": "+13474618830",
+                            "role": "hr_director",
+                            "status": "active",
+                            "updated_at": "2022-03-03T16:57:44",
+                            "user_id": "1"
+                        }
+                    ],
+                    "success": true
+                }
+            },
+            {
+                "name": "check_approval",
+                "arguments": {
+                    "action": "create_benefits_plan",
+                    "requester_email": "johnny.jones@protonmail.com"
+                },
+                "output": {
+                    "approval_valid": true,
+                    "approved_by": "finance_officer",
+                    "message": "Approved by authorized role: finance_officer"
+                }
+            },
+            {
+                "name": "discover_benefits_entities",
+                "arguments": {
+                    "entity_type": "benefits_plans",
+                    "filters": {
+                        "plan_name": "Kaiser Permanente Life Insurance"
+                    }
+                },
+                "output": {
+                    "count": 0,
+                    "entity_type": "benefits_plans",
+                    "results": [],
+                    "success": true
+                }
+            },
+            {
+                "name": "manage_benefits_plan",
+                "arguments": {
+                    "action": "create",
+                    "plan_data": {
+                        "plan_name": "Kaiser Permanente Life Insurance",
+                        "plan_type": "life_insurance",
+                        "effective_date": "2025-10-15"
+                    }
+                },
+                "output": {
+                    "action": "create",
+                    "message": "Benefits plan 54 created successfully",
+                    "plan_data": {
+                        "created_at": "2025-10-01T12:00:00",
+                        "effective_date": "2025-10-15",
+                        "employee_cost": null,
+                        "employer_cost": null,
+                        "expiration_date": null,
+                        "plan_id": "54",
+                        "plan_name": "Kaiser Permanente Life Insurance",
+                        "plan_type": "life_insurance",
+                        "provider": null,
+                        "status": "active",
+                        "updated_at": "2025-10-01T12:00:00"
+                    },
+                    "plan_id": "54",
+                    "success": true
+                }
+            },
+            {
+                "name": "manage_audit_logs",
+                "arguments": {
+                    "action": "create",
+                    "operation": "create",
+                    "reference_id": "54",
+                    "reference_type": "benefits_plan",
+                    "user_id": "1"
+                },
+                "output": {
+                    "action": "create",
+                    "field_name": null,
+                    "log_id": "2885",
+                    "new_value": null,
+                    "old_value": null,
+                    "reference_id": "54",
+                    "reference_type": "benefits_plan",
+                    "timestamp": "2025-10-01T12:00:00",
+                    "user_id": "1"
+                }
+            },
+            {
+                "name": "discover_user_employee_entities",
+                "arguments": {
+                    "entity_type": "users",
+                    "filters": {
+                        "first_name": "Jessica",
+                        "last_name": "Duran"
+                    }
+                },
+                "output": {
+                    "count": 1,
+                    "entity_type": "users",
+                    "results": [
+                        {
+                            "created_at": "2021-03-23T16:30:43",
+                            "email": "jduran@outlook.com",
+                            "first_name": "Jessica",
+                            "last_name": "Duran",
+                            "mfa_enabled": true,
+                            "phone_number": "+16789732910",
+                            "role": "employee",
+                            "status": "active",
+                            "updated_at": "2024-01-23T18:57:38",
+                            "user_id": "107"
+                        }
+                    ],
+                    "success": true
+                }
+            },
+            {
+                "name": "discover_user_employee_entities",
+                "arguments": {
+                    "entity_type": "employees",
+                    "filters": {
+                        "user_id": "107",
+                        "employment_status": "active"
+                    }
+                },
+                "output": {
+                    "count": 1,
+                    "entity_type": "employees",
+                    "results": [
+                        {
+                            "address": "PSC 4868, Box 4783, APO AE 76270",
+                            "created_at": "2025-04-12T10:57:27",
+                            "date_of_birth": "1994-01-25",
+                            "employee_id": "61",
+                            "employment_status": "active",
+                            "hire_date": "2024-10-13",
+                            "hourly_rate": 41,
+                            "manager_id": null,
+                            "position_id": "84",
+                            "updated_at": "2025-04-17T12:01:14",
+                            "user_id": "107"
+                        }
+                    ],
+                    "success": true
+                }
+            },
+            {
+                "name": "discover_benefits_entities",
+                "arguments": {
+                    "entity_type": "employee_benefits",
+                    "filters": {
+                        "employee_id": "61",
+                        "plan_id": "54"
+                    }
+                },
+                "output": {
+                    "count": 0,
+                    "entity_type": "employee_benefits",
+                    "results": [],
+                    "success": true
+                }
+            },
+            {
+                "name": "manage_employee_benefits",
+                "arguments": {
+                    "action": "create",
+                    "benefits_data": {
+                        "employee_id": "61",
+                        "plan_id": "54",
+                        "enrollment_date": "2025-10-13",
+                        "coverage_level": "family",
+                        "beneficiary_name": "Michael Martinez",
+                        "beneficiary_relationship": "spouse",
+                        "status": "active"
+                    }
+                },
+                "output": {
+                    "action": "create",
+                    "benefits_data": {
+                        "beneficiary_name": "Michael Martinez",
+                        "beneficiary_relationship": "spouse",
+                        "coverage_level": "family",
+                        "created_at": "2025-10-01T12:00:00",
+                        "employee_id": "61",
+                        "enrollment_date": "2025-10-13",
+                        "enrollment_id": "271",
+                        "plan_id": "54",
+                        "status": "active",
+                        "updated_at": "2025-10-01T12:00:00"
+                    },
+                    "enrollment_id": "271",
+                    "message": "Employee benefits enrollment 271 created successfully",
+                    "success": true
+                }
+            },
+            {
+                "name": "manage_audit_logs",
+                "arguments": {
+                    "action": "create",
+                    "operation": "create",
+                    "reference_id": "271",
+                    "reference_type": "employee_benefits",
+                    "user_id": "1"
+                },
+                "output": {
+                    "action": "create",
+                    "field_name": null,
+                    "log_id": "2886",
+                    "new_value": null,
+                    "old_value": null,
+                    "reference_id": "271",
+                    "reference_type": "employee_benefits",
+                    "timestamp": "2025-10-01T12:00:00",
+                    "user_id": "1"
+                }
+            }
+        ],
+        "edges": [
+            {
+                "from": "instruction",
+                "connection": {
+                    "output": "entity_type, email, first_name, last_name, employment_status",
+                    "input": "entity_type, filters.email, filters.first_name, filters.last_name, filters.employment_status"
+                },
+                "to": "discover_user_employee_entities"
+            },
+            {
+                "from": "instruction",
+                "connection": {
+                    "output": "action, requester_email",
+                    "input": "action, requester_email"
+                },
+                "to": "check_approval"
+            },
+            {
+                "from": "instruction",
+                "connection": {
+                    "output": "entity_type, plan_name",
+                    "input": "entity_type, filters.plan_name"
+                },
+                "to": "discover_benefits_entities"
+            },
+            {
+                "from": "instruction",
+                "connection": {
+                    "output": "action, effective_date, plan_name, plan_type",
+                    "input": "action, plan_data.effective_date, plan_data.plan_name, plan_data.plan_type"
+                },
+                "to": "manage_benefits_plan"
+            },
+            {
+                "from": "manage_benefits_plan",
+                "connection": {
+                    "output": "plan_id",
+                    "input": "reference_id"
+                },
+                "to": "manage_audit_logs"
+            },
+            {
+                "from": "discover_user_employee_entities",
+                "connection": {
+                    "output": "results[0].user_id",
+                    "input": "user_id"
+                },
+                "to": "manage_audit_logs"
+            },
+            {
+                "from": "instruction",
+                "connection": {
+                    "output": "action, operation, reference_type",
+                    "input": "action, operation, reference_type"
+                },
+                "to": "manage_audit_logs"
+            },
+            {
+                "from": "discover_user_employee_entities",
+                "connection": {
+                    "output": "results[0].user_id, result[0].status",
+                    "input": "filters.user_id, filters.employment_status"
+                },
+                "to": "discover_user_employee_entities"
+            },
+            {
+                "from": "manage_benefits_plan",
+                "connection": {
+                    "output": "plan_id",
+                    "input": "filters.plan_id"
+                },
+                "to": "discover_benefits_entities"
+            },
+            {
+                "from": "discover_user_employee_entities",
+                "connection": {
+                    "output": "results[0].employee_id",
+                    "input": "filters.employee_id"
+                },
+                "to": "discover_benefits_entities"
+            },
+            {
+                "from": "manage_benefits_plan",
+                "connection": {
+                    "output": "plan_id",
+                    "input": "benefits_data.plan_id"
+                },
+                "to": "manage_employee_benefits"
+            },
+            {
+                "from": "discover_user_employee_entities",
+                "connection": {
+                    "output": "results[0].employee_id",
+                    "input": "benefits_data.employee_id"
+                },
+                "to": "manage_employee_benefits"
+            },
+            {
+                "from": "instruction",
+                "connection": {
+                    "output": "action, beneficiary_name, beneficiary_relationship, coverage_level, enrollment_date, status",
+                    "input": "action, benefits_data.beneficiary_name, benefits_data.beneficiary_relationship, benefits_data.coverage_level, benefits_data.enrollment_date, benefits_data.status"
+                },
+                "to": "manage_employee_benefits"
+            },
+            {
+                "from": "manage_employee_benefits",
+                "connection": {
+                    "output": "enrollment_id",
+                    "input": "reference_id"
+                },
+                "to": "manage_audit_logs"
+            }
+        ],
+        "outputs": [],
+        "num_edges": 14
+    }
+}

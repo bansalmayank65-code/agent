@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 public class EdgeGeneratorMain {
 	// Set this to a task.json path string to use it instead of passing as a
 	// command-line arg.
-	public static String TASK_JSON_PATH = "C:\\Users\\bansa\\turing\\agenticWorkstation\\backend\\test\\tasks_files\\taskk.json";
+	public static String TASK_JSON_PATH = "C:\\Users\\bansa\\turing\\agenticWorkstation\\backend\\test\\tasks_files\\tasks.json";
 
 	public static void main(String[] args) {
 		if (TASK_JSON_PATH != null && !TASK_JSON_PATH.isBlank()) {
@@ -26,6 +26,9 @@ public class EdgeGeneratorMain {
 			try {
 				String json = mapper.writeValueAsString(edges != null ? edges : List.of());
 				System.out.println(json);
+				System.out.println();
+				System.out.println("----------------------");
+				System.out.println("Total edges: " + (edges != null ? edges.size() : 0));
 			} catch (Exception ex) {
 				System.err.println("Failed to serialize edges to JSON: " + ex.getMessage());
 				ex.printStackTrace();
