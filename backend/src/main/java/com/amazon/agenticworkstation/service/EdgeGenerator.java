@@ -55,7 +55,7 @@ public final class EdgeGenerator {
 			TaskDto.ActionDto currentAction = actions.get(i);
 			if (currentAction == null || currentAction.getName() == null) {
 				continue;
-			}
+			} 
 
 			String currentName = currentAction.getName();
 			Map<String, Object> currentInputs = extractInputs(currentAction.getArguments());
@@ -195,21 +195,21 @@ public final class EdgeGenerator {
 
 		// Merge edges with same "from" and "to" values
 		List<TaskDto.EdgeDto> mergedEdges = new ArrayList<>();
-		
+
 		for (TaskDto.EdgeDto edge : deduplicatedEdges) {
 			boolean merged = false;
-			
+
 			// Check if we already have an edge with the same from and to
 			for (TaskDto.EdgeDto existingEdge : mergedEdges) {
-				if (java.util.Objects.equals(edge.getFrom(), existingEdge.getFrom()) &&
-					java.util.Objects.equals(edge.getTo(), existingEdge.getTo())) {
+				if (java.util.Objects.equals(edge.getFrom(), existingEdge.getFrom())
+						&& java.util.Objects.equals(edge.getTo(), existingEdge.getTo())) {
 					// Merge the connections
 					mergeConnections(existingEdge, edge);
 					merged = true;
 					break;
 				}
 			}
-			
+
 			// If not merged, add as new edge
 			if (!merged) {
 				mergedEdges.add(edge);
@@ -268,7 +268,9 @@ public final class EdgeGenerator {
 			// sometimes valid
 			if (valueMatchedOutputKey != null && valueMatchedInputKey != null
 					&& (valueMatchedInputKey.equalsIgnoreCase("reference_id")
-							|| valueMatchedOutputKey.equalsIgnoreCase("reference_id"))) {
+							|| valueMatchedOutputKey.equalsIgnoreCase("reference_id")
+							|| valueMatchedInputKey.equalsIgnoreCase("old_value")
+							|| valueMatchedOutputKey.equalsIgnoreCase("old_value"))) {
 				return valueMatchedOutputKey; // Return the value match even if field names aren't compatible
 			}
 		}
@@ -575,60 +577,80 @@ public final class EdgeGenerator {
 	}
 
 	/**
-	 * Merge connections from the second edge into the first edge by combining their inputs and outputs
+	 * Merge connections from the second edge into the first edge by combining their
+	 * inputs and outputs while maintaining proper input-output pairing
 	 */
 	private static void mergeConnections(TaskDto.EdgeDto targetEdge, TaskDto.EdgeDto sourceEdge) {
 		TaskDto.ConnectionDto targetConnection = targetEdge.getConnection();
 		TaskDto.ConnectionDto sourceConnection = sourceEdge.getConnection();
-		
+
 		if (targetConnection == null) {
 			targetEdge.setConnection(sourceConnection);
 			return;
 		}
-		
+
 		if (sourceConnection == null) {
 			return;
 		}
+
+		// Parse existing input-output pairs from target connection
+		List<String> targetOutputs = parseFields(targetConnection.getOutput());
+		List<String> targetInputs = parseFields(targetConnection.getInput());
 		
-		// Merge outputs
-		String mergedOutput = mergeFields(targetConnection.getOutput(), sourceConnection.getOutput());
-		targetConnection.setOutput(mergedOutput);
+		// Parse input-output pairs from source connection
+		List<String> sourceOutputs = parseFields(sourceConnection.getOutput());
+		List<String> sourceInputs = parseFields(sourceConnection.getInput());
 		
-		// Merge inputs
-		String mergedInput = mergeFields(targetConnection.getInput(), sourceConnection.getInput());
-		targetConnection.setInput(mergedInput);
+		// Merge pairs while maintaining input-output correspondence
+		List<String> mergedOutputs = new ArrayList<>(targetOutputs);
+		List<String> mergedInputs = new ArrayList<>(targetInputs);
+		
+		// Add source pairs, avoiding duplicates based on input-output combination
+		int sourceSize = Math.min(sourceOutputs.size(), sourceInputs.size());
+		for (int i = 0; i < sourceSize; i++) {
+			String sourceOutput = sourceOutputs.get(i);
+			String sourceInput = sourceInputs.get(i);
+			
+			// Check if this input-output pair already exists
+			boolean pairExists = false;
+			int targetSize = Math.min(mergedOutputs.size(), mergedInputs.size());
+			for (int j = 0; j < targetSize; j++) {
+				if (mergedOutputs.get(j).equals(sourceOutput) && mergedInputs.get(j).equals(sourceInput)) {
+					pairExists = true;
+					break;
+				}
+			}
+			
+			// Add the pair if it doesn't exist
+			if (!pairExists) {
+				mergedOutputs.add(sourceOutput);
+				mergedInputs.add(sourceInput);
+			}
+		}
+		
+		// Set the merged results, ensuring equal lengths
+		targetConnection.setOutput(String.join(", ", mergedOutputs));
+		targetConnection.setInput(String.join(", ", mergedInputs));
 	}
-	
+
 	/**
-	 * Merge two comma-separated field strings, avoiding duplicates
+	 * Parse comma-separated field string into a list of individual fields
 	 */
-	private static String mergeFields(String field1, String field2) {
-		if (field1 == null || field1.trim().isEmpty()) {
-			return field2 == null ? "" : field2.trim();
-		}
-		if (field2 == null || field2.trim().isEmpty()) {
-			return field1.trim();
+	private static List<String> parseFields(String fieldString) {
+		List<String> fields = new ArrayList<>();
+		if (fieldString == null || fieldString.trim().isEmpty()) {
+			return fields;
 		}
 		
-		// Parse existing fields
-		List<String> allFields = new ArrayList<>();
-		
-		// Add fields from first string
-		for (String field : field1.split(",")) {
+		for (String field : fieldString.split(",")) {
 			String trimmed = field.trim();
 			if (!trimmed.isEmpty()) {
-				allFields.add(trimmed);
+				fields.add(trimmed);
 			}
 		}
 		
-		// Add fields from second string, avoiding duplicates
-		for (String field : field2.split(",")) {
-			String trimmed = field.trim();
-			if (!trimmed.isEmpty() && !allFields.contains(trimmed)) {
-				allFields.add(trimmed);
-			}
-		}
-		
-		return String.join(", ", allFields);
+		return fields;
 	}
+
+
 }
