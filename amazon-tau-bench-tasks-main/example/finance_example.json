@@ -1,0 +1,225 @@
+{
+  "env": "finance",
+  "model_provider": "openai",
+  "model": "o4-mini",
+  "num_trials": 3,
+  "temperature": 1,
+  "interface_num": 1,
+  "task": {
+    "user_id": "1",
+    "instruction": "You are Stephen Hickman with the email \"stephen.hickman@outlook.com\", a fund manager with fund_manager_approval authority. You need to establish a new hedge fund and execute initial trading operations. First, get the list of currently available funds to check existing offerings. Then validate the fund manager approval using approval code 'FUND0001' to ensure proper authorization for fund creation. After validating approval, create a new fund named 'AI Technology Growth Fund' as a hedge_funds type with initial fund size of 10,000,000.00 USD and fund manager ID 1, using the validated approval code. Next, get available tradable instruments for trading and execute a buy trade for fund_instrument_id 1 with fund_quantity 2000 and fund_price_limit 125.75 for the newly created fund with fund_trader_id 1 and fund_manager_approval true. After the trade, calculate the NAV for the fund using fund_calculation_date 2025-08-17, and finally add a fund audit trail record with fund_reference_type 'fund' and fund_audit_action 'create' for the fund creation.",
+    "actions": [
+      {
+        "name": "retrieve_available_funds",
+        "arguments": {}
+      },
+      {
+        "name": "validate_approval",
+        "arguments": {
+          "fund_approval_code": "FUND0001"
+        }
+      },
+      {
+        "name": "create_fund",
+        "arguments": {
+          "fund_name": "AI Technology Growth Fund",
+          "fund_type": "hedge_funds",
+          "initial_fund_size": 10000000.0,
+          "fund_manager_id": "1",
+          "fund_approval_code": "FUND0001"
+        }
+      },
+      {
+        "name": "retrieve_instruments",
+        "arguments": {}
+      },
+      {
+        "name": "execute_trade",
+        "arguments": {
+          "fund_id": "1",
+          "fund_instrument_id": "1",
+          "fund_quantity": 2000,
+          "fund_price_limit": 125.75,
+          "fund_trader_id": "1",
+          "fund_manager_approval": true
+        }
+      },
+      {
+        "name": "compute_nav",
+        "arguments": {
+          "fund_id": "1",
+          "fund_calculation_date": "2025-08-17"
+        }
+      },
+      {
+        "name": "add_audit_trail",
+        "arguments": {
+          "fund_reference_id": "1",
+          "fund_reference_type": "fund",
+          "fund_audit_action": "create"
+        }
+      }
+    ],
+    "outputs": [
+      "AI Technology Growth Fund",
+      "hedge_funds",
+      "FUND0001",
+      "1",
+      "1",
+      "2000",
+      "125.75",
+      "1",
+      "true",
+      "2025-08-17",
+      "fund",
+      "create"
+    ],
+    "edges": [
+      {
+        "from": "instruction",
+        "to": "retrieve_available_funds",
+        "connection": {
+          "input": "no_parameters",
+          "output": "available_funds_list"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "validate_approval",
+        "connection": {
+          "input": "fund_approval_code",
+          "output": "FUND0001"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_fund",
+        "connection": {
+          "input": "fund_name",
+          "output": "AI Technology Growth Fund"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_fund",
+        "connection": {
+          "input": "fund_type",
+          "output": "hedge_funds"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_fund",
+        "connection": {
+          "input": "initial_fund_size",
+          "output": "10000000.00"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_fund",
+        "connection": {
+          "input": "fund_manager_id",
+          "output": "1"
+        }
+      },
+      {
+        "from": "validate_approval",
+        "to": "create_fund",
+        "connection": {
+          "input": "fund_approval_code",
+          "output": "approval_code"
+        }
+      },
+      {
+        "from": "create_fund",
+        "to": "execute_trade",
+        "connection": {
+          "input": "fund_id",
+          "output": "fund_id"
+        }
+      },
+      {
+        "from": "retrieve_instruments",
+        "to": "execute_trade",
+        "connection": {
+          "input": "fund_instrument_id",
+          "output": "instrument_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "execute_trade",
+        "connection": {
+          "input": "fund_quantity",
+          "output": "2000"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "execute_trade",
+        "connection": {
+          "input": "fund_price_limit",
+          "output": "125.75"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "execute_trade",
+        "connection": {
+          "input": "fund_trader_id",
+          "output": "1"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "execute_trade",
+        "connection": {
+          "input": "fund_manager_approval",
+          "output": "true"
+        }
+      },
+      {
+        "from": "create_fund",
+        "to": "compute_nav",
+        "connection": {
+          "input": "fund_id",
+          "output": "fund_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "compute_nav",
+        "connection": {
+          "input": "fund_calculation_date",
+          "output": "2025-08-17"
+        }
+      },
+      {
+        "from": "create_fund",
+        "to": "add_audit_trail",
+        "connection": {
+          "input": "fund_reference_id",
+          "output": "fund_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "add_audit_trail",
+        "connection": {
+          "input": "fund_reference_type",
+          "output": "fund"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "add_audit_trail",
+        "connection": {
+          "input": "fund_audit_action",
+          "output": "create"
+        }
+      }
+    ],
+    "num_edges": 18
+  }
+}

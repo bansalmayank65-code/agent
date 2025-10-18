@@ -1,0 +1,329 @@
+{
+  "env": "fund_finance",
+  "model_provider": "fireworks",
+  "model": "qwen3-coder-480b-a35b-instruct",
+  "num_trials": 3,
+  "temperature": 1,
+  "interface_num": 1,
+  "task": {
+    "user_id": "88",
+    "instruction": "You are Maria Rodriguez with the email \"maria.rodriguez@fundmanagers.com\", a fund manager with fund_management_setup authorization. You need to establish investment operations for a new client and execute a comprehensive workflow. First, validate your approval authorization using the action 'fund_management_setup' and your email to ensure proper permissions. Next, discover available fund entities to review the current fund landscape, specifically looking for multi-asset funds. Then create a new investor named 'Tech Innovation Partners LLC' with corporate capital as source of funds, email 'contact@techinnovation.com', accredited status, incorporated in USA with tax ID 'TIP-987654321'. After onboarding the investor, discover available instrument entities to review trading opportunities, focusing on active bonds like the VSH7 ticker from Neal PLC Inc. Create a new fund called 'Balanced Growth Portfolio' as a multi_asset_funds type with initial size of 5,000,000.00 USD under manager ID 88. Execute a trade for the newly created fund using instrument ID 1 (Neal PLC Inc bonds), quantity 1500 shares at price 142.50. Calculate the NAV for the fund using today's date (2025-09-23), and finally create an audit trail record for the fund creation with reference type 'fund' and action 'create'.",
+    "actions": [
+      {
+        "name": "approval_lookup",
+        "arguments": {
+          "action": "fund_management_setup",
+          "requester_email": "maria.rodriguez@fundmanagers.com"
+        }
+      },
+      {
+        "name": "discover_fund_entities",
+        "arguments": {}
+      },
+      {
+        "name": "create_investor",
+        "arguments": {
+          "legal_name": "Tech Innovation Partners LLC",
+          "source_of_funds": "corporate_capital",
+          "contact_email": "contact@techinnovation.com",
+          "accreditation_status": "accredited",
+          "country_of_incorporation": "USA",
+          "tax_id": "TIP-987654321"
+        }
+      },
+      {
+        "name": "discover_instrument_entities",
+        "arguments": {}
+      },
+      {
+        "name": "manage_fund",
+        "arguments": {
+          "action": "create",
+          "fund_data": {
+            "name": "Balanced Growth Portfolio",
+            "fund_type": "multi_asset_funds",
+            "base_currency": "USD",
+            "size": 5000000.0,
+            "status": "open",
+            "manager_id": "88"
+          }
+        }
+      },
+      {
+        "name": "execute_trade",
+        "arguments": {
+          "fund_id": "1",
+          "instrument_id": "1",
+          "quantity": 1500,
+          "price": 142.5,
+          "side": "buy"
+        }
+      },
+      {
+        "name": "manage_nav_record",
+        "arguments": {
+          "action": "create",
+          "nav_data": {
+            "fund_id": "1",
+            "calculation_date": "2025-09-23",
+            "nav_value": 1.0
+          }
+        }
+      },
+      {
+        "name": "create_new_audit_trail",
+        "arguments": {
+          "reference_id": "1",
+          "reference_type": "fund",
+          "action": "create",
+          "field_name": "fund_creation",
+          "old_value": null,
+          "new_value": "Balanced Growth Portfolio"
+        }
+      }
+    ],
+    "outputs": [
+      "fund_management_setup",
+      "maria.rodriguez@fundmanagers.com",
+      "Tech Innovation Partners LLC",
+      "corporate_capital",
+      "contact@techinnovation.com",
+      "accredited",
+      "USA",
+      "TIP-987654321",
+      "Balanced Growth Portfolio",
+      "multi_asset_funds",
+      "USD",
+      "5000000.0",
+      "88",
+      "1",
+      "1500",
+      "142.50",
+      "buy",
+      "2025-09-23",
+      "fund",
+      "create",
+      "fund_creation",
+      "Balanced Growth Portfolio"
+    ],
+    "edges": [
+      {
+        "from": "instruction",
+        "to": "approval_lookup",
+        "connection": {
+          "input": "action",
+          "output": "fund_management_setup"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "approval_lookup",
+        "connection": {
+          "input": "requester_email",
+          "output": "maria.rodriguez@fundmanagers.com"
+        }
+      },
+      {
+        "from": "approval_lookup",
+        "to": "discover_fund_entities",
+        "connection": {
+          "input": "authorization_confirmed",
+          "output": "proceed_with_operations"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_investor",
+        "connection": {
+          "input": "legal_name",
+          "output": "Tech Innovation Partners LLC"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_investor",
+        "connection": {
+          "input": "source_of_funds",
+          "output": "corporate_capital"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_investor",
+        "connection": {
+          "input": "contact_email",
+          "output": "contact@techinnovation.com"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_investor",
+        "connection": {
+          "input": "accreditation_status",
+          "output": "accredited"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_investor",
+        "connection": {
+          "input": "country_of_incorporation",
+          "output": "USA"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_investor",
+        "connection": {
+          "input": "tax_id",
+          "output": "TIP-987654321"
+        }
+      },
+      {
+        "from": "create_investor",
+        "to": "discover_instrument_entities",
+        "connection": {
+          "input": "investor_created",
+          "output": "proceed_with_instrument_discovery"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "manage_fund",
+        "connection": {
+          "input": "fund_name",
+          "output": "Balanced Growth Portfolio"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "manage_fund",
+        "connection": {
+          "input": "fund_type",
+          "output": "multi_asset_funds"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "manage_fund",
+        "connection": {
+          "input": "size",
+          "output": "5000000.0"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "manage_fund",
+        "connection": {
+          "input": "manager_id",
+          "output": "88"
+        }
+      },
+      {
+        "from": "manage_fund",
+        "to": "execute_trade",
+        "connection": {
+          "input": "fund_id",
+          "output": "fund_id"
+        }
+      },
+      {
+        "from": "discover_instrument_entities",
+        "to": "execute_trade",
+        "connection": {
+          "input": "instrument_id",
+          "output": "instrument_selection"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "execute_trade",
+        "connection": {
+          "input": "quantity",
+          "output": "1500"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "execute_trade",
+        "connection": {
+          "input": "price",
+          "output": "142.50"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "execute_trade",
+        "connection": {
+          "input": "side",
+          "output": "buy"
+        }
+      },
+      {
+        "from": "manage_fund",
+        "to": "manage_nav_record",
+        "connection": {
+          "input": "fund_id",
+          "output": "fund_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "manage_nav_record",
+        "connection": {
+          "input": "calculation_date",
+          "output": "2025-09-23"
+        }
+      },
+      {
+        "from": "manage_nav_record",
+        "to": "create_new_audit_trail",
+        "connection": {
+          "input": "reference_id",
+          "output": "record_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_new_audit_trail",
+        "connection": {
+          "input": "reference_type",
+          "output": "fund"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_new_audit_trail",
+        "connection": {
+          "input": "action",
+          "output": "create"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_new_audit_trail",
+        "connection": {
+          "input": "field_name",
+          "output": "fund_creation"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_new_audit_trail",
+        "connection": {
+          "input": "new_value",
+          "output": "Balanced Growth Portfolio"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_new_audit_trail",
+        "connection": {
+          "input": "old_value",
+          "output": "null"
+        }
+      }
+    ],
+    "num_edges": 27
+  }
+}

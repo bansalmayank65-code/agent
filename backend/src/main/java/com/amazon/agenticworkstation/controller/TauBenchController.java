@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.amazon.agenticworkstation.service.ComputeComplexityService;
 import com.amazon.agenticworkstation.service.ComputeComplexityService.ApiResponse;
 import com.amazon.agenticworkstation.service.ComputeComplexityService.Endpoint;
@@ -37,9 +35,6 @@ public class TauBenchController {
 	
 	@Autowired
 	private TaskCacheService taskCacheService;
-	
-	@Autowired
-	private ObjectMapper objectMapper;
 
 	/**
 	 * Execute a task using the specified endpoint
@@ -53,92 +48,13 @@ public class TauBenchController {
 
 			return ResponseEntity.ok(new TaskExecutionResponse(response.isSuccess(), response.getMessage(),
 					response.getData(), response.getPlotBase64(), response.hasPlot()));
+
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body(
+					new TaskExecutionResponse(false, "Invalid endpoint: " + request.getEndpoint(), null, null, false));
 		} catch (Exception e) {
-			return ResponseEntity.ok(new TaskExecutionResponse(false, "Task execution failed: " + e.getMessage(),
-					null, null, false));
-		}
-	}
-					
-	/**
-	 * Execute task validation using user_id and task_id (database-based, no temp files)
-	 */
-	@PostMapping("/validate-by-id")
-	public ResponseEntity<TaskExecutionResponse> validateTaskById(
-			@RequestParam String userId, 
-			@RequestParam String taskId) {
-		
-		try {
-			// Load task into cache if not already present
-			taskCacheService.loadTaskIntoCache(userId, taskId);
-			
-			// Set current context for legacy compatibility
-			taskCacheService.setCurrentContext(userId, taskId);
-			
-			// Get task JSON directly from cache/database
-			String taskJson = taskCacheService.aggregatedJson(userId, taskId);
-			
-			if (taskJson == null || taskJson.trim().isEmpty()) {
-				return ResponseEntity.ok(new TaskExecutionResponse(false, 
-					"Task not found in database for userId: " + userId + ", taskId: " + taskId,
-					null, null, false));
-			}
-			
-			// Execute validation using JSON content directly (no file needed)
-			ApiResponse response = computeComplexityService.executeTaskFromJson(Endpoint.TASK_VERIFICATION, taskJson, userId, taskId);
-			
-			return ResponseEntity.ok(new TaskExecutionResponse(response.isSuccess(), response.getMessage(),
-					response.getData(), response.getPlotBase64(), response.hasPlot()));
-		} catch (Exception e) {
-			return ResponseEntity.ok(new TaskExecutionResponse(false, "Validation failed: " + e.getMessage(),
-					null, null, false));
-		}
-	}
-	
-	/**
-	 * Execute task using user_id and task_id (database-based, no temp files)
-	 */
-	@PostMapping("/execute-by-id")
-	public ResponseEntity<TaskExecutionResponse> executeTaskById(
-			@RequestParam String userId, 
-			@RequestParam String taskId,
-			@RequestParam String endpoint) {
-		
-		try {
-			// Load task into cache if not already present
-			taskCacheService.loadTaskIntoCache(userId, taskId);
-			
-			// Set current context for legacy compatibility
-			taskCacheService.setCurrentContext(userId, taskId);
-			
-			// Get task JSON directly from cache/database
-			String taskJson = taskCacheService.aggregatedJson(userId, taskId);
-			
-			if (taskJson == null || taskJson.trim().isEmpty()) {
-				return ResponseEntity.ok(new TaskExecutionResponse(false, 
-					"Task not found in database for userId: " + userId + ", taskId: " + taskId,
-					null, null, false));
-			}
-			
-			// Execute task using JSON content directly (no file needed)
-			Endpoint ep = Endpoint.valueOf(endpoint.toUpperCase());
-			ApiResponse response = computeComplexityService.executeTaskFromJson(ep, taskJson, userId, taskId);
-			
-			// Store result in cache if available (skip run_task as it's handled in response handler)
-			if (response.isSuccess() && response.getData() != null && !"run_task".equalsIgnoreCase(endpoint)) {
-				// For non-run_task endpoints, wrap with metadata and store in cache
-				Map<String, Object> resultData = new HashMap<>();
-				resultData.put("endpoint", endpoint);
-				resultData.put("result", response.getData());
-				resultData.put("timestamp", System.currentTimeMillis());
-				
-				taskCacheService.storeResultData(userId, taskId, resultData, "memory://" + userId + "_" + taskId);
-			}
-			
-			return ResponseEntity.ok(new TaskExecutionResponse(response.isSuccess(), response.getMessage(),
-					response.getData(), response.getPlotBase64(), response.hasPlot()));
-		} catch (Exception e) {
-			return ResponseEntity.ok(new TaskExecutionResponse(false, "Task execution failed: " + e.getMessage(),
-					null, null, false));
+			return ResponseEntity.internalServerError().body(
+					new TaskExecutionResponse(false, "Error executing task: " + e.getMessage(), null, null, false));
 		}
 	}
 
@@ -158,7 +74,7 @@ public class TauBenchController {
 	 * Execute compute complexity analysis
 	 */
 	@PostMapping("/compute-complexity")
-	public ResponseEntity<TaskExecutionResponse> computeComplexity(@RequestParam String taskFilePath,
+	public ResponseEntity<TaskExecutionResponse> computeComplexity(@RequestParam(required = false) String taskFilePath,
 			@RequestParam(defaultValue = "1") int numTrials) {
 
 		ApiResponse response = computeComplexityService.executeTask(Endpoint.COMPUTE_COMPLEXITY, taskFilePath);
@@ -171,7 +87,7 @@ public class TauBenchController {
 	 * Execute task verification
 	 */
 	@PostMapping("/task-verification")
-	public ResponseEntity<TaskExecutionResponse> taskVerification(@RequestParam String taskFilePath,
+	public ResponseEntity<TaskExecutionResponse> taskVerification(@RequestParam(required = false) String taskFilePath,
 			@RequestParam(defaultValue = "1") int numTrials) {
 
 		ApiResponse response = computeComplexityService.executeTask(Endpoint.TASK_VERIFICATION, taskFilePath);
@@ -184,7 +100,7 @@ public class TauBenchController {
 	 * Run task execution
 	 */
 	@PostMapping("/run-task")
-	public ResponseEntity<TaskExecutionResponse> runTask(@RequestParam String taskFilePath,
+	public ResponseEntity<TaskExecutionResponse> runTask(@RequestParam(required = false) String taskFilePath,
 			@RequestParam(defaultValue = "1") int numTrials) {
 
 		ApiResponse response = computeComplexityService.executeTask(Endpoint.RUN_TASK, taskFilePath);
@@ -197,7 +113,7 @@ public class TauBenchController {
 	 * Evaluate task results
 	 */
 	@PostMapping("/evaluate")
-	public ResponseEntity<TaskExecutionResponse> evaluate(@RequestParam String taskFilePath) {
+	public ResponseEntity<TaskExecutionResponse> evaluate(@RequestParam(required = false) String taskFilePath) {
 
 		ApiResponse response = computeComplexityService.executeTask(Endpoint.EVALUATE, taskFilePath);
 
@@ -209,7 +125,7 @@ public class TauBenchController {
 	 * Check results directory status
 	 */
 	@GetMapping("/results-status")
-	public ResponseEntity<Map<String, Object>> checkResultsStatus(@RequestParam String taskFilePath) {
+	public ResponseEntity<Map<String, Object>> checkResultsStatus(@RequestParam(required = false) String taskFilePath) {
 
 		Map<String, Object> status = computeComplexityService.checkResultsDirectory(taskFilePath);
 		return ResponseEntity.ok(status);
@@ -228,82 +144,35 @@ public class TauBenchController {
 	}
 
 	/**
-	 * Get raw result.json content from run_task validation (database storage)
-	 */
-	@GetMapping("/result.json")
-	public ResponseEntity<Map<String, Object>> getResultJson(
-			@RequestParam String userId, 
-			@RequestParam String taskId) {
-		try {
-			// Get raw result.json data directly from database
-			String resultJson = taskCacheService.getResultJsonFromDatabase(userId, taskId);
-			
-			if (resultJson == null || resultJson.trim().isEmpty()) {
-				Map<String, Object> response = new HashMap<>();
-				response.put("success", false);
-				response.put("message", "No result.json data available for userId: " + userId + ", taskId: " + taskId);
-				response.put("data", null);
-				return ResponseEntity.ok(response);
-			}
-
-			// Parse the JSON and return as object
-			@SuppressWarnings("unchecked")
-			Map<String, Object> resultData = objectMapper.readValue(resultJson, Map.class);
-			
-			Map<String, Object> response = new HashMap<>();
-			response.put("success", true);
-			response.put("message", "result.json retrieved successfully");
-			response.put("data", resultData);
-			response.put("userId", userId);
-			response.put("taskId", taskId);
-			return ResponseEntity.ok(response);
-			
-		} catch (Exception e) {
-			Map<String, Object> response = new HashMap<>();
-			response.put("success", false);
-			response.put("message", "Error retrieving result.json: " + e.getMessage());
-			response.put("data", null);
-			return ResponseEntity.ok(response);
-		}
-	}
-
-	/**
-	 * Get result.json content from memory cache using userId and taskId
+	 * Get result.json content from memory cache
 	 */
 	@GetMapping("/result")
-	public ResponseEntity<Map<String, Object>> getResult(
-			@RequestParam String userId, 
-			@RequestParam String taskId) {
+	public ResponseEntity<Map<String, Object>> getResult(@RequestParam(required = false) String taskFilePath) {
 		try {
-			// Set current context for the specified user and task
-			taskCacheService.setCurrentContext(userId, taskId);
-			
-			// Check if result data exists for this specific user/task
+			// Check if result data exists in memory cache
 			if (!taskCacheService.hasResultData()) {
 				Map<String, Object> response = new HashMap<>();
 				response.put("success", false);
-				response.put("message", "No result data available for userId: " + userId + ", taskId: " + taskId);
+				response.put("message", "No result data available in memory cache");
 				response.put("data", null);
 				return ResponseEntity.ok(response);
 			}
 
-			// Get result data from memory cache for current context
+			// Get result data from memory cache
 			Map<String, Object> resultData = taskCacheService.getResultData();
 			String cachedFilePath = taskCacheService.getResultFilePath();
 
 			Map<String, Object> response = new HashMap<>();
 			response.put("success", true);
-			response.put("message", "Result retrieved successfully for userId: " + userId + ", taskId: " + taskId);
+			response.put("message", "Result retrieved successfully from memory cache");
 			response.put("data", resultData);
-			response.put("userId", userId);
-			response.put("taskId", taskId);
-			response.put("filePath", cachedFilePath != null ? cachedFilePath : "memory://" + userId + "_" + taskId + ".result.json");
+			response.put("filePath", cachedFilePath != null ? cachedFilePath : "memory://result.json");
 			return ResponseEntity.ok(response);
 
 		} catch (Exception e) {
 			Map<String, Object> errorResponse = new HashMap<>();
 			errorResponse.put("success", false);
-			errorResponse.put("message", "Error reading result data for userId: " + userId + ", taskId: " + taskId + " - " + e.getMessage());
+			errorResponse.put("message", "Error reading result data: " + e.getMessage());
 			errorResponse.put("data", null);
 			return ResponseEntity.internalServerError().body(errorResponse);
 		}
@@ -313,7 +182,7 @@ public class TauBenchController {
 	 * Generate edges using EdgeGenerator service
 	 */
 	@PostMapping("/generate-edges")
-	public ResponseEntity<Map<String, Object>> generateEdges(@RequestParam String taskFilePath) {
+	public ResponseEntity<Map<String, Object>> generateEdges(@RequestParam(required = false) String taskFilePath) {
 		try {
 			// Get the current task from cache service
 			com.amazon.agenticworkstation.dto.TaskDto currentTask = taskCacheService.buildAggregatedTaskDto();

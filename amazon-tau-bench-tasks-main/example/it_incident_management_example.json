@@ -1,0 +1,232 @@
+{
+    "env": "it_incident_management",
+    "model_provider": "openai",
+    "model": "o4-mini",
+    "num_trials": 3,
+    "temperature": 1,
+    "interface_num": 1,
+    "task": {
+        "user_id": "10",
+        "instruction": "You are Shirley Smith (ssmith@yahoo.com), an account manager. You want to onboard a new enterprise client 'FinEdge Global' with registration number FE-2025-9987, contact email support@finedgeglobal.com, operating in the Financial Services industry in the United States. This client should be subscribed to the 'Microcraft Apex Flow' product under a full_service plan with a premium SLA and an RTO of 4 hours, starting on 2025-10-01. The subscription must include the following SLA agreements: P1 (response time 15 minutes, resolution 2 hours), P2 (response time 30 minutes, resolution 4 hours), and P3 (response time 60 minutes, resolution 12 hours).",
+        "actions": [
+            {
+                "name": "get_users",
+                "arguments": {
+                    "email": "ssmith@yahoo.com"
+                },
+                "output": [
+                    {
+                        "client_id": null,
+                        "created_at": "2024-08-03T13:21:38",
+                        "department": "Business Development",
+                        "email": "ssmith@yahoo.com",
+                        "first_name": "Shirley",
+                        "last_name": "Smith",
+                        "phone": "+12028538958",
+                        "role": "account_manager",
+                        "status": "active",
+                        "timezone": "MST",
+                        "updated_at": "2025-06-02T21:59:52",
+                        "user_id": "10",
+                        "vendor_id": null
+                    }
+                ]
+            },
+            {
+                "name": "get_products",
+                "arguments": {
+                    "product_name": "Microcraft Apex Flow"
+                },
+                "output": [
+                    {
+                        "created_at": "2025-08-13T17:45:57",
+                        "product_id": "14",
+                        "product_name": "Microcraft Apex Flow",
+                        "product_type": "banking_system",
+                        "status": "active",
+                        "updated_at": "2025-08-29T21:54:37",
+                        "vendor_support_id": "12",
+                        "version": "2.0.5"
+                    }
+                ]
+            },
+            {
+                "name": "create_client",
+                "arguments": {
+                    "client_name": "FinEdge Global",
+                    "client_type": "enterprise",
+                    "contact_email": "support@finedgeglobal.com",
+                    "country": "United States",
+                    "industry": "Financial Services",
+                    "registration_number": "FE-2025-9987",
+                    "status": "active"
+                },
+                "output": {
+                    "client_id": "121",
+                    "success": true
+                }
+            },
+            {
+                "name": "create_client_subscription",
+                "arguments": {
+                    "client_id": "121",
+                    "product_id": "14",
+                    "rto_hours": 4,
+                    "sla_tier": "premium",
+                    "start_date": "2025-10-01",
+                    "status": "active",
+                    "subscription_type": "full_service"
+                },
+                "output": {
+                    "subscription_id": "237",
+                    "success": true
+                }
+            },
+            {
+                "name": "create_sla_agreement",
+                "arguments": {
+                    "resolution_time_hours": 2,
+                    "response_time_minutes": 15,
+                    "severity_level": "P1",
+                    "subscription_id": "237"
+                },
+                "output": {
+                    "sla_id": "944",
+                    "success": true
+                }
+            },
+            {
+                "name": "create_sla_agreement",
+                "arguments": {
+                    "resolution_time_hours": 4,
+                    "response_time_minutes": 30,
+                    "severity_level": "P2",
+                    "subscription_id": "237"
+                },
+                "output": {
+                    "sla_id": "945",
+                    "success": true
+                }
+            },
+            {
+                "name": "create_sla_agreement",
+                "arguments": {
+                    "resolution_time_hours": 12,
+                    "response_time_minutes": 60,
+                    "severity_level": "P3",
+                    "subscription_id": "237"
+                },
+                "output": {
+                    "sla_id": "946",
+                    "success": true
+                }
+            }
+        ],
+        "edges": [
+            {
+                "from": "instruction",
+                "to": "get_users",
+                "connection": {
+                    "output": "email",
+                    "input": "email"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "get_products",
+                "connection": {
+                    "output": "product_name",
+                    "input": "product_name"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "create_client",
+                "connection": {
+                    "output": "client_name, registration_number, contact_email, client_type, industry, country, status",
+                    "input": "client_name, registration_number, contact_email, client_type, industry, country, status"
+                }
+            },
+            {
+                "from": "create_client",
+                "to": "create_client_subscription",
+                "connection": {
+                    "output": "client_id",
+                    "input": "client_id"
+                }
+            },
+            {
+                "from": "get_products",
+                "to": "create_client_subscription",
+                "connection": {
+                    "output": "output[0].product_id",
+                    "input": "product_id"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "create_client_subscription",
+                "connection": {
+                    "output": "subscription_type, sla_tier, rto_hours, start_date, status",
+                    "input": "subscription_type, sla_tier, rto_hours, start_date, status"
+                }
+            },
+            {
+                "from": "create_client_subscription",
+                "to": "create_sla_agreement",
+                "connection": {
+                    "output": "subscription_id",
+                    "input": "subscription_id"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "create_sla_agreement",
+                "connection": {
+                    "output": "severity_level, response_time_minutes, resolution_time_hours, availability_percentage",
+                    "input": "severity_level, response_time_minutes, resolution_time_hours, availability_percentage"
+                }
+            },
+            {
+                "from": "create_client_subscription",
+                "to": "create_sla_agreement",
+                "connection": {
+                    "output": "subscription_id",
+                    "input": "subscription_id"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "create_sla_agreement",
+                "connection": {
+                    "output": "severity_level, response_time_minutes, resolution_time_hours, availability_percentage",
+                    "input": "severity_level, response_time_minutes, resolution_time_hours, availability_percentage"
+                }
+            },
+            {
+                "from": "create_client_subscription",
+                "to": "create_sla_agreement",
+                "connection": {
+                    "output": "subscription_id",
+                    "input": "subscription_id"
+                }
+            },
+            {
+                "from": "instruction",
+                "to": "create_sla_agreement",
+                "connection": {
+                    "output": "severity_level, response_time_minutes, resolution_time_hours, availability_percentage",
+                    "input": "severity_level, response_time_minutes, resolution_time_hours, availability_percentage"
+                }
+            }
+        ],
+        "outputs": [
+            "121",
+            "237",
+            "944",
+            "945",
+            "946"
+        ],
+        "num_edges": 12
+    }
+}

@@ -1,0 +1,325 @@
+{
+  "env": "enterprise_wiki",
+  "model_provider": "openai",
+  "model": "o4-mini",
+  "num_trials": 3,
+  "temperature": 1,
+  "interface_num": 4,
+  "task": {
+    "user_id": "303",
+    "instruction": "You are Dorothy Clark (email: dorothy.clark@systems.io), a technical writer. You're cleaning up the 'PlatinumSys Space' space (id: 41) and noticed there are some draft pages hanging around that need attention. You want to update the 'Getting Started Guide - Part 221' page by renaming the title to 'Getting Started Guide - Latest', publish it (dated 2025-07-23T16:00:00Z), add a 'documentation' label to keep it organized, leave a comment saying 'Updated and ready for use', and delete other draft pages since they are outdated and no longer needed.",
+    "actions": [
+      {
+        "name": "get_user_by_email",
+        "arguments": {
+          "email": "dorothy.clark@systems.io"
+        },
+        "output": {
+          "id": 303,
+          "username": "dorothy.clark",
+          "email": "dorothy.clark@systems.io",
+          "password_hash": "526a7c769680d0f71cd664f9fdfb13a9605f472ba701839b5c83c602d532c830",
+          "first_name": "Dorothy",
+          "last_name": "Clark",
+          "display_name": "Dorothy Clark",
+          "avatar_url": null,
+          "timezone": "Australia/Sydney",
+          "locale": "es_ES",
+          "status": "active",
+          "last_login_at": null,
+          "created_at": "2025-03-03T14:19:41.296460",
+          "updated_at": "2025-05-30T14:19:41.296460",
+          "role": "admin"
+        }
+      },
+      {
+        "name": "get_pages_by_filters",
+        "arguments": {
+          "space_id": "41",
+          "status": "draft"
+        },
+        "output": [
+          {
+            "id": 33,
+            "space_id": 41,
+            "title": "Deployment Guide - Part 8",
+            "content": "# Deployment Guide - Part 8\n\nDeployment guide for production environments.\n\n## Prerequisites\n\nThis section covers prerequisites related information and guidelines. Follow the procedures outlined here to ensure proper prerequisites implementation.\n\n## Installation\n\nThis section covers installation related information and guidelines. Follow the procedures outlined here to ensure proper installation implementation.\n\n## Configuration\n\nThis section covers configuration related information and guidelines. Follow the procedures outlined here to ensure proper configuration implementation.\n\n## Verification\n\nThis section covers verification related information and guidelines. Follow the procedures outlined here to ensure proper verification implementation.\n\n## Rollback\n\nThis section covers rollback related information and guidelines. Follow the procedures outlined here to ensure proper rollback implementation.\n\n## Additional Resources\n\n- Related documentation links\n- Support contact information\n- Training materials\n",
+            "content_format": "markdown",
+            "parent_id": null,
+            "position": 20,
+            "status": "draft",
+            "version": 6,
+            "template_id": null,
+            "excerpt": "Deployment guide for production environments.",
+            "created_at": "2025-05-01T14:47:39.154325",
+            "updated_at": "2025-03-02T14:47:39.154330",
+            "published_at": null,
+            "created_by": 138,
+            "last_modified_by": 118
+          },
+          {
+            "id": 246,
+            "space_id": 41,
+            "title": "Getting Started Guide - Part 221",
+            "content": "# Getting Started Guide - Part 221\n\nWelcome to our comprehensive getting started guide.\n\n## Overview\n\nThis section covers overview related information and guidelines. Follow the procedures outlined here to ensure proper overview implementation.\n\n## Quick Start\n\nThis section covers quick start related information and guidelines. Follow the procedures outlined here to ensure proper quick start implementation.\n\n## Navigation\n\nThis section covers navigation related information and guidelines. Follow the procedures outlined here to ensure proper navigation implementation.\n\n## Best Practices\n\nThis section covers best practices related information and guidelines. Follow the procedures outlined here to ensure proper best practices implementation.\n\n## Getting Help\n\nThis section covers getting help related information and guidelines. Follow the procedures outlined here to ensure proper getting help implementation.\n\n## Additional Resources\n\n- Related documentation links\n- Support contact information\n- Training materials\n",
+            "content_format": "markdown",
+            "parent_id": null,
+            "position": 63,
+            "status": "draft",
+            "version": 10,
+            "template_id": null,
+            "excerpt": "Welcome to our comprehensive getting started guide.",
+            "created_at": "2024-01-16T14:47:39.175397",
+            "updated_at": "2023-08-06T14:47:39.175405",
+            "published_at": null,
+            "created_by": 72,
+            "last_modified_by": 258
+          }
+        ]
+      },
+      {
+        "name": "update_page",
+        "arguments": {
+          "page_id": "246",
+          "title": "Getting Started Guide - Latest",
+          "status": "current",
+          "published_at": "2025-07-23T16:00:00Z",
+          "last_modified_by": "303"
+        },
+        "output": {
+          "id": 246,
+          "space_id": 41,
+          "title": "Getting Started Guide - Latest",
+          "content": "# Getting Started Guide - Part 221\n\nWelcome to our comprehensive getting started guide.\n\n## Overview\n\nThis section covers overview related information and guidelines. Follow the procedures outlined here to ensure proper overview implementation.\n\n## Quick Start\n\nThis section covers quick start related information and guidelines. Follow the procedures outlined here to ensure proper quick start implementation.\n\n## Navigation\n\nThis section covers navigation related information and guidelines. Follow the procedures outlined here to ensure proper navigation implementation.\n\n## Best Practices\n\nThis section covers best practices related information and guidelines. Follow the procedures outlined here to ensure proper best practices implementation.\n\n## Getting Help\n\nThis section covers getting help related information and guidelines. Follow the procedures outlined here to ensure proper getting help implementation.\n\n## Additional Resources\n\n- Related documentation links\n- Support contact information\n- Training materials\n",
+          "content_format": "markdown",
+          "parent_id": null,
+          "position": 63,
+          "status": "current",
+          "version": 10,
+          "template_id": null,
+          "excerpt": "Welcome to our comprehensive getting started guide.",
+          "created_at": "2024-01-16T14:47:39.175397",
+          "updated_at": "2025-07-01T00:00:00Z",
+          "published_at": "2025-07-23T16:00:00Z",
+          "created_by": 72,
+          "last_modified_by": "303"
+        }
+      },
+      {
+        "name": "create_label",
+        "arguments": {
+          "name": "documentation",
+          "space_id": "41",
+          "created_by": "303"
+        },
+        "output": {
+          "id": 101,
+          "name": "documentation",
+          "color": null,
+          "description": null,
+          "space_id": "41",
+          "created_by": "303",
+          "usage_count": 0,
+          "created_at": "2025-07-01T00:00:00Z"
+        }
+      },
+      {
+        "name": "add_page_label",
+        "arguments": {
+          "page_id": "246",
+          "label_id": "101",
+          "added_by": "303"
+        },
+        "output": {
+          "page_id": "246",
+          "label_id": "101",
+          "added_at": "2025-07-01T00:00:00Z",
+          "added_by": "303"
+        }
+      },
+      {
+        "name": "increment_label_usage_count",
+        "arguments": {
+          "label_id": "101"
+        },
+        "output": {
+          "status": "incremented",
+          "label_id": "101",
+          "usage_count": 1
+        }
+      },
+      {
+        "name": "create_comment",
+        "arguments": {
+          "page_id": "246",
+          "content": "Updated and ready for use",
+          "created_by": "303"
+        },
+        "output": {
+          "id": 801,
+          "page_id": "246",
+          "parent_id": null,
+          "content": "Updated and ready for use",
+          "content_format": "markdown",
+          "status": "active",
+          "thread_level": 0,
+          "created_at": "2025-07-01T00:00:00Z",
+          "updated_at": "2025-07-01T00:00:00Z",
+          "created_by": "303"
+        }
+      },
+      {
+        "name": "update_page",
+        "arguments": {
+          "page_id": "33",
+          "status": "deleted",
+          "last_modified_by": "303"
+        },
+        "output": {
+          "id": 33,
+          "space_id": 41,
+          "title": "Deployment Guide - Part 8",
+          "content": "# Deployment Guide - Part 8\n\nDeployment guide for production environments.\n\n## Prerequisites\n\nThis section covers prerequisites related information and guidelines. Follow the procedures outlined here to ensure proper prerequisites implementation.\n\n## Installation\n\nThis section covers installation related information and guidelines. Follow the procedures outlined here to ensure proper installation implementation.\n\n## Configuration\n\nThis section covers configuration related information and guidelines. Follow the procedures outlined here to ensure proper configuration implementation.\n\n## Verification\n\nThis section covers verification related information and guidelines. Follow the procedures outlined here to ensure proper verification implementation.\n\n## Rollback\n\nThis section covers rollback related information and guidelines. Follow the procedures outlined here to ensure proper rollback implementation.\n\n## Additional Resources\n\n- Related documentation links\n- Support contact information\n- Training materials\n",
+          "content_format": "markdown",
+          "parent_id": null,
+          "position": 20,
+          "status": "deleted",
+          "version": 6,
+          "template_id": null,
+          "excerpt": "Deployment guide for production environments.",
+          "created_at": "2025-05-01T14:47:39.154325",
+          "updated_at": "2025-07-01T00:00:00Z",
+          "published_at": null,
+          "created_by": 138,
+          "last_modified_by": "303"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "instruction",
+        "to": "get_user_by_email",
+        "connection": {
+          "output": "email",
+          "input": "email"
+        }
+      },
+
+      {
+        "from": "instruction",
+        "to": "get_pages_by_filters",
+        "connection": {
+          "output": "space_id, status",
+          "input": "space_id, status"
+        }
+      },
+      {
+        "from": "get_pages_by_filters",
+        "to": "update_page",
+        "connection": {
+          "output": "output[1].id",
+          "input": "page_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "update_page",
+        "connection": {
+          "output": "title, status, published_at",
+          "input": "title, status, published_at"
+        }
+      },
+      {
+        "from": "get_user_by_email",
+        "to": "update_page",
+        "connection": {
+          "output": "id",
+          "input": "last_modified_by"
+        }
+      },
+      {
+        "from": "update_page",
+        "to": "create_label",
+        "connection": {
+          "output": "space_id, last_modified_by",
+          "input": "space_id, created_by"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_label",
+        "connection": {
+          "output": "name",
+          "input": "name"
+        }
+      },
+      {
+        "from": "create_label",
+        "to": "add_page_label",
+        "connection": {
+          "output": "id",
+          "input": "label_id"
+        }
+      },
+      {
+        "from": "update_page",
+        "to": "add_page_label",
+        "connection": {
+          "output": "page_id, last_modified_by",
+          "input": "page_id, added_by"
+        }
+      },
+      {
+        "from": "add_page_label",
+        "to": "increment_label_usage_count",
+        "connection": {
+          "output": "label_id",
+          "input": "label_id"
+        }
+      },
+
+      {
+        "from": "update_page",
+        "to": "create_comment",
+        "connection": {
+          "output": "page_id, last_modified_by",
+          "input": "page_id, created_by"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_comment",
+        "connection": {
+          "output": "content",
+          "input": "content"
+        }
+      },
+      {
+        "from": "get_pages_by_filters",
+        "to": "update_page",
+        "connection": {
+          "output": "output[0].id",
+          "input": "page_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "update_page",
+        "connection": {
+          "output": "status",
+          "input": "status"
+        }
+      },
+      {
+        "from": "get_user_by_email",
+        "to": "update_page",
+        "connection": {
+          "output": "id",
+          "input": "last_modified_by"
+        }
+      }
+    ],
+    "outputs": [],
+    "num_edges": 15
+  }
+}

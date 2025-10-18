@@ -62,6 +62,16 @@ public class TaskDto {
 
         public Integer getNumEdges() { return numEdges; }
         public void setNumEdges(Integer numEdges) { this.numEdges = numEdges; }
+
+        @Override
+        public String toString() {
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
+            } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                return "TaskDetails{userId='" + userId + "', instruction='" + instruction + "', actions=" + actions + ", edges=" + edges + ", outputs=" + outputs + ", numEdges=" + numEdges + "}";
+            }
+        }
     }
 
     /**
@@ -81,6 +91,16 @@ public class TaskDto {
 
         public Object getOutput() { return output; }
         public void setOutput(Object output) { this.output = output; }
+
+        @Override
+        public String toString() {
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
+            } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                return "ActionDto{name='" + name + "', arguments=" + arguments + ", output=" + output + "}";
+            }
+        }
     }
 
     /**
@@ -100,6 +120,16 @@ public class TaskDto {
 
         public ConnectionDto getConnection() { return connection; }
         public void setConnection(ConnectionDto connection) { this.connection = connection; }
+
+        @Override
+        public String toString() {
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
+            } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                return "EdgeDto{from='" + from + "', to='" + to + "', connection=" + connection + "}";
+            }
+        }
     }
 
     /**
@@ -115,6 +145,16 @@ public class TaskDto {
 
         public String getInput() { return input; }
         public void setInput(String input) { this.input = input; }
+
+        @Override
+        public String toString() {
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
+            } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                return "ConnectionDto{output='" + output + "', input='" + input + "'}";
+            }
+        }
     }
 
     // Main TaskDto getters and setters
@@ -138,4 +178,14 @@ public class TaskDto {
 
     public TaskDetails getTask() { return task; }
     public void setTask(TaskDetails task) { this.task = task; }
+
+    @Override
+    public String toString() {
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            return "TaskDto{env='" + env + "', modelProvider='" + modelProvider + "', model='" + model + "', numTrials=" + numTrials + ", temperature=" + temperature + ", interfaceNum=" + interfaceNum + ", task=" + task + "}";
+        }
+    }
 }

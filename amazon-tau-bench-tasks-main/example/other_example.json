@@ -1,0 +1,46 @@
+{
+    "env": "ecommerce",
+    "model_provider": "openai",
+    "model": "o4-mini",
+    "num_trials": 3,
+    "temperature": 1,
+    "interface_num": 1,
+    "task": {
+    "user_id": "test_user",
+    "instruction": "Process multiple user lookups and orders",
+    "actions": [
+        {"name": "get_user_info", "arguments": {"email": "user1@example.com"}},
+        {"name": "get_user_info", "arguments": {"email": "user2@example.com"}},
+        {"name": "place_order", "arguments": {"user_id": "user1_id", "product": "laptop"}},
+        {"name": "get_user_info", "arguments": {"email": "user3@example.com"}},
+        {"name": "place_order", "arguments": {"user_id": "user2_id", "product": "phone"}}
+    ],
+    "edges": [
+        {
+            "from": "instruction",
+            "to": "get_user_info",
+            "connection": {"output": "email1", "input": "email"}
+        },
+        {
+            "from": "instruction", 
+            "to": "get_user_info",
+            "connection": {"output": "email2", "input": "email"}
+        },
+        {
+            "from": "get_user_info",
+            "to": "place_order", 
+            "connection": {"output": "user_id", "input": "user_id"}
+        },
+        {
+            "from": "get_user_info",
+            "to": "place_order",
+            "connection": {"output": "user_id", "input": "user_id"}
+        },
+        {
+            "from": "instruction",
+            "to": "get_user_info", 
+            "connection": {"output": "email3", "input": "email"}
+        }
+    ],
+    "num_edges": 5
+}}

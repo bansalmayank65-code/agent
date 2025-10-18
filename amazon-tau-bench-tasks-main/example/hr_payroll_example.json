@@ -1,0 +1,130 @@
+{
+  "env": "hr_payroll",
+  "model_provider": "openai",
+  "model": "o4-mini",
+  "num_trials": 3,
+  "temperature": 1,
+  "interface_num": 1,
+  "task": {
+    "user_id": "new_employee_sarah",
+    "instruction": "As an HR administrator, onboard a new employee Sarah Johnson (sarah.johnson@company.com) with role 'payroll' in timezone 'America/New_York'. After creating her profile, verify the account details, list available organizations she can join, assign her to organization 'Tech Solutions Inc', and finally check her financial summary to ensure everything is properly set up.",
+    "actions": [
+      {
+        "name": "create_user_profile",
+        "arguments": {
+          "name": "Sarah Johnson",
+          "email": "sarah.johnson@company.com",
+          "role": "payroll",
+          "timezone": "America/New_York"
+        }
+      },
+      {
+        "name": "get_user_profile",
+        "arguments": {
+          "user_id": "created_user_id"
+        }
+      },
+      {
+        "name": "list_organizations",
+        "arguments": {
+          "user_id": "created_user_id"
+        }
+      },
+      {
+        "name": "assign_worker_to_org",
+        "arguments": {
+          "worker_id": "worker_profile_id",
+          "new_organization_id": "231470fb-9185-4987-b403-932abc01638a"
+        }
+      },
+      {
+        "name": "get_worker_financial_summary",
+        "arguments": {
+          "worker_id": "worker_profile_id"
+        }
+      }
+    ],
+    "outputs": [
+      "sarah.johnson@company.com",
+      "payroll",
+      "America/New_York",
+      "231470fb-9185-4987-b403-932abc01638a",
+      "active"
+    ],
+    "edges": [
+      {
+        "from": "instruction",
+        "to": "create_user_profile",
+        "connection": {
+          "input": "name",
+          "output": "name"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_user_profile",
+        "connection": {
+          "input": "email",
+          "output": "email"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_user_profile",
+        "connection": {
+          "input": "role",
+          "output": "role"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_user_profile",
+        "connection": {
+          "input": "timezone",
+          "output": "timezone"
+        }
+      },
+      {
+        "from": "create_user_profile",
+        "to": "get_user_profile",
+        "connection": {
+          "input": "user_id",
+          "output": "user_id"
+        }
+      },
+      {
+        "from": "create_user_profile",
+        "to": "list_organizations",
+        "connection": {
+          "input": "user_id",
+          "output": "user_id"
+        }
+      },
+      {
+        "from": "create_user_profile",
+        "to": "assign_worker_to_org",
+        "connection": {
+          "input": "worker_id",
+          "output": "user_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "assign_worker_to_org",
+        "connection": {
+          "input": "new_organization_id",
+          "output": "organization_id"
+        }
+      },
+      {
+        "from": "assign_worker_to_org",
+        "to": "get_worker_financial_summary",
+        "connection": {
+          "input": "worker_id",
+          "output": "worker_id"
+        }
+      }
+    ],
+    "num_edges": 9
+  }
+}

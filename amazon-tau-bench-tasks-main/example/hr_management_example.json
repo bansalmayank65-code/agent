@@ -1,0 +1,647 @@
+{
+  "env": "hr_management",
+  "model_provider": "openai",
+  "model": "o4-mini",
+  "num_trials": 3,
+  "temperature": 1,
+  "interface_num": 1,
+  "task": {
+    "user_id": "25",
+    "instruction": "You are Christopher Roach (christopher.roach@yahoo.com), a Hiring Manager. You need to create a full time 'mid' level Quality Assurance Engineer position for the Software Engineering department (id: 42) with an hourly rate of 40–55 USD. This position should require the same skills as the most recently opened 'entry' level Quality Assurance Engineer position in the same department. You also want to withdraw Jared Thompson's (jared.thompson@protonmail.com) applications and apply him to this new opening, then schedule a 90-minute phone screening interview for him with Gina Banks (gina.banks@outlook.com) who is his recruiter to be held on 28th August 2025 at 10 AM.",
+    "actions": [
+      {
+        "name": "get_users",
+        "arguments": {
+          "email": "christopher.roach@yahoo.com"
+        },
+        "output": [
+          {
+            "created_at": "2024-04-19T05:51:19",
+            "email": "christopher.roach@yahoo.com",
+            "first_name": "Christopher",
+            "last_name": "Roach",
+            "mfa_enabled": false,
+            "phone_number": "+19386718784",
+            "role": "hiring_manager",
+            "status": "active",
+            "updated_at": "2024-07-19T18:26:26",
+            "user_id": "25"
+          }
+        ]
+      },
+      {
+        "name": "get_departments",
+        "arguments": {
+          "department_id": "42"
+        },
+        "output": [
+          {
+            "budget": 1532160.88,
+            "created_at": "2022-04-10T00:31:48",
+            "department_id": "42",
+            "department_name": "Software Engineering",
+            "manager_id": "21",
+            "status": "active",
+            "updated_at": "2025-08-25T13:28:07"
+          }
+        ]
+      },
+      {
+        "name": "get_job_positions",
+        "arguments": {
+          "department_id": "42",
+          "job_level": "entry",
+          "status": "open"
+        },
+        "output": [
+          {
+            "created_at": "2024-11-26T01:27:25",
+            "department_id": "42",
+            "employment_type": "contract",
+            "hourly_rate_max": 25,
+            "hourly_rate_min": 15,
+            "job_level": "entry",
+            "position_id": "183",
+            "status": "open",
+            "title": "Quality Assurance Engineer",
+            "updated_at": "2025-07-11T12:51:27"
+          }
+        ]
+      },
+      {
+        "name": "get_job_position_skills",
+        "arguments": {
+          "position_id": "183"
+        },
+        "output": [
+          {
+            "position_id": "183",
+            "skill_id": "59"
+          },
+          {
+            "position_id": "183",
+            "skill_id": "24"
+          },
+          {
+            "position_id": "183",
+            "skill_id": "50"
+          },
+          {
+            "position_id": "183",
+            "skill_id": "20"
+          }
+        ]
+      },
+      {
+        "name": "create_job_position",
+        "arguments": {
+          "department_id": "42",
+          "employment_type": "full_time",
+          "hiring_manager_approval": true,
+          "hourly_rate_max": 55,
+          "hourly_rate_min": 40,
+          "job_level": "mid",
+          "status": "draft",
+          "title": "Quality Assurance Engineer"
+        },
+        "output": {
+          "position_id": "461",
+          "success": true
+        }
+      },
+      {
+        "name": "assign_skill_to_position",
+        "arguments": {
+          "position_id": "461",
+          "skill_id": "20"
+        },
+        "output": {
+          "message": "Skill assigned to position",
+          "success": true
+        }
+      },
+      {
+        "name": "assign_skill_to_position",
+        "arguments": {
+          "position_id": "461",
+          "skill_id": "24"
+        },
+        "output": {
+          "message": "Skill assigned to position",
+          "success": true
+        }
+      },
+      {
+        "name": "assign_skill_to_position",
+        "arguments": {
+          "position_id": "461",
+          "skill_id": "50"
+        },
+        "output": {
+          "message": "Skill assigned to position",
+          "success": true
+        }
+      },
+      {
+        "name": "assign_skill_to_position",
+        "arguments": {
+          "position_id": "461",
+          "skill_id": "59"
+        },
+        "output": {
+          "message": "Skill assigned to position",
+          "success": true
+        }
+      },
+      {
+        "name": "post_job_opening",
+        "arguments": {
+          "position_id": "461"
+        },
+        "output": {
+          "message": "Job posted successfully",
+          "success": true
+        }
+      },
+      {
+        "name": "get_candidates",
+        "arguments": {
+          "email": "jared.thompson@protonmail.com"
+        },
+        "output": [
+          {
+            "address": "414 Clay Mill, South Ashleyton, OH 37353",
+            "candidate_id": "130",
+            "created_at": "2023-03-18T07:25:00",
+            "email": "jared.thompson@protonmail.com",
+            "first_name": "Jared",
+            "last_name": "Thompson",
+            "phone_number": "+19173539111",
+            "source": "social_media",
+            "status": "screening",
+            "updated_at": "2024-02-14T03:47:22"
+          }
+        ]
+      },
+      {
+        "name": "get_job_applications",
+        "arguments": {
+          "candidate_id": "130"
+        },
+        "output": [
+          {
+            "ai_screening_score": 77.62,
+            "application_date": "2023-06-25",
+            "application_id": "247",
+            "candidate_id": "130",
+            "created_at": "2023-06-25T19:43:55",
+            "final_decision": null,
+            "position_id": "144",
+            "recruiter_id": "10",
+            "status": "screening",
+            "updated_at": "2025-07-06T13:46:39"
+          }
+        ]
+      },
+      {
+        "name": "update_application_stage",
+        "arguments": {
+          "application_id": "247",
+          "status": "withdrawn"
+        },
+        "output": {
+          "message": "Application stage updated",
+          "success": true
+        }
+      },
+      {
+        "name": "get_users",
+        "arguments": {
+          "email": "gina.banks@outlook.com"
+        },
+        "output": [
+          {
+            "created_at": "2020-11-26T13:25:25",
+            "email": "gina.banks@outlook.com",
+            "first_name": "Gina",
+            "last_name": "Banks",
+            "mfa_enabled": true,
+            "phone_number": "+19298421880",
+            "role": "recruiter",
+            "status": "active",
+            "updated_at": "2023-05-22T14:48:47",
+            "user_id": "11"
+          }
+        ]
+      },
+      {
+        "name": "create_job_application",
+        "arguments": {
+          "application_date": "2025-08-27",
+          "candidate_id": "130",
+          "position_id": "461",
+          "recruiter_id": "11",
+          "status": "submitted"
+        },
+        "output": {
+          "application_id": "480",
+          "success": true
+        }
+      },
+      {
+        "name": "schedule_interview",
+        "arguments": {
+          "application_id": "480",
+          "duration_minutes": 90,
+          "interview_type": "phone_screening",
+          "interviewer_id": "11",
+          "scheduled_date": "2025-08-28T10:00:00",
+          "status": "scheduled"
+        },
+        "output": {
+          "interview_id": "348",
+          "success": true
+        }
+      },
+      {
+        "name": "create_audit_log",
+        "arguments": {
+          "action": "create",
+          "reference_id": "461",
+          "reference_type": "job_positions",
+          "user_id": "25"
+        },
+        "output": {
+          "log_id": "2885",
+          "success": true
+        }
+      },
+      {
+        "name": "create_audit_log",
+        "arguments": {
+          "action": "update",
+          "field_name": "status",
+          "new_value": "open",
+          "old_value": "draft",
+          "reference_id": "461",
+          "reference_type": "job_positions",
+          "user_id": "25"
+        },
+        "output": {
+          "log_id": "2886",
+          "success": true
+        }
+      },
+      {
+        "name": "create_audit_log",
+        "arguments": {
+          "action": "create",
+          "reference_id": "480",
+          "reference_type": "job_applications",
+          "user_id": "25"
+        },
+        "output": {
+          "log_id": "2887",
+          "success": true
+        }
+      },
+      {
+        "name": "create_audit_log",
+        "arguments": {
+          "action": "create",
+          "reference_id": "348",
+          "reference_type": "interviews",
+          "user_id": "25"
+        },
+        "output": {
+          "log_id": "2888",
+          "success": true
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "instruction",
+        "to": "get_users",
+        "connection": {
+          "output": "email",
+          "input": "email"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "get_departments",
+        "connection": {
+          "output": "department_id",
+          "input": "department_id"
+        }
+      },
+      {
+        "from": "get_departments",
+        "to": "get_job_positions",
+        "connection": {
+          "output": "output[0].department_id",
+          "input": "department_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "get_job_positions",
+        "connection": {
+          "output": "job_level, status",
+          "input": "job_level, status"
+        }
+      },
+      {
+        "from": "get_job_positions",
+        "to": "get_job_position_skills",
+        "connection": {
+          "output": "output[0].position_id",
+          "input": "position_id"
+        }
+      },
+      {
+        "from": "get_departments",
+        "to": "create_job_position",
+        "connection": {
+          "output": "output[0].department_id",
+          "input": "department_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_job_position",
+        "connection": {
+          "output": "employment_type, hourly_rate_min, hourly_rate_max, job_level, title, hiring_manager_approval, status",
+          "input": "employment_type, hourly_rate_min, hourly_rate_max, job_level, title, hiring_manager_approval, status"
+        }
+      },
+      {
+        "from": "create_job_position",
+        "to": "assign_skill_to_position",
+        "connection": {
+          "output": "position_id",
+          "input": "position_id"
+        }
+      },
+      {
+        "from": "get_job_position_skills",
+        "to": "assign_skill_to_position",
+        "connection": {
+          "output": "output[0].skill_id",
+          "input": "skill_id"
+        }
+      },
+      {
+        "from": "create_job_position",
+        "to": "assign_skill_to_position",
+        "connection": {
+          "output": "position_id",
+          "input": "position_id"
+        }
+      },
+      {
+        "from": "get_job_position_skills",
+        "to": "assign_skill_to_position",
+        "connection": {
+          "output": "output[1].skill_id",
+          "input": "skill_id"
+        }
+      },
+      {
+        "from": "create_job_position",
+        "to": "assign_skill_to_position",
+        "connection": {
+          "output": "position_id",
+          "input": "position_id"
+        }
+      },
+      {
+        "from": "get_job_position_skills",
+        "to": "assign_skill_to_position",
+        "connection": {
+          "output": "output[2].skill_id",
+          "input": "skill_id"
+        }
+      },
+      {
+        "from": "create_job_position",
+        "to": "assign_skill_to_position",
+        "connection": {
+          "output": "position_id",
+          "input": "position_id"
+        }
+      },
+      {
+        "from": "get_job_position_skills",
+        "to": "assign_skill_to_position",
+        "connection": {
+          "output": "output[3].skill_id",
+          "input": "skill_id"
+        }
+      },
+      {
+        "from": "assign_skill_to_position",
+        "to": "post_job_opening",
+        "connection": {
+          "output": "position_id",
+          "input": "position_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "get_candidates",
+        "connection": {
+          "output": "email",
+          "input": "email"
+        }
+      },
+      {
+        "from": "get_candidates",
+        "to": "get_job_applications",
+        "connection": {
+          "output": "output[0].candidate_id",
+          "input": "candidate_id"
+        }
+      },
+      {
+        "from": "get_job_applications",
+        "to": "update_application_stage",
+        "connection": {
+          "output": "output[0].application_id",
+          "input": "application_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "update_application_stage",
+        "connection": {
+          "output": "status",
+          "input": "status"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "get_users",
+        "connection": {
+          "output": "email",
+          "input": "email"
+        }
+      },
+      {
+        "from": "get_candidates",
+        "to": "create_job_application",
+        "connection": {
+          "output": "output[0].candidate_id",
+          "input": "candidate_id"
+        }
+      },
+      {
+        "from": "create_job_position",
+        "to": "create_job_application",
+        "connection": {
+          "output": "position_id",
+          "input": "position_id"
+        }
+      },
+      {
+        "from": "get_users",
+        "to": "create_job_application",
+        "connection": {
+          "output": "output[0].user_id",
+          "input": "recruiter_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_job_application",
+        "connection": {
+          "output": "application_date, status",
+          "input": "application_date, status"
+        }
+      },
+      {
+        "from": "create_job_application",
+        "to": "schedule_interview",
+        "connection": {
+          "output": "application_id",
+          "input": "application_id"
+        }
+      },
+      {
+        "from": "get_users",
+        "to": "schedule_interview",
+        "connection": {
+          "output": "output[0].user_id",
+          "input": "interviewer_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "schedule_interview",
+        "connection": {
+          "output": "duration_minutes, interview_type, scheduled_date, status",
+          "input": "duration_minutes, interview_type, scheduled_date, status"
+        }
+      },
+      {
+        "from": "get_users",
+        "to": "create_audit_log",
+        "connection": {
+          "output": "output[0].user_id",
+          "input": "user_id"
+        }
+      },
+      {
+        "from": "create_job_position",
+        "to": "create_audit_log",
+        "connection": {
+          "output": "position_id",
+          "input": "reference_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_audit_log",
+        "connection": {
+          "output": "action, reference_type",
+          "input": "action, reference_type"
+        }
+      },
+      {
+        "from": "get_users",
+        "to": "create_audit_log",
+        "connection": {
+          "output": "output[0].user_id",
+          "input": "user_id"
+        }
+      },
+      {
+        "from": "create_job_position",
+        "to": "create_audit_log",
+        "connection": {
+          "output": "position_id",
+          "input": "reference_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_audit_log",
+        "connection": {
+          "output": "action, field_name, new_value, old_value, reference_type",
+          "input": "action, field_name, new_value, old_value, reference_type"
+        }
+      },
+      {
+        "from": "get_users",
+        "to": "create_audit_log",
+        "connection": {
+          "output": "output[0].user_id",
+          "input": "user_id"
+        }
+      },
+      {
+        "from": "create_job_application",
+        "to": "create_audit_log",
+        "connection": {
+          "output": "application_id",
+          "input": "reference_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_audit_log",
+        "connection": {
+          "output": "action, reference_type",
+          "input": "action, reference_type"
+        }
+      },
+      {
+        "from": "get_users",
+        "to": "create_audit_log",
+        "connection": {
+          "output": "output[0].user_id",
+          "input": "user_id"
+        }
+      },
+      {
+        "from": "schedule_interview",
+        "to": "create_audit_log",
+        "connection": {
+          "output": "interview_id",
+          "input": "reference_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_audit_log",
+        "connection": {
+          "output": "action, reference_type",
+          "input": "action, reference_type"
+        }
+      }
+    ],
+    "outputs": ["461", "480", "348"],
+    "num_edges": 40
+  }
+}

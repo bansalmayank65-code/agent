@@ -1,0 +1,174 @@
+{
+  "env": "enterprise_wiki",
+  "model_provider": "openai",
+  "model": "o4-mini",
+  "num_trials": 3,
+  "temperature": 1,
+  "interface_num": 2,
+  "task": {
+    "user_id": "4",
+    "instruction": "You are Jennifer Harris (jennifer.harris@tech.org). You would like to get the comments from the page with the title \"User Manual - Part 266\". Please, create a new comment written \"Good user manual\". Make sure no watcher is in the page so it doesn't provide any bug. Now, create an attachment with the file 'User Manual - Part 266' as 'user_manual_part_266.pdf' in 'myspace' having size of 200 bytes. Finally, make sure the 35 user's status must be inactive.",
+    "actions": [
+      {
+        "name": "get_user_by_email",
+        "arguments": {
+          "email": "jennifer.harris@tech.org"
+        },
+        "output": {
+          "avatar_url": "https://avatars.example.com/jennifer.harris.jpg",
+          "created_at": "2023-10-09T14:19:41.291355",
+          "display_name": "Jennifer Harris",
+          "email": "jennifer.harris@tech.org",
+          "first_name": "Jennifer",
+          "id": 4,
+          "last_login_at": null,
+          "last_name": "Harris",
+          "locale": "fr_FR",
+          "password_hash": "65155bd4ba44b960c74bf07defdff9272a3e303aac792ba86ea6f6d71cd336e0",
+          "role": "admin",
+          "status": "inactive",
+          "timezone": "Australia/Sydney",
+          "updated_at": "2025-04-10T14:19:41.291355",
+          "username": "jennifer.harris"
+        }
+      },
+      {
+        "name": "get_page_comments",
+        "arguments": {
+          "page_id": 291
+        },
+        "output": [561, 597]
+      },
+      {
+        "name": "create_comment",
+        "arguments": {
+          "content": "Good user manual",
+          "created_by": 4,
+          "page_id": 291
+        },
+        "output": {
+          "content": "Good user manual",
+          "content_format": "markdown",
+          "created_at": "2025-07-01T00:00:00Z",
+          "created_by": 4,
+          "id": 801,
+          "page_id": 291,
+          "parent_id": null,
+          "status": "active"
+        }
+      },
+      {
+        "name": "get_user_watchers",
+        "arguments": {
+          "user_id": 4
+        },
+        "output": []
+      },
+      {
+        "name": "create_attachment",
+        "arguments": {
+          "file_size": 200,
+          "mime_type": "application/pdf",
+          "original_filename": "user_manual_part_266.pdf",
+          "filename": "user_manual_part_266.pdf",
+          "storage_path": "myspace",
+          "uploaded_by": 4
+        },
+        "output": {
+          "attachment_id": 392
+        }
+      },
+      {
+        "name": "update_user_status",
+        "arguments": {
+          "user_id": 35,
+          "status": "inactive"
+        },
+        "output": {
+          "avatar_url": null,
+          "created_at": "2025-06-04T14:19:41.291900",
+          "display_name": "Sarah Wilson",
+          "email": "sarah.wilson@tech.org",
+          "first_name": "Sarah",
+          "id": 35,
+          "last_login_at": null,
+          "last_name": "Wilson",
+          "locale": "en_US",
+          "password_hash": "ed340f5b0f861f388d4a5b82d6743d60ea4389d86c89e85403c68e9a139e9186",
+          "role": "user",
+          "status": "inactive",
+          "timezone": "America/Los_Angeles",
+          "updated_at": null,
+          "username": "sarah.wilson"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "get_user_by_email",
+        "to": "create_comment",
+        "connection": {
+          "input": "created_by",
+          "output": "id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_comment",
+        "connection": {
+          "input": "content",
+          "output": "content"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "get_page_comments",
+        "connection": {
+          "input": "page_id",
+          "output": "page_id"
+        }
+      },
+      {
+        "from": "get_page_comments",
+        "to": "create_comment",
+        "connection": {
+          "input": "page_id",
+          "output": "page_id"
+        }
+      },
+      {
+        "from": "get_user_by_email",
+        "to": "get_user_watchers",
+        "connection": {
+          "input": "user_id",
+          "output": "id"
+        }
+      },
+      {
+        "from": "get_user_by_email",
+        "to": "create_attachment",
+        "connection": {
+          "input": "uploaded_by",
+          "output": "id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_attachment",
+        "connection": {
+          "input": "file_size, mime_type, original_filename, filename, storage_path",
+          "output": "file_size, mime_type, original_filename, filename, storage_path"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "update_user_status",
+        "connection": {
+          "input": "user_id, status",
+          "output": "user_id, status"
+        }
+      }
+    ],
+    "num_edges": 8
+  }
+}

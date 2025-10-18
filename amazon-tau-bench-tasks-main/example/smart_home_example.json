@@ -1,0 +1,163 @@
+{
+  "env": "smart_home",
+  "model_provider": "openai",
+  "model": "o4-mini",
+  "num_trials": 3,
+  "temperature": 1,
+  "interface_num": 1,
+  "task": {
+    "user_id": "1",
+    "instruction": "You are Zachary Potts with the email \"zachary.potts@outlook.com\", the owner of a smart home. You just got home and want to set up your evening routine. First, you want to check your user profile to confirm your details. Then, you want to get information about your home and see what rooms are available. After that, you want to check all the devices in your bedroom and turn on a smart bulb to create a cozy atmosphere. You also want to adjust the thermostat in your bedroom. Finally, you want to create an automated routine for your home that will run daily at 8 PM.",
+    "actions": [
+      {
+        "name": "get_user_info",
+        "arguments": {
+          "user_id": "1"
+        }
+      },
+      {
+        "name": "get_home_info",
+        "arguments": {
+          "home_id": "1"
+        }
+      },
+      {
+        "name": "get_rooms_info",
+        "arguments": {
+          "home_id": "1"
+        }
+      },
+      {
+        "name": "get_devices_info",
+        "arguments": {
+          "room_id": "1"
+        }
+      },
+      {
+        "name": "update_device_info",
+        "arguments": {
+          "device_id": "1",
+          "status": "on",
+          "brightness_level": "75"
+        }
+      },
+      {
+        "name": "update_device_info",
+        "arguments": {
+          "device_id": "11",
+          "status": "on"
+        }
+      },
+      {
+        "name": "create_routine",
+        "arguments": {
+          "user_id": 1,
+          "home_id": 1,
+          "action_time": "20:00",
+          "start_action_date": "2025-08-01",
+          "action_interval": "daily"
+        }
+      }
+    ],
+    "outputs": ["zachary.potts@outlook.com", "1", "1", "on", "daily"],
+    "edges": [
+      {
+        "from": "instruction",
+        "to": "get_user_info",
+        "connection": {
+          "input": "user_id",
+          "output": "user_id"
+        }
+      },
+      {
+        "from": "get_user_info",
+        "to": "get_home_info",
+        "connection": {
+          "input": "home_id",
+          "output": "address_id"
+        }
+      },
+      {
+        "from": "get_home_info",
+        "to": "get_rooms_info",
+        "connection": {
+          "input": "home_id",
+          "output": "home_id"
+        }
+      },
+      {
+        "from": "get_rooms_info",
+        "to": "get_devices_info",
+        "connection": {
+          "input": "room_id",
+          "output": "room_id"
+        }
+      },
+      {
+        "from": "get_devices_info",
+        "to": "update_device_info",
+        "connection": {
+          "input": "device_id",
+          "output": "device_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "update_device_info",
+        "connection": {
+          "input": "status",
+          "output": "status"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "update_device_info",
+        "connection": {
+          "input": "brightness_level",
+          "output": "brightness_level"
+        }
+      },
+      {
+        "from": "get_user_info",
+        "to": "create_routine",
+        "connection": {
+          "input": "user_id",
+          "output": "user_id"
+        }
+      },
+      {
+        "from": "get_home_info",
+        "to": "create_routine",
+        "connection": {
+          "input": "home_id",
+          "output": "home_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_routine",
+        "connection": {
+          "input": "action_time",
+          "output": "action_time"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_routine",
+        "connection": {
+          "input": "start_action_date",
+          "output": "start_action_date"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_routine",
+        "connection": {
+          "input": "action_interval",
+          "output": "action_interval"
+        }
+      }
+    ],
+    "num_edges": 12
+  }
+}

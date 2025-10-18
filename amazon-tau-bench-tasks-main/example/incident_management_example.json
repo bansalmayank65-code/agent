@@ -1,0 +1,228 @@
+{
+  "env": "incident_management",
+  "model_provider": "openai",
+  "model": "o4-mini",
+  "num_trials": 3,
+  "temperature": 1,
+  "interface_num": 1,
+  "task": {
+    "user_id": "user_steve_admin_9999",
+    "instruction": "You are Steve Mar with the email \"steve@target.com\", admin of the security department of Target. There has been an incident (inc_8001) logged reporting a data leak and passwords for all the agents of your department have been compromised. You need to handle this incident which is considered a high priority. You will have to reset the password for all the affected agents, but you have to first log this as a task having the description 'Resetting passwords for affected users' because the process mandates this. Then, you will be able to reset the passwords. For other users to know what you did, you want to add a comment stating 'Passwords Reset for affected users, and an email will be sent for changing the passwords to their inboxes'. To avoid this situation happening again, you want to coordinate with external security vendors for additional support, however, you will assign this task to Sara Josh who has the email \"sar.josh@Target.com\" as she has experience with external affairs, ensuring to add the description \"Coordinating with external security vendors for additional support\". All the tasks mentioned should be done before 6 PM, 24th July.",
+    "actions": [
+      {
+        "name": "search_users",
+        "arguments": {
+          "email": "steve@target.com"
+        }
+      },
+      {
+        "name": "get_company_by_name",
+        "arguments": {
+          "name": "Target"
+        }
+      },
+      {
+        "name": "search_departments",
+        "arguments": {
+          "company_id": "org_target_002",
+          "name": "Security"
+        }
+      },
+      {
+        "name": "create_incident_task",
+        "arguments": {
+          "incident_id": "inc_8001",
+          "description": "Resetting passwords for affected users",
+          "assigned_to": "user_steve_admin_9999",
+          "priority": "high",
+          "due_date": "2025-07-24T18:00:00Z"
+        }
+      },
+      {
+        "name": "search_users",
+        "arguments": {
+          "role": "agent",
+          "company_id": "org_target_002",
+          "department_id": "dept_sec_002"
+        }
+      },
+      {
+        "name": "search_users",
+        "arguments": {
+          "email": "sar.josh@Target.com"
+        }
+      },
+      {
+        "name": "create_incident_task",
+        "arguments": {
+          "incident_id": "inc_8001",
+          "description": "Coordinating with external security vendors for additional support",
+          "assigned_to": "sarauserid",
+          "priority": "high",
+          "due_date": "2025-07-24T18:00:00Z"
+        }
+      },
+      {
+        "name": "add_incident_comment",
+        "arguments": {
+          "incident_id": "inc_8001",
+          "user_id": "user_steve_admin_9999",
+          "comment_text": "Passwords Reset for affected users, and an email will be sent for changing the passwords to their inboxes.",
+          "is_public": true
+        }
+      },
+      {
+        "name": "update_task",
+        "arguments": {
+          "task_id": "task_6001",
+          "status": "done"
+        }
+      },
+      {
+        "name": "update_incident",
+        "arguments": {
+          "incident_id": "inc_8001",
+          "status": "resolved"
+        }
+      }
+    ],
+    "outputs": [
+      "steve@target.com",
+      "org_target_002",
+      "dept_sec_002",
+      "inc_8001",
+      "resolved"
+    ],
+    "edges": [
+      {
+        "from": "instruction",
+        "to": "search_users",
+        "connection": {
+          "input": "email",
+          "output": "email"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "get_company_by_name",
+        "connection": {
+          "input": "name",
+          "output": "company_name"
+        }
+      },
+      {
+        "from": "get_company_by_name",
+        "to": "search_departments",
+        "connection": {
+          "input": "company_id",
+          "output": "company_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "search_departments",
+        "connection": {
+          "input": "name",
+          "output": "department_name"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_incident_task",
+        "connection": {
+          "input": "incident_id",
+          "output": "incident_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "create_incident_task",
+        "connection": {
+          "input": "description",
+          "output": "task_description"
+        }
+      },
+      {
+        "from": "search_users",
+        "to": "create_incident_task",
+        "connection": {
+          "input": "assigned_to",
+          "output": "user_id"
+        }
+      },
+      {
+        "from": "get_company_by_name",
+        "to": "search_users",
+        "connection": {
+          "input": "company_id",
+          "output": "company_id"
+        }
+      },
+      {
+        "from": "search_departments",
+        "to": "search_users",
+        "connection": {
+          "input": "department_id",
+          "output": "department_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "search_users",
+        "connection": {
+          "input": "email",
+          "output": "email"
+        }
+      },
+      {
+        "from": "search_users",
+        "to": "create_incident_task",
+        "connection": {
+          "input": "assigned_to",
+          "output": "user_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "add_incident_comment",
+        "connection": {
+          "input": "incident_id",
+          "output": "incident_id"
+        }
+      },
+      {
+        "from": "search_users",
+        "to": "add_incident_comment",
+        "connection": {
+          "input": "user_id",
+          "output": "user_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "add_incident_comment",
+        "connection": {
+          "input": "comment_text",
+          "output": "comment_content"
+        }
+      },
+      {
+        "from": "create_incident_task",
+        "to": "update_task",
+        "connection": {
+          "input": "task_id",
+          "output": "task_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "update_incident",
+        "connection": {
+          "input": "incident_id",
+          "output": "incident_id"
+        }
+      }
+    ],
+    "num_edges": 16
+  }
+}

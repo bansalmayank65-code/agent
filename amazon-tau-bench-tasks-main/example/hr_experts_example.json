@@ -1,0 +1,709 @@
+{
+  "env": "hr_experts",
+  "model_provider": "fireworks",
+  "model": "qwen3-coder-480b-a35b-instruct",
+  "num_trials": 3,
+  "temperature": 1,
+  "interface_num": 1,
+  "task": {
+    "user_id": "5",
+    "instruction": "You are Sarah Mitchell (sarah.mitchell@company.com), an HR Manager. Create a new full-time 'senior' level Software Engineer position for the Engineering department (id: 1) with an hourly rate of 65–85 USD. This position should require the same skills as the most recently opened 'mid' level Software Engineer position in the same department. You also need to withdraw Maria Garcia's (maria.garcia@outlook.com) current applications and apply her to this new position, then schedule a 120-minute technical interview for her with David Chen (david.chen@company.com) who is the hiring manager, to be held on 15th October 2025 at 2 PM.",
+    "actions": [
+      {
+        "name": "discover_user_entities",
+        "arguments": {
+          "email": "sarah.mitchell@company.com"
+        },
+        "output": [
+          {
+            "user_id": "5",
+            "first_name": "Sarah",
+            "last_name": "Mitchell",
+            "email": "sarah.mitchell@company.com",
+            "phone_number": "+15551234567",
+            "role": "hr_manager",
+            "status": "active",
+            "mfa_enabled": true,
+            "created_at": "2023-01-15T09:30:00",
+            "updated_at": "2024-08-20T14:45:00"
+          }
+        ]
+      },
+      {
+        "name": "discover_department_entities",
+        "arguments": {
+          "department_id": "1"
+        },
+        "output": [
+          {
+            "department_id": "1",
+            "department_name": "Engineering",
+            "manager_id": null,
+            "budget": 4771808.47,
+            "status": "active",
+            "created_at": "2022-10-01T03:53:36",
+            "updated_at": "2022-12-03T19:12:31"
+          }
+        ]
+      },
+      {
+        "name": "discover_job_entities",
+        "arguments": {
+          "department_id": "1",
+          "job_level": "mid",
+          "title": "Software Engineer",
+          "status": "open"
+        },
+        "output": [
+          {
+            "position_id": "25",
+            "title": "Software Engineer",
+            "department_id": "1",
+            "job_level": "mid",
+            "employment_type": "full_time",
+            "hourly_rate_min": 45.0,
+            "hourly_rate_max": 60.0,
+            "status": "open",
+            "created_at": "2024-08-15T10:00:00",
+            "updated_at": "2024-09-01T16:30:00"
+          }
+        ]
+      },
+      {
+        "name": "discover_job_entities",
+        "arguments": {
+          "position_id": "25"
+        },
+        "output": [
+          {
+            "position_id": "25",
+            "skill_id": "12"
+          },
+          {
+            "position_id": "25",
+            "skill_id": "18"
+          },
+          {
+            "position_id": "25",
+            "skill_id": "23"
+          },
+          {
+            "position_id": "25",
+            "skill_id": "31"
+          }
+        ]
+      },
+      {
+        "name": "check_approval",
+        "arguments": {
+          "action": "create_job_position",
+          "requester_email": "sarah.mitchell@company.com"
+        },
+        "output": {
+          "approved": true,
+          "approval_id": "APP-2025-001",
+          "approver": "hr_director",
+          "message": "Job position creation approved"
+        }
+      },
+      {
+        "name": "manage_job_position",
+        "arguments": {
+          "action": "create",
+          "title": "Software Engineer",
+          "department_id": "1",
+          "job_level": "senior",
+          "employment_type": "full_time",
+          "hourly_rate_min": 65.0,
+          "hourly_rate_max": 85.0,
+          "status": "draft"
+        },
+        "output": {
+          "position_id": "89",
+          "success": true,
+          "message": "Job position created successfully"
+        }
+      },
+      {
+        "name": "manage_job_position_skills",
+        "arguments": {
+          "action": "assign",
+          "position_id": "89",
+          "skill_id": "12"
+        },
+        "output": {
+          "success": true,
+          "message": "Skill assigned to position successfully"
+        }
+      },
+      {
+        "name": "manage_job_position_skills",
+        "arguments": {
+          "action": "assign",
+          "position_id": "89",
+          "skill_id": "18"
+        },
+        "output": {
+          "success": true,
+          "message": "Skill assigned to position successfully"
+        }
+      },
+      {
+        "name": "manage_job_position_skills",
+        "arguments": {
+          "action": "assign",
+          "position_id": "89",
+          "skill_id": "23"
+        },
+        "output": {
+          "success": true,
+          "message": "Skill assigned to position successfully"
+        }
+      },
+      {
+        "name": "manage_job_position_skills",
+        "arguments": {
+          "action": "assign",
+          "position_id": "89",
+          "skill_id": "31"
+        },
+        "output": {
+          "success": true,
+          "message": "Skill assigned to position successfully"
+        }
+      },
+      {
+        "name": "manage_job_position",
+        "arguments": {
+          "action": "update",
+          "position_id": "89",
+          "status": "open"
+        },
+        "output": {
+          "success": true,
+          "message": "Job position status updated to open"
+        }
+      },
+      {
+        "name": "discover_employee_entities",
+        "arguments": {
+          "email": "maria.garcia@outlook.com"
+        },
+        "output": [
+          {
+            "candidate_id": "45",
+            "first_name": "Maria",
+            "last_name": "Garcia",
+            "email": "maria.garcia@outlook.com",
+            "phone_number": "+15559876543",
+            "status": "screening",
+            "source": "career_fair",
+            "address": "123 Tech Street, San Francisco, CA 94105",
+            "created_at": "2024-07-20T11:15:00",
+            "updated_at": "2024-09-10T09:30:00"
+          }
+        ]
+      },
+      {
+        "name": "discover_recruitment_entities",
+        "arguments": {
+          "candidate_id": "45"
+        },
+        "output": [
+          {
+            "application_id": "156",
+            "candidate_id": "45",
+            "position_id": "18",
+            "recruiter_id": "8",
+            "status": "screening",
+            "application_date": "2024-09-01",
+            "ai_screening_score": 82.5,
+            "final_decision": null,
+            "created_at": "2024-09-01T14:20:00",
+            "updated_at": "2024-09-15T10:45:00"
+          }
+        ]
+      },
+      {
+        "name": "manage_job_application",
+        "arguments": {
+          "action": "update",
+          "application_id": "156",
+          "status": "withdrawn"
+        },
+        "output": {
+          "success": true,
+          "message": "Application status updated to withdrawn"
+        }
+      },
+      {
+        "name": "discover_user_entities",
+        "arguments": {
+          "email": "david.chen@company.com"
+        },
+        "output": [
+          {
+            "user_id": "12",
+            "first_name": "David",
+            "last_name": "Chen",
+            "email": "david.chen@company.com",
+            "phone_number": "+15557654321",
+            "role": "hiring_manager",
+            "status": "active",
+            "mfa_enabled": true,
+            "created_at": "2022-05-10T08:00:00",
+            "updated_at": "2024-06-15T12:30:00"
+          }
+        ]
+      },
+      {
+        "name": "manage_job_application",
+        "arguments": {
+          "action": "create",
+          "candidate_id": "45",
+          "position_id": "89",
+          "recruiter_id": "5",
+          "application_date": "2025-09-28",
+          "status": "submitted"
+        },
+        "output": {
+          "application_id": "203",
+          "success": true,
+          "message": "Job application created successfully"
+        }
+      },
+      {
+        "name": "manage_interview",
+        "arguments": {
+          "action": "create",
+          "application_id": "203",
+          "interviewer_id": "12",
+          "interview_type": "technical",
+          "scheduled_date": "2025-10-15T14:00:00",
+          "duration_minutes": 120,
+          "status": "scheduled"
+        },
+        "output": {
+          "interview_id": "78",
+          "success": true,
+          "message": "Interview scheduled successfully"
+        }
+      },
+      {
+        "name": "manage_audit_logs",
+        "arguments": {
+          "action": "create",
+          "reference_type": "job_positions",
+          "reference_id": "89",
+          "user_id": "5"
+        },
+        "output": {
+          "log_id": "1245",
+          "success": true,
+          "message": "Audit log created successfully"
+        }
+      },
+      {
+        "name": "manage_audit_logs",
+        "arguments": {
+          "action": "update",
+          "reference_type": "job_positions",
+          "reference_id": "89",
+          "field_name": "status",
+          "old_value": "draft",
+          "new_value": "open",
+          "user_id": "5"
+        },
+        "output": {
+          "log_id": "1246",
+          "success": true,
+          "message": "Audit log created successfully"
+        }
+      },
+      {
+        "name": "manage_audit_logs",
+        "arguments": {
+          "action": "create",
+          "reference_type": "job_applications",
+          "reference_id": "203",
+          "user_id": "5"
+        },
+        "output": {
+          "log_id": "1247",
+          "success": true,
+          "message": "Audit log created successfully"
+        }
+      },
+      {
+        "name": "manage_audit_logs",
+        "arguments": {
+          "action": "create",
+          "reference_type": "interviews",
+          "reference_id": "78",
+          "user_id": "5"
+        },
+        "output": {
+          "log_id": "1248",
+          "success": true,
+          "message": "Audit log created successfully"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "instruction",
+        "to": "discover_user_entities",
+        "connection": {
+          "output": "email",
+          "input": "email"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "discover_department_entities",
+        "connection": {
+          "output": "department_id",
+          "input": "department_id"
+        }
+      },
+      {
+        "from": "discover_department_entities",
+        "to": "discover_job_entities",
+        "connection": {
+          "output": "output[0].department_id",
+          "input": "department_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "discover_job_entities",
+        "connection": {
+          "output": "job_level, title, status",
+          "input": "job_level, title, status"
+        }
+      },
+      {
+        "from": "discover_job_entities",
+        "to": "discover_job_entities",
+        "connection": {
+          "output": "output[0].position_id",
+          "input": "position_id"
+        }
+      },
+      {
+        "from": "discover_user_entities",
+        "to": "check_approval",
+        "connection": {
+          "output": "output[0].email",
+          "input": "requester_email"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "check_approval",
+        "connection": {
+          "output": "action",
+          "input": "action"
+        }
+      },
+      {
+        "from": "discover_department_entities",
+        "to": "manage_job_position",
+        "connection": {
+          "output": "output[0].department_id",
+          "input": "department_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "manage_job_position",
+        "connection": {
+          "output": "action, title, job_level, employment_type, hourly_rate_min, hourly_rate_max, status",
+          "input": "action, title, job_level, employment_type, hourly_rate_min, hourly_rate_max, status"
+        }
+      },
+      {
+        "from": "manage_job_position",
+        "to": "manage_job_position_skills",
+        "connection": {
+          "output": "position_id",
+          "input": "position_id"
+        }
+      },
+      {
+        "from": "discover_job_entities",
+        "to": "manage_job_position_skills",
+        "connection": {
+          "output": "output[0].skill_id",
+          "input": "skill_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "manage_job_position_skills",
+        "connection": {
+          "output": "action",
+          "input": "action"
+        }
+      },
+      {
+        "from": "manage_job_position",
+        "to": "manage_job_position_skills",
+        "connection": {
+          "output": "position_id",
+          "input": "position_id"
+        }
+      },
+      {
+        "from": "discover_job_entities",
+        "to": "manage_job_position_skills",
+        "connection": {
+          "output": "output[1].skill_id",
+          "input": "skill_id"
+        }
+      },
+      {
+        "from": "manage_job_position",
+        "to": "manage_job_position_skills",
+        "connection": {
+          "output": "position_id",
+          "input": "position_id"
+        }
+      },
+      {
+        "from": "discover_job_entities",
+        "to": "manage_job_position_skills",
+        "connection": {
+          "output": "output[2].skill_id",
+          "input": "skill_id"
+        }
+      },
+      {
+        "from": "manage_job_position",
+        "to": "manage_job_position_skills",
+        "connection": {
+          "output": "position_id",
+          "input": "position_id"
+        }
+      },
+      {
+        "from": "discover_job_entities",
+        "to": "manage_job_position_skills",
+        "connection": {
+          "output": "output[3].skill_id",
+          "input": "skill_id"
+        }
+      },
+      {
+        "from": "manage_job_position_skills",
+        "to": "manage_job_position",
+        "connection": {
+          "output": "position_id",
+          "input": "position_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "manage_job_position",
+        "connection": {
+          "output": "action, status",
+          "input": "action, status"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "discover_employee_entities",
+        "connection": {
+          "output": "email",
+          "input": "email"
+        }
+      },
+      {
+        "from": "discover_employee_entities",
+        "to": "discover_recruitment_entities",
+        "connection": {
+          "output": "output[0].candidate_id",
+          "input": "candidate_id"
+        }
+      },
+      {
+        "from": "discover_recruitment_entities",
+        "to": "manage_job_application",
+        "connection": {
+          "output": "output[0].application_id",
+          "input": "application_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "manage_job_application",
+        "connection": {
+          "output": "action, status",
+          "input": "action, status"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "discover_user_entities",
+        "connection": {
+          "output": "email",
+          "input": "email"
+        }
+      },
+      {
+        "from": "discover_employee_entities",
+        "to": "manage_job_application",
+        "connection": {
+          "output": "output[0].candidate_id",
+          "input": "candidate_id"
+        }
+      },
+      {
+        "from": "manage_job_position",
+        "to": "manage_job_application",
+        "connection": {
+          "output": "position_id",
+          "input": "position_id"
+        }
+      },
+      {
+        "from": "discover_user_entities",
+        "to": "manage_job_application",
+        "connection": {
+          "output": "output[0].user_id",
+          "input": "recruiter_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "manage_job_application",
+        "connection": {
+          "output": "action, application_date, status",
+          "input": "action, application_date, status"
+        }
+      },
+      {
+        "from": "manage_job_application",
+        "to": "manage_interview",
+        "connection": {
+          "output": "application_id",
+          "input": "application_id"
+        }
+      },
+      {
+        "from": "discover_user_entities",
+        "to": "manage_interview",
+        "connection": {
+          "output": "output[0].user_id",
+          "input": "interviewer_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "manage_interview",
+        "connection": {
+          "output": "action, interview_type, scheduled_date, duration_minutes, status",
+          "input": "action, interview_type, scheduled_date, duration_minutes, status"
+        }
+      },
+      {
+        "from": "discover_user_entities",
+        "to": "manage_audit_logs",
+        "connection": {
+          "output": "output[0].user_id",
+          "input": "user_id"
+        }
+      },
+      {
+        "from": "manage_job_position",
+        "to": "manage_audit_logs",
+        "connection": {
+          "output": "position_id",
+          "input": "reference_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "manage_audit_logs",
+        "connection": {
+          "output": "action, reference_type",
+          "input": "action, reference_type"
+        }
+      },
+      {
+        "from": "discover_user_entities",
+        "to": "manage_audit_logs",
+        "connection": {
+          "output": "output[0].user_id",
+          "input": "user_id"
+        }
+      },
+      {
+        "from": "manage_job_position",
+        "to": "manage_audit_logs",
+        "connection": {
+          "output": "position_id",
+          "input": "reference_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "manage_audit_logs",
+        "connection": {
+          "output": "action, reference_type, field_name, old_value, new_value",
+          "input": "action, reference_type, field_name, old_value, new_value"
+        }
+      },
+      {
+        "from": "discover_user_entities",
+        "to": "manage_audit_logs",
+        "connection": {
+          "output": "output[0].user_id",
+          "input": "user_id"
+        }
+      },
+      {
+        "from": "manage_job_application",
+        "to": "manage_audit_logs",
+        "connection": {
+          "output": "application_id",
+          "input": "reference_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "manage_audit_logs",
+        "connection": {
+          "output": "action, reference_type",
+          "input": "action, reference_type"
+        }
+      },
+      {
+        "from": "discover_user_entities",
+        "to": "manage_audit_logs",
+        "connection": {
+          "output": "output[0].user_id",
+          "input": "user_id"
+        }
+      },
+      {
+        "from": "manage_interview",
+        "to": "manage_audit_logs",
+        "connection": {
+          "output": "interview_id",
+          "input": "reference_id"
+        }
+      },
+      {
+        "from": "instruction",
+        "to": "manage_audit_logs",
+        "connection": {
+          "output": "action, reference_type",
+          "input": "action, reference_type"
+        }
+      }
+    ],
+    "outputs": ["89", "203", "78"],
+    "num_edges": 44
+  }
+}
