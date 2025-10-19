@@ -998,6 +998,7 @@ public class TaskCacheService {
             // Save to database with original JSON content to preserve model configuration
             saveTaskToDatabase(userId, taskId, entry, taskJsonContent);
             
+            
             // Set as current context for immediate use
             setCurrentContext(userId, taskId);
             
@@ -1014,4 +1015,34 @@ public class TaskCacheService {
             throw e;
         }
     }
+    
+    /**
+     * Clear cache for a specific user and task
+     * This is useful when importing a new task to ensure old data doesn't interfere
+     */
+    public synchronized void clearCache(String userId, String taskId) {
+        String cacheKey = generateCacheKey(userId, taskId);
+        TaskCacheEntry removed = userTaskCache.remove(cacheKey);
+        
+        if (removed != null) {
+            logger.info("Cleared cache entry for user {} task {}", userId, taskId);
+        } else {
+            logger.info("No cache entry found for user {} task {} (already clear)", userId, taskId);
+        }
+    }
+    
+    /**
+     * Clear all cache entries for a specific user
+     * Useful when user logs out or wants to start fresh
+     */
+    public synchronized void clearUserCache(String userId) {
+        List<String> keysToRemove = userTaskCache.keySet().stream()
+            .filter(key -> key.startsWith(userId + "_"))
+            .collect(Collectors.toList());
+        
+        keysToRemove.forEach(userTaskCache::remove);
+        
+        logger.info("Cleared {} cache entries for user {}", keysToRemove.size(), userId);
+    }
 }
+

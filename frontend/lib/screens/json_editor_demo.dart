@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/json_editor_viewer.dart';
+import '../widgets/common/developer_footer.dart';
 
 /// Demo page showcasing the JSON Editor + Viewer capabilities
 class JsonEditorDemo extends StatelessWidget {
@@ -64,6 +65,8 @@ class JsonEditorDemo extends StatelessWidget {
                 splitView: true,
               ),
             ),
+            SizedBox(height: 32),
+            DeveloperFooter(),
           ],
         ),
       ),

@@ -43,6 +43,29 @@ class LeftNavigationWidget extends StatelessWidget {
               itemCount: NavigationService.itemCount,
               itemBuilder: (context, index) {
                 final item = NavigationService.getItem(index);
+                
+                // Show separator and section header for utility tools
+                if (item.sectionKey == 'separator') {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Divider(color: Colors.grey, thickness: 1, height: 32),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Text(
+                          'UTILITY TOOLS',
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }
+                
                 final selected = index == selectedIndex;
                 final dirty = FormValidationService.isSectionDirty(provider, item.sectionKey);
                 final enabled = _isNavigationEnabled(provider, index);
@@ -127,6 +150,9 @@ class LeftNavigationWidget extends StatelessWidget {
     switch (item.sectionKey) {
       case 'tasks_history':
       case 'repo': // Import JSON
+      case 'separator': // Visual separator
+      case 'hr_interface_changer': // Utility tool - always available
+      case 'task_refiner': // Utility tool - always available
         return true;
       
       // Task-dependent items (Phase 2)  

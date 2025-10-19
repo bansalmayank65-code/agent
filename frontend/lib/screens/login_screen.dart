@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/common/developer_footer.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -76,36 +77,43 @@ class _LoginScreenState extends State<LoginScreen>
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    child: Card(
-                      elevation: 8,
-                      shadowColor: Colors.black26,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildHeader(),
-                            const SizedBox(height: 32),
-                            _buildLoginForm(),
-                            const SizedBox(height: 24),
-                            _buildLoginButton(),
-                            const SizedBox(height: 16),
-                            _buildRememberMeRow(),
-                          ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SlideTransition(
+                    position: _slideAnimation,
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 400),
+                        child: Card(
+                          elevation: 8,
+                          shadowColor: Colors.black26,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _buildHeader(),
+                                const SizedBox(height: 32),
+                                _buildLoginForm(),
+                                const SizedBox(height: 24),
+                                _buildLoginButton(),
+                                const SizedBox(height: 16),
+                                _buildRememberMeRow(),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 32),
+                  const DeveloperFooter(),
+                ],
               ),
             ),
           ),

@@ -315,6 +315,31 @@ class ApiService {
     throw Exception('Failed to load existing task.json: ${response.statusCode} - ${response.body}');
   }
 
+  /// Clear cache for a specific user and task
+  /// This ensures old task data doesn't interfere with new imports
+  Future<Map<String, dynamic>> clearCache(String userId, {String? taskId}) async {
+    try {
+      final requestBody = {'userId': userId};
+      if (taskId != null && taskId.isNotEmpty) {
+        requestBody['taskId'] = taskId;
+      }
+      
+      final response = await http.post(
+        Uri.parse('$baseUrl/cache/clear'),
+        headers: _jsonHeaders,
+        body: jsonEncode(requestBody),
+      );
+      
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to clear cache: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error clearing cache: $e');
+    }
+  }
+
   /// List directory contents
   Future<List<Map<String, dynamic>>> listDirectoryContents(String directory) async {
     try {
@@ -771,9 +796,15 @@ class ApiService {
   /// ====================================================================
   /// Task History API Methods
   /// ====================================================================
+  /// TEMPORARILY DISABLED - These API calls are disabled temporarily
+  static const bool _taskHistoryApiEnabled = false;
 
   /// Get all tasks for a user
   Future<Map<String, dynamic>> getTasksForUser(String userId, [String? sessionId]) async {
+    if (!_taskHistoryApiEnabled) {
+      return {'success': false, 'message': 'Task History API is temporarily disabled', 'data': []};
+    }
+    
     try {
       final headers = sessionId != null ? _authHeaders(sessionId) : _jsonHeaders;
       final response = await http.get(
@@ -793,6 +824,10 @@ class ApiService {
 
   /// Get tasks by status for a user
   Future<Map<String, dynamic>> getTasksByStatus(String userId, String status, [String? sessionId]) async {
+    if (!_taskHistoryApiEnabled) {
+      return {'success': false, 'message': 'Task History API is temporarily disabled', 'data': []};
+    }
+    
     try {
       final headers = sessionId != null ? _authHeaders(sessionId) : _jsonHeaders;
       final response = await http.get(
@@ -812,6 +847,10 @@ class ApiService {
 
   /// Get task statistics for a user
   Future<Map<String, dynamic>> getTaskStatistics(String userId, [String? sessionId]) async {
+    if (!_taskHistoryApiEnabled) {
+      return {'success': false, 'message': 'Task History API is temporarily disabled', 'data': {}};
+    }
+    
     try {
       final headers = sessionId != null ? _authHeaders(sessionId) : _jsonHeaders;
       final response = await http.get(
@@ -831,6 +870,10 @@ class ApiService {
 
   /// Get detailed task information
   Future<Map<String, dynamic>> getTaskDetails(String userId, String taskId, [String? sessionId]) async {
+    if (!_taskHistoryApiEnabled) {
+      return {'success': false, 'message': 'Task History API is temporarily disabled', 'data': {}};
+    }
+    
     try {
       final headers = sessionId != null ? _authHeaders(sessionId) : _jsonHeaders;
       final response = await http.get(
@@ -850,6 +893,10 @@ class ApiService {
 
   /// Get recent tasks for a user
   Future<Map<String, dynamic>> getRecentTasks(String userId, [String? sessionId]) async {
+    if (!_taskHistoryApiEnabled) {
+      return {'success': false, 'message': 'Task History API is temporarily disabled', 'data': []};
+    }
+    
     try {
       final headers = sessionId != null ? _authHeaders(sessionId) : _jsonHeaders;
       final response = await http.get(
@@ -864,6 +911,41 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Error getting recent tasks: $e');
+    }
+  }
+
+  /// Task Refinement Methods
+  
+  /// Refine a task.json by:
+  /// - Merging duplicate actions
+  /// - Moving audit log actions to end
+  /// - Generating edges
+  /// - Fixing num_of_edges
+  Future<Map<String, dynamic>> refineTask(
+    dynamic taskData, {
+    Map<String, bool>? options,
+  }) async {
+    try {
+      // Build request body with task data and options
+      final requestBody = {
+        ...taskData as Map<String, dynamic>,
+        if (options != null) 'options': options,
+      };
+      
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/refine-task'),
+        headers: _jsonHeaders,
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        final errorMsg = _extractErrorMessage(response);
+        throw Exception('Failed to refine task: $errorMsg');
+      }
+    } catch (e) {
+      throw Exception('Error refining task: $e');
     }
   }
 }

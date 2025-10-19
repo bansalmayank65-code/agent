@@ -7,6 +7,9 @@ import '../widgets/step_card.dart';
 import '../widgets/connection_status_widget.dart';
 import '../widgets/progress_indicator_widget.dart';
 import 'instruction_validation_screen.dart';
+import 'task_interface_converter_screen.dart';
+import 'edge_merger_screen.dart';
+import 'task_refiner_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -103,6 +106,12 @@ class _MainScreenState extends State<MainScreen>
               );
             },
           ),
+          // Always-visible HR Interface Changer button
+          IconButton(
+            icon: const Icon(Icons.swap_horiz),
+            onPressed: () => _navigateToOtherTools(),
+            tooltip: 'HR Expert Interface Changer',
+          ),
           // Web-style navigation for desktop
           if (isDesktop) ...[
             TextButton.icon(
@@ -114,16 +123,38 @@ class _MainScreenState extends State<MainScreen>
               ),
             ),
             const SizedBox(width: 8),
+            TextButton.icon(
+              onPressed: () => _navigateToOtherTools(),
+              icon: const Icon(Icons.swap_horiz),
+              label: const Text('HR Interface Changer'),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF667eea),
+              ),
+            ),
+            const SizedBox(width: 8),
           ],
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             onSelected: (value) => _handleMenuSelection(value),
             itemBuilder: (context) => [
-              if (!isDesktop)
+              if (!isDesktop) ...[
                 const PopupMenuItem(
                   value: 'instruction_validation',
                   child: Text('Instruction Validation'),
                 ),
+                const PopupMenuItem(
+                  value: 'hr_interface_changer',
+                  child: Text('HR Interface Changer'),
+                ),
+                const PopupMenuItem(
+                  value: 'merge_edges',
+                  child: Text('Merge Edges'),
+                ),
+                const PopupMenuItem(
+                  value: 'task_refiner',
+                  child: Text('Refine task.json'),
+                ),
+              ],
               const PopupMenuItem(
                 value: 'expand_all',
                 child: Text('Expand All Steps'),
@@ -258,6 +289,38 @@ class _MainScreenState extends State<MainScreen>
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const InstructionValidationScreen(),
+      ),
+    );
+  }
+
+  void _navigateToOtherTools() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const TaskInterfaceConverterScreen(),
+      ),
+    );
+  }
+
+  void _navigateToHRInterfaceChanger() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const TaskInterfaceConverterScreen(),
+      ),
+    );
+  }
+
+  void _navigateToTaskRefiner() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const TaskRefinerScreen(),
+      ),
+    );
+  }
+
+  void _navigateToEdgeMerger() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const EdgeMergerScreen(),
       ),
     );
   }
@@ -664,6 +727,15 @@ class _MainScreenState extends State<MainScreen>
     switch (value) {
       case 'instruction_validation':
         _navigateToInstructionValidation();
+        break;
+      case 'hr_interface_changer':
+        _navigateToHRInterfaceChanger();
+        break;
+      case 'merge_edges':
+        _navigateToEdgeMerger();
+        break;
+      case 'task_refiner':
+        _navigateToTaskRefiner();
         break;
       case 'expand_all':
         provider.expandAllSteps();

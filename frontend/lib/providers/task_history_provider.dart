@@ -16,10 +16,19 @@ class TaskHistoryProvider with ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String? get currentUserId => _currentUserId;
 
+  // TEMPORARILY DISABLED - Not needed when API calls are disabled
+  // ignore: unused_field
   final ApiService _apiService = ApiService();
 
   /// Load tasks for the specified user
   Future<void> loadTasksForUser(String userId, [String? sessionId]) async {
+    // TODO: TEMPORARILY DISABLED - Task history API calls disabled
+    if (kDebugMode) {
+      print('Task history API calls are temporarily disabled');
+    }
+    return;
+    
+    /* TEMPORARILY DISABLED
     _setLoading(true);
     _clearError();
     _currentUserId = userId;
@@ -50,10 +59,18 @@ class TaskHistoryProvider with ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+    */
   }
 
   /// Load tasks by status
   Future<void> loadTasksByStatus(String userId, String status, [String? sessionId]) async {
+    // TODO: TEMPORARILY DISABLED - Task history API calls disabled
+    if (kDebugMode) {
+      print('Task history API calls are temporarily disabled');
+    }
+    return;
+    
+    /* TEMPORARILY DISABLED
     _setLoading(true);
     _clearError();
 
@@ -80,10 +97,18 @@ class TaskHistoryProvider with ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+    */
   }
 
   /// Load recent tasks
   Future<void> loadRecentTasks(String userId, [String? sessionId]) async {
+    // TODO: TEMPORARILY DISABLED - Task history API calls disabled
+    if (kDebugMode) {
+      print('Task history API calls are temporarily disabled');
+    }
+    return;
+    
+    /* TEMPORARILY DISABLED
     _setLoading(true);
     _clearError();
 
@@ -110,10 +135,18 @@ class TaskHistoryProvider with ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+    */
   }
 
   /// Load task statistics
   Future<Map<String, dynamic>?> loadTaskStatistics(String userId, [String? sessionId]) async {
+    // TODO: TEMPORARILY DISABLED - Task history API calls disabled
+    if (kDebugMode) {
+      print('Task history API calls are temporarily disabled');
+    }
+    return null;
+    
+    /* TEMPORARILY DISABLED
     try {
       final response = await _apiService.getTaskStatistics(userId, sessionId);
       
@@ -135,10 +168,18 @@ class TaskHistoryProvider with ChangeNotifier {
       }
     }
     return null;
+    */
   }
 
   /// Get task details
   Future<TaskHistoryModel?> getTaskDetails(String userId, String taskId, [String? sessionId]) async {
+    // TODO: TEMPORARILY DISABLED - Task history API calls disabled
+    if (kDebugMode) {
+      print('Task history API calls are temporarily disabled');
+    }
+    return null;
+    
+    /* TEMPORARILY DISABLED
     try {
       final response = await _apiService.getTaskDetails(userId, taskId, sessionId);
       
@@ -154,6 +195,7 @@ class TaskHistoryProvider with ChangeNotifier {
       }
     }
     return null;
+    */
   }
 
   /// Filter tasks by status
@@ -189,6 +231,8 @@ class TaskHistoryProvider with ChangeNotifier {
   }
 
   /// Calculate status counts from current tasks
+  // TEMPORARILY DISABLED - Not needed when API calls are disabled
+  // ignore: unused_element
   void _calculateStatusCounts() {
     _statusCounts = {};
     for (final task in _tasks) {
@@ -226,11 +270,15 @@ class TaskHistoryProvider with ChangeNotifier {
   }
 
   /// Private helper methods
+  // TEMPORARILY DISABLED - Not needed when API calls are disabled
+  // ignore: unused_element
   void _setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
   }
 
+  // TEMPORARILY DISABLED - Not needed when API calls are disabled
+  // ignore: unused_element
   void _setError(String error) {
     _errorMessage = error;
     notifyListeners();

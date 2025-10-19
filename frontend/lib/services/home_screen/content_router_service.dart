@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../providers/task_provider.dart';
-import '../../screens/task_history_screen.dart';
+// TODO: TEMPORARILY COMMENTED - import '../../screens/task_history_screen.dart';
 import '../../widgets/home_screen/repository_section_widget.dart';
 import '../../widgets/home_screen/project_parameters_section_widget.dart';
 
@@ -15,6 +15,10 @@ import '../../widgets/home_screen/task_json_section_widget.dart';
 import '../../widgets/home_screen/validation_section_widget.dart';
 import '../../widgets/home_screen/results_section_widget.dart';
 import '../../services/home_screen/ui_helper_service.dart';
+import '../../screens/task_interface_converter_screen.dart';
+import '../../screens/edge_merger_screen.dart';
+import '../../screens/task_refiner_screen.dart';
+import '../../widgets/common/developer_footer.dart';
 
 /// Service for routing content sections
 class ContentRouterService {
@@ -53,88 +57,106 @@ class ContentRouterService {
     Function(int)? onNavigate,
   }) {
     switch (selectedIndex) {
+      // case 0: Tasks History is temporarily hidden
       case 0:
-        return _sectionWrapper(
-          key,
-          'Tasks History',
-          TaskHistoryScreen(onNavigate: onNavigate),
-          scrollController,
-        );
-      case 1:
         return _sectionWrapper(
           key,
           'Select local repository folder',
           RepositorySectionWidget(provider: provider),
           scrollController,
         );
-      case 2:
+      case 1:
         return _sectionWrapper(
           key,
           'Edit project parameters',
           ProjectParametersSectionWidget(provider: provider),
           scrollController,
         );
-      case 3:
+      case 2:
         return _sectionWrapper(
           key,
           'Instruction',
           const InstructionSectionWidget(),
           scrollController,
         );
-      case 4:
+      case 3:
         return _sectionWrapper(
           key,
           'Actions',
           const ActionsSectionWidget(),
           scrollController,
         );
-      case 5:
+      case 4:
         return _sectionWrapper(
           key,
           'User ID',
           const UserIdSectionWidget(),
           scrollController,
         );
-      case 6:
+      case 5:
         return _sectionWrapper(
           key,
           'Outputs',
           const OutputsSectionWidget(),
           scrollController,
         );
-      case 7:
+      case 6:
         return _sectionWrapper(
           key,
           'Edges',
           const EdgesSectionWidget(),
           scrollController,
         );
-      case 8:
+      case 7:
         return _sectionWrapper(
           key,
           'Number of edges',
           const NumberOfEdgesSectionWidget(),
           scrollController,
         );
-      case 9:
+      case 8:
         return _sectionWrapper(
           key,
           'Task.json',
           const TaskJsonSectionWidget(),
           scrollController,
         );
-      case 10:
+      case 9:
         return _sectionWrapper(
           key,
           'Validate Task.json',
           const ValidationSectionWidget(),
           scrollController,
         );
-      case 11:
+      case 10:
         return _sectionWrapper(
           key,
           'Result.json',
           ResultsSectionWidget(onNavigate: onNavigate),
+          scrollController,
+        );
+      case 11:
+        // Separator - return empty (shouldn't be selected)
+        return const SizedBox();
+      case 12:
+        return _sectionWrapper(
+          key,
+          'HR Expert Interface Changer',
+          const TaskInterfaceConverterScreen(standalone: false),
+          scrollController,
+        );
+      case 13:
+        return _sectionWrapper(
+          key,
+          'Merge Edges',
+          const EdgeMergerScreen(standalone: false),
+          scrollController,
+        );
+      case 14:
+        return _sectionWrapper(
+          key,
+          'Refine task.json',
+          const TaskRefinerScreen(standalone: false),
           scrollController,
         );
       default:
@@ -211,6 +233,9 @@ class ContentRouterService {
                       }
                     },
                   ),
+                  // Add developer footer at the bottom
+                  const SizedBox(height: 48),
+                  const DeveloperFooter(),
                 ],
               ),
             ),

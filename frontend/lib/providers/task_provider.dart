@@ -168,11 +168,23 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateRepositoryPath(String path) {
+  void updateRepositoryPath(String path) async {
     _task = _task.copyWith(repositoryPath: path);
     _clearError();
     notifyListeners();
     _persistRepositoryPath(path);
+    
+    // Clear cache when changing repository to ensure clean state
+    // This prevents old task data from interfering with new tasks in this repository
+    if (_task.userId.isNotEmpty) {
+      try {
+        await _apiService.clearCache(_task.userId);
+        print('Cleared cache after repository path change for user: ${_task.userId}');
+      } catch (e) {
+        print('Warning: Failed to clear cache after repository change: $e');
+      }
+    }
+    
     // Attempt to load existing task.json automatically
     _loadExistingIfPresent();
     _dirtyRepo = true; // mark until persisted
@@ -714,6 +726,24 @@ class TaskProvider extends ChangeNotifier {
   /// dbUserId: Optional - The database user ID for foreign key constraint (should be logged-in user)
   Future<Map<String, dynamic>> importTaskJson(Map<String,dynamic> root, {String? loggedInUserId, String? dbUserId}) async {
     try {
+      // IMPORTANT: Clear old cache/session data before importing new task
+      // This ensures old task data doesn't interfere with the new import
+      if (loggedInUserId != null && loggedInUserId.isNotEmpty) {
+        try {
+          await _apiService.clearCache(loggedInUserId);
+          print('Successfully cleared cache before importing new task for user: $loggedInUserId');
+        } catch (e) {
+          print('Warning: Failed to clear cache before import: $e');
+          // Continue with import even if cache clear fails
+        }
+      }
+      
+      // Clear local state
+      _resultData = null;
+      _resultFilePath = null;
+      _hasImportedTaskJson = false;
+      _importedJsonPath = null;
+      
       final env = root['env'] as String? ?? _task.env;
       final iface = (root['interface_num'] is int) ? root['interface_num'] as int : _task.interfaceNum;
       final taskSection = root['task'] as Map<String,dynamic>?;

@@ -4,7 +4,8 @@ import '../../models/home_screen/nav_item.dart';
 /// Navigation service for managing navigation state and items
 class NavigationService {
   static const List<NavItem> _navItems = [
-    NavItem('Tasks History', Icons.history, sectionKey: 'tasks_history'),
+    // Main workflow items
+    // TODO: TEMPORARILY HIDDEN - NavItem('Tasks History', Icons.history, sectionKey: 'tasks_history'),
     NavItem('Import JSON', Icons.upload_file, sectionKey: 'repo'),
     NavItem('Project Parameters', Icons.settings_applications, sectionKey: 'params'),
     NavItem('Instruction', Icons.description, sectionKey: 'instruction'),
@@ -16,6 +17,12 @@ class NavigationService {
     NavItem('Task.json', Icons.code),
     NavItem('Validate Task.json', Icons.rule_folder),
     NavItem('Result.json', Icons.assessment, sectionKey: 'results'),
+    
+    // Utility tools section (separator)
+    NavItem('', Icons.more_horiz, sectionKey: 'separator'), // Visual separator
+    NavItem('HR Expert Interface Changer', Icons.swap_horiz, sectionKey: 'hr_interface_changer'),
+    NavItem('Merge Edges', Icons.merge, sectionKey: 'merge_edges'),
+    NavItem('Refine task.json', Icons.auto_fix_high, sectionKey: 'task_refiner'),
   ];
 
   static List<NavItem> get navItems => _navItems;
@@ -23,4 +30,7 @@ class NavigationService {
   static int get itemCount => _navItems.length;
 
   static NavItem getItem(int index) => _navItems[index];
+  
+  /// Get the index where utility tools section starts
+  static int get utilityToolsStartIndex => 11; // After Result.json (adjusted because Tasks History is hidden)
 }

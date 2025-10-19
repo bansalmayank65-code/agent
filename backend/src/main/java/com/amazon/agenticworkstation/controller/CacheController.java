@@ -212,6 +212,41 @@ public class CacheController {
         }
     }
 
+    /**
+     * Clear cache for specific user and task
+     * This ensures old task data doesn't interfere with new imports
+     */
+    @PostMapping("/clear")
+    public ResponseEntity<?> clearCache(@RequestBody Map<String, String> body) {
+        String userId = body.get("userId");
+        String taskId = body.get("taskId");
+        
+        log.info("Clear cache request received for userId: '{}', taskId: '{}'", userId, taskId);
+        
+        try {
+            if (userId == null || userId.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "userId is required"));
+            }
+            
+            // If taskId is provided, clear specific task cache, otherwise clear all for user
+            if (taskId != null && !taskId.isBlank()) {
+                cacheService.clearCache(userId, taskId);
+                log.info("Successfully cleared cache for user '{}' task '{}'", userId, taskId);
+            } else {
+                cacheService.clearUserCache(userId);
+                log.info("Successfully cleared all cache entries for user '{}'", userId);
+            }
+            
+            return ResponseEntity.ok(Map.of(
+                "status", "cleared",
+                "message", "Cache cleared successfully"
+            ));
+        } catch (Exception e) {
+            log.error("Failed to clear cache for user '{}' task '{}': {}", userId, taskId, e.getMessage(), e);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @GetMapping("/policy")
     public ResponseEntity<?> getPolicy(@RequestParam(required = false) String directory,
                                       @RequestParam String env,

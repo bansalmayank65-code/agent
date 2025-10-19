@@ -4,6 +4,7 @@ import '../providers/instruction_validation_provider.dart';
 import '../widgets/gradient_background.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/instruction_validation_redirect_button.dart';
+import '../widgets/app_footer.dart';
 
 /// Minimal redirect-only screen. Legacy validation form removed.
 class InstructionValidationScreen extends StatelessWidget {
@@ -22,10 +23,18 @@ class InstructionValidationScreen extends StatelessWidget {
                 onBackPressed: () => Navigator.of(context).pop(),
               ),
               Expanded(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 600),
-                    child: const _RedirectCard(),
+                child: SingleChildScrollView(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child: Column(
+                        children: const [
+                          _RedirectCard(),
+                          SizedBox(height: 24),
+                          AppFooter(),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),

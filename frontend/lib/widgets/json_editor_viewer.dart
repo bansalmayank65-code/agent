@@ -22,6 +22,8 @@ class JsonEditorViewer extends StatefulWidget {
   final String? title;
   final bool showToolbar;
   final bool splitView;
+  final TextEditingController? controller;
+  final void Function(TextEditingController)? onControllerReady;
 
   const JsonEditorViewer({
     super.key,
@@ -30,6 +32,8 @@ class JsonEditorViewer extends StatefulWidget {
     this.title,
     this.showToolbar = true,
     this.splitView = true,
+    this.controller,
+    this.onControllerReady,
   });
 
   @override
@@ -37,7 +41,7 @@ class JsonEditorViewer extends StatefulWidget {
 }
 
 class _JsonEditorViewerState extends State<JsonEditorViewer> with TickerProviderStateMixin {
-  final TextEditingController _textController = TextEditingController();
+  late final TextEditingController _textController;
   late TabController _tabController;
   dynamic _parsedJson;
   bool _isValidJson = true;
@@ -50,8 +54,14 @@ class _JsonEditorViewerState extends State<JsonEditorViewer> with TickerProvider
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     
+    _textController = widget.controller ?? TextEditingController();
+    widget.onControllerReady?.call(_textController);
+
     if (widget.initialJson != null && widget.initialJson!.isNotEmpty) {
       _textController.text = widget.initialJson!;
+      _parseJson(immediate: true);
+    } else if (_textController.text.isNotEmpty) {
+      // If external controller already has content, parse it
       _parseJson(immediate: true);
     } else {
       _textController.text = _getDefaultJson();
@@ -66,7 +76,10 @@ class _JsonEditorViewerState extends State<JsonEditorViewer> with TickerProvider
 
   @override
   void dispose() {
-    _textController.dispose();
+    if (widget.controller == null) {
+      // Only dispose controller if we created it
+      _textController.dispose();
+    }
     _tabController.dispose();
     _debounceTimer?.cancel();
     super.dispose();
