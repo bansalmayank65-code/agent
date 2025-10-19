@@ -561,9 +561,8 @@ public final class ScenarioActionMergerService {
 		// "OtherScenario.step1.field")
 		private final Map<String, String> outputToParamMappings;
 		// When true, the ScenarioActionMergerService will prepare one data file per
-		// environment
-		// and reuse it for all scenarios in that environment for this execution request
-		// list.
+		// environment and reuse it for all scenarios in that environment for this
+		// execution request list.
 		private final boolean reuseDataFile;
 
 		public ScenarioExecutionRequest(String scenarioName, String environment, int interfaceNumber,

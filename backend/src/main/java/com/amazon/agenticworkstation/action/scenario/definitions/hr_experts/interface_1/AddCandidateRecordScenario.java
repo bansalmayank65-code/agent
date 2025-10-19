@@ -105,7 +105,7 @@ public final class AddCandidateRecordScenario implements BaseScenario {
 								.addInputMapping(InputMapping.fromScenarioInput("last_name", "last_name"))
 								.addInputMapping(InputMapping.fromScenarioInput("email", "email"))
 								.addInputMapping(InputMapping.fromScenarioInput("source", "source"))
-								.addInputMapping(InputMapping.fromScenarioInput("phone_number", "phone_number"))
+								.addInputMapping(InputMapping.fromScenarioInput("phone_number", "phone_number"))	
 								.addInputMapping(InputMapping.fromScenarioInput("address", "address"))
 								.addInputMapping(InputMapping.withStaticValue("status", "new"))
 								.addInputMapping(InputMapping.withStaticValue("action", "create"))
