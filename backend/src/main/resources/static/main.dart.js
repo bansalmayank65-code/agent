@@ -47114,7 +47114,7 @@ case 1:return A.E(q,r)
 case 2:return A.D(o.at(-1),r)}})
 return A.F($async$u6,r)},
 ag3(a,b){var s
-switch(B.qq[b].c){case"tasks_history":case"repo":case"separator":case"hr_interface_changer":case"task_refiner":return!0
+switch(B.qq[b].c){case"tasks_history":case"repo":case"separator":case"hr_interface_changer":case"merge_edges":case"task_refiner":return!0
 case"params":case"instruction":case"actions":case"user":case"outputs":case"edges":case"num_edges":case"results":s=a.c
 return s!=null&&s.length!==0
 default:s=a.c

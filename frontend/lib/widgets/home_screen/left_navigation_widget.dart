@@ -152,6 +152,7 @@ class LeftNavigationWidget extends StatelessWidget {
       case 'repo': // Import JSON
       case 'separator': // Visual separator
       case 'hr_interface_changer': // Utility tool - always available
+      case 'merge_edges': // Utility tool - always available
       case 'task_refiner': // Utility tool - always available
         return true;
       
