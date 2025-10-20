@@ -335,6 +335,13 @@ public final class EdgeGenerator {
 		compatibleFields.put("results[0].contact_email", "notification_data.email");
 		compatibleFields.put("results[0].subscription_id", "notification_data.reference_id");
 		compatibleFields.put("results[0].status", "filters.employment_status");
+
+		compatibleFields.put("results[0].user_id", "fund_data.manager_id");
+
+		compatibleFields.put("fund_data.fund_manager_approval", "approval_valid");
+		compatibleFields.put("fund_data.compliance_officer_approval", "approval_valid");
+		compatibleFields.put("fund_manager_approval", "approval_valid");
+		compatibleFields.put("compliance_officer_approval", "approval_valid");
 		if ((compatibleFields.containsKey(outOrg) && compatibleFields.get(outOrg).equals(inOrg))
 				|| (compatibleFields.containsKey(inOrg) && compatibleFields.get(inOrg).equals(outOrg))) {
 			return true;

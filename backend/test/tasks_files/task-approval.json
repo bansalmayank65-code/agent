@@ -1,0 +1,348 @@
+{
+    "env": "fund_finance",
+    "model_provider": "fireworks",
+    "model": "qwen3-coder-480b-a35b-instruct",
+    "num_trials": 1,
+    "temperature": 1,
+    "interface_num": 4,
+    "task": {
+        "user_id": "4",
+        "instruction": "You are Clinton Hopkins (clinton.hopkins@finance.com), a Trader. Today is September 23, 2025. You want to create a new multi asset fund named 'Global Diversified Growth Fund 2025' with an initial size of 50000000 USD and a commitment of 100000 USD for investor 'Griffith, Hampton and James' for this new fund today, ensuring investor receives alert notification on their email.",
+        "actions": [
+          {
+            "name": "lookup_user_entities",
+            "arguments": {
+              "entity_type": "users",
+              "filters": {
+                "email": "clinton.hopkins@finance.com"
+              }
+            },
+            "output": {
+              "count": 1,
+              "entity_type": "users",
+              "results": [
+                {
+                  "created_at": "2024-02-18T12:24:48",
+                  "email": "clinton.hopkins@finance.com",
+                  "first_name": "Clinton",
+                  "last_name": "Hopkins",
+                  "role": "trader",
+                  "status": "active",
+                  "timezone": "UTC",
+                  "updated_at": "2025-01-12T12:29:28",
+                  "user_id": "52"
+                }
+              ],
+              "success": true
+            }
+          },
+          {
+            "name": "verify_approval",
+            "arguments": {
+              "action": "fund_management_setup",
+              "requester_email": "clinton.hopkins@finance.com"
+            },
+            "output": {
+              "approval_valid": true,
+              "approved_by": [
+                "fund_manager",
+                "compliance_officer"
+              ]
+            }
+          },
+          {
+            "name": "address_fund",
+            "arguments": {
+              "action": "create",
+              "fund_data": {
+                "name": "Global Diversified Growth Fund 2025",
+                "size": 50000000,
+                "fund_type": "multi_asset_funds",
+                "fund_manager_approval": true,
+                "compliance_officer_approval": true,
+                "manager_id": "52"
+              }
+            },
+            "output": {
+              "action": "create",
+              "fund_data": {
+                "base_currency": "USD",
+                "created_at": "2025-10-01T12:00:00",
+                "fund_id": "101",
+                "fund_type": "multi_asset_funds",
+                "manager_id": "52",
+                "name": "Global Diversified Growth Fund 2025",
+                "size": 50000000,
+                "status": "open",
+                "updated_at": "2025-10-01T12:00:00"
+              },
+              "fund_id": "101",
+              "message": "Fund 101 created successfully with name 'Global Diversified Growth Fund 2025'",
+              "success": true
+            }
+          },
+          {
+            "name": "record_new_audit_trail",
+            "arguments": {
+              "action": "create",
+              "reference_id": "101",
+              "reference_type": "fund"
+            },
+            "output": {
+              "action": "create",
+              "audit_trail_id": "3501",
+              "created_at": "2025-10-01T00:00:00",
+              "field_name": null,
+              "new_value": null,
+              "old_value": null,
+              "reference_id": "101",
+              "reference_type": "fund"
+            }
+          },
+          {
+            "name": "lookup_investor_entities",
+            "arguments": {
+              "entity_type": "investors",
+              "filters": {
+                "name": "Griffith, Hampton and James"
+              }
+            },
+            "output": {
+              "count": 1,
+              "entity_type": "investors",
+              "results": [
+                {
+                  "accreditation_status": "accredited",
+                  "address": "07562 Vaughn Loop, Salaston, VT 18599",
+                  "contact_email": "griffith5322@gmail.com",
+                  "country": "Australia",
+                  "created_at": "2025-07-08T21:18:03",
+                  "date_of_incorporation": "1996-09-11",
+                  "investor_id": "35",
+                  "name": "Griffith, Hampton and James",
+                  "registration_number": 260156579,
+                  "source_of_funds": "external_investment",
+                  "status": "onboarded",
+                  "tax_id": "938-57-8652"
+                }
+              ],
+              "success": true
+            }
+          },
+          {
+            "name": "record_commitment",
+            "arguments": {
+              "commitment_amount": 100000.0,
+              "commitment_date": "2025-09-17",
+              "compliance_officer_approval": true,
+              "fund_id": "101",
+              "investor_id": "35"
+            },
+            "output": {
+              "commitment_amount": 100000.0,
+              "commitment_date": "2025-09-17",
+              "commitment_id": "2001",
+              "fund_id": "101",
+              "investor_id": "35",
+              "status": "pending",
+              "updated_at": "2025-10-01T00:00:00"
+            }
+          },
+          {
+            "name": "record_new_audit_trail",
+            "arguments": {
+              "action": "create",
+              "reference_id": "2001",
+              "reference_type": "commitment"
+            },
+            "output": {
+              "action": "create",
+              "audit_trail_id": "3502",
+              "created_at": "2025-10-01T00:00:00",
+              "field_name": null,
+              "new_value": null,
+              "old_value": null,
+              "reference_id": "2001",
+              "reference_type": "commitment"
+            }
+          },
+          {
+            "name": "address_notifications",
+            "arguments": {
+              "action": "create",
+              "notification_data": {
+                "email": "griffith5322@gmail.com",
+                "type": "alert",
+                "class": "commitments"
+              }
+            },
+            "output": {
+              "action": "create",
+              "message": "Notification 1501 created successfully for griffith5322@gmail.com",
+              "notification_data": {
+                "class": "commitments",
+                "created_at": "2025-10-01T12:00:00",
+                "email": "griffith5322@gmail.com",
+                "notification_id": "1501",
+                "reference_id": null,
+                "sent_at": null,
+                "status": "pending",
+                "type": "alert"
+              },
+              "notification_id": "1501",
+              "success": true
+            }
+          },
+          {
+            "name": "record_new_audit_trail",
+            "arguments": {
+              "action": "create",
+              "reference_id": "1501",
+              "reference_type": "notification"
+            },
+            "output": {
+              "action": "create",
+              "audit_trail_id": "3503",
+              "created_at": "2025-10-01T00:00:00",
+              "field_name": null,
+              "new_value": null,
+              "old_value": null,
+              "reference_id": "1501",
+              "reference_type": "notification"
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "instruction",
+            "connection": {
+              "output": "entity_type, email",
+              "input": "entity_type, filters.email"
+            },
+            "to": "lookup_user_entities"
+          },
+          {
+            "from": "instruction",
+            "connection": {
+              "output": "action, email",
+              "input": "action, requester_email"
+            },
+            "to": "verify_approval"
+          },
+          {
+            "from": "instruction",
+            "connection": {
+              "output": "action, name, size, fund_type",
+              "input": "action, fund_data.name, fund_data.size, fund_data.fund_type"
+            },
+            "to": "address_fund"
+          },
+          {
+            "from": "verify_approval",
+            "connection": {
+              "output": "approval_valid, approval_valid",
+              "input": "fund_data.fund_manager_approval, fund_data.compliance_officer_approval"
+            },
+            "to": "address_fund"
+          },
+          {
+            "from": "lookup_user_entities",
+            "connection": {
+              "output": "results[0].user_id",
+              "input": "fund_data.manager_id"
+            },
+            "to": "address_fund"
+          },
+          {
+            "from": "address_fund",
+            "connection": {
+              "output": "fund_id",
+              "input": "reference_id"
+            },
+            "to": "record_new_audit_trail"
+          },
+          {
+            "from": "instruction",
+            "connection": {
+              "output": "action, reference_type",
+              "input": "action, reference_type"
+            },
+            "to": "record_new_audit_trail"
+          },
+          {
+            "from": "instruction",
+            "connection": {
+              "output": "entity_type, name",
+              "input": "entity_type, filters.name"
+            },
+            "to": "lookup_investor_entities"
+          },
+          {
+            "from": "address_fund",
+            "connection": {
+              "output": "fund_id",
+              "input": "fund_id"
+            },
+            "to": "record_commitment"
+          },
+          {
+            "from": "lookup_investor_entities",
+            "connection": {
+              "output": "results[0].investor_id",
+              "input": "investor_id"
+            },
+            "to": "record_commitment"
+          },
+          {
+            "from": "verify_approval",
+            "connection": {
+              "output": "approval_valid",
+              "input": "compliance_officer_approval"
+            },
+            "to": "record_commitment"
+          },
+          {
+            "from": "instruction",
+            "connection": {
+              "output": "commitment_amount, commitment_date",
+              "input": "commitment_amount, commitment_date"
+            },
+            "to": "record_commitment"
+          },
+          {
+            "from": "record_commitment",
+            "connection": {
+              "output": "commitment_id",
+              "input": "reference_id"
+            },
+            "to": "record_new_audit_trail"
+          },
+          {
+            "from": "lookup_investor_entities",
+            "connection": {
+              "output": "results[0].contact_email",
+              "input": "notification_data.email"
+            },
+            "to": "address_notifications"
+          },
+          {
+            "from": "instruction",
+            "connection": {
+              "output": "action, class, type",
+              "input": "action, notification_data.class, notification_data.type"
+            },
+            "to": "address_notifications"
+          },
+          {
+            "from": "address_notifications",
+            "connection": {
+              "output": "notification_id",
+              "input": "reference_id"
+            },
+            "to": "record_new_audit_trail"
+          }
+        ],
+        "num_edges": 16,
+        "outputs": []
+    }
+}
