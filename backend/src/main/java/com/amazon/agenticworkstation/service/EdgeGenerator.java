@@ -336,7 +336,7 @@ public final class EdgeGenerator {
 		compatibleFields.put("results[0].subscription_id", "notification_data.reference_id");
 		compatibleFields.put("results[0].status", "filters.employment_status");
 
-		compatibleFields.put("results[0].user_id", "fund_data.manager_id");
+		compatibleFields.put("fund_data.manager_id", "results[0].user_id");
 
 		compatibleFields.put("fund_data.fund_manager_approval", "approval_valid");
 		compatibleFields.put("fund_data.compliance_officer_approval", "approval_valid");

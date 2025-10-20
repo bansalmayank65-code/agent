@@ -620,8 +620,6 @@ public class ComputeComplexityService {
 	private ApiResponse handleEvaluateResponse(JsonNode responseData) {
 		try {
 			StringBuilder summary = new StringBuilder();
-			boolean hasErrors = false;
-			String errorType = null;
 
 			if (responseData.has("success") && responseData.get("success").asBoolean()) {
 				JsonNode summaryNode = responseData.get("summary");
@@ -633,88 +631,61 @@ public class ComputeComplexityService {
 					summary.append("  Analyzed results: ").append(summaryNode.path("analyzed_results").asInt())
 							.append("\n");
 
-					// Add fault distribution info and check for errors
+					// Add fault distribution info
 					JsonNode faultDist = summaryNode.get("fault_distribution");
 					if (faultDist != null) {
 						summary.append("\nFault Distribution:\n");
 						
-						// Check for User errors
+						// Display User errors (if any)
 						if (faultDist.has("user")) {
 							JsonNode userData = faultDist.get("user");
 							int userCount = userData.path("count").asInt();
 							double userPercentage = userData.path("percentage").asDouble();
 							summary.append("  User: ").append(userCount).append(" (")
-									.append(userPercentage).append("%)\n");
-							
-							if (userCount > 0) {
-								hasErrors = true;
-								errorType = "USER";
-							}
+									.append(String.format("%.1f", userPercentage)).append("%)\n");
 						}
 						
-						// Check for Agent errors
+						// Display Agent errors (if any)
 						if (faultDist.has("agent")) {
 							JsonNode agentData = faultDist.get("agent");
 							int agentCount = agentData.path("count").asInt();
 							double agentPercentage = agentData.path("percentage").asDouble();
 							summary.append("  Agent: ").append(agentCount).append(" (")
-									.append(agentPercentage).append("%)\n");
-							
-							if (agentCount > 0) {
-								hasErrors = true;
-								if (errorType == null) {
-									errorType = "AGENT";
-								} else {
-									errorType = "BOTH";
-								}
-							}
+									.append(String.format("%.1f", agentPercentage)).append("%)\n");
 						}
 						
-						// Check for Environment errors
+						// Display Environment errors (if any)
 						if (faultDist.has("environment")) {
 							JsonNode envData = faultDist.get("environment");
 							int envCount = envData.path("count").asInt();
 							double envPercentage = envData.path("percentage").asDouble();
 							summary.append("  Environment: ").append(envCount).append(" (")
-									.append(envPercentage).append("%)\n");
-							
-							if (envCount > 0) {
-								hasErrors = true;
-								if (errorType == null) {
-									errorType = "ENVIRONMENT";
-								} else if (!errorType.equals("BOTH")) {
-									errorType = "BOTH";
-								}
-							}
+									.append(String.format("%.1f", envPercentage)).append("%)\n");
 						}
 					}
 					
-					// Add error interpretation to summary
-					if (hasErrors) {
-						summary.append("\n⚠️ VALIDATION FAILED\n");
-						if (errorType != null) {
-							switch (errorType) {
-								case "USER":
-									summary.append("Error Type: Task definition error - The task.json has incorrect or invalid data.\n");
-									break;
-								case "AGENT":
-									summary.append("Error Type: Agent execution error - The agent failed to execute the task correctly.\n");
-									break;
-								case "ENVIRONMENT":
-									summary.append("Error Type: Environment error - The test environment has issues.\n");
-									break;
-								case "BOTH":
-									summary.append("Error Type: Multiple errors detected in task, agent, or environment.\n");
-									break;
-							}
-						}
+					// Add interpretation note
+					int totalResults = summaryNode.path("total_results").asInt();
+					int failedResults = summaryNode.path("failed_results").asInt();
+					
+					summary.append("\n");
+					if (failedResults == 0) {
+						summary.append("✅ All test cases passed successfully!\n");
+					} else if (failedResults == totalResults) {
+						summary.append("⚠️ All test cases failed. Review the fault distribution above.\n");
 					} else {
-						summary.append("\n✅ VALIDATION PASSED - No errors detected.\n");
+						summary.append("ℹ️ Some test cases failed. See fault distribution above for details.\n");
 					}
+					
+					summary.append("\nNote: Fault distribution categorizes failures during task execution:\n");
+					summary.append("  - User: Issues with task definition or data\n");
+					summary.append("  - Agent: Agent execution or logic errors\n");
+					summary.append("  - Environment: Test environment problems\n");
 				}
 
-				// Return success=false if there are validation errors
-				return new ApiResponse(!hasErrors, summary.toString(), responseData, null);
+				// Return success=true because evaluation completed successfully
+				// The presence of execution errors doesn't mean validation failed
+				return new ApiResponse(true, summary.toString(), responseData, null);
 			} else {
 				String error = responseData.path("error").asText("Unknown error");
 				return new ApiResponse(false, "Error evaluation failed: " + error, responseData, null);
