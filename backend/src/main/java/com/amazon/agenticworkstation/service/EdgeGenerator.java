@@ -333,17 +333,33 @@ public final class EdgeGenerator {
 
 		Map<String, String> compatibleFields = new HashMap<>();
 		compatibleFields.put("results[0].contact_email", "notification_data.email");
+		compatibleFields.put("contact_email", "notification_data.email");
+		compatibleFields.put("results[0].subscription_id", "notification_data.reference_id");
 		compatibleFields.put("results[0].subscription_id", "notification_data.reference_id");
 		compatibleFields.put("results[0].status", "filters.employment_status");
 
 		compatibleFields.put("fund_data.manager_id", "results[0].user_id");
+		compatibleFields.put("manager_id", "results[0].user_id");
+		compatibleFields.put("employee_id", "results[0].user_id");
+		compatibleFields.put("requester_id", "results[0].user_id");
+		compatibleFields.put("reviewer_id", "results[0].user_id");
+		compatibleFields.put("approver_id", "results[0].user_id");
+		compatibleFields.put("approved_by", "results[0].user_id");
+		compatibleFields.put("approving_user_id", "results[0].user_id");
+		compatibleFields.put("uploaded_by", "results[0].user_id");
+		compatibleFields.put("created_by", "results[0].user_id");
+		compatibleFields.put("interviewer_id", "results[0].user_id");
+		compatibleFields.put("candidate_id", "results[0].user_id");
+		compatibleFields.put("recruiter_id", "results[0].user_id");
 
 		compatibleFields.put("fund_data.fund_manager_approval", "approval_valid");
 		compatibleFields.put("fund_data.compliance_officer_approval", "approval_valid");
 		compatibleFields.put("fund_manager_approval", "approval_valid");
 		compatibleFields.put("compliance_officer_approval", "approval_valid");
-		if ((compatibleFields.containsKey(outOrg) && compatibleFields.get(outOrg).equals(inOrg))
-				|| (compatibleFields.containsKey(inOrg) && compatibleFields.get(inOrg).equals(outOrg))) {
+		if ((compatibleFields.containsKey(outOrg)
+				&& (compatibleFields.get(outOrg).contains(inOrg) || inOrg.contains(compatibleFields.get(outOrg))))
+				|| (compatibleFields.containsKey(inOrg) && (compatibleFields.get(inOrg).contains(outOrg)
+						|| outOrg.contains(compatibleFields.get(inOrg))))) {
 			return true;
 		}
 
