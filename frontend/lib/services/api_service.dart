@@ -948,4 +948,237 @@ class ApiService {
       throw Exception('Error refining task: $e');
     }
   }
+
+  /// ====================================================================
+  /// Policy Actions Builder API Methods
+  /// ====================================================================
+  
+  /// Create a new policy action
+  Future<Map<String, dynamic>> createPolicyAction({
+    required String envName,
+    required int interfaceNum,
+    required String policyCat1,
+    required String policyCat2,
+    required String policyDescription,
+    required String actionsJson,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/policy-actions/create'),
+        headers: _jsonHeaders,
+        body: jsonEncode({
+          'envName': envName,
+          'interfaceNum': interfaceNum,
+          'policyCat1': policyCat1,
+          'policyCat2': policyCat2,
+          'policyDescription': policyDescription,
+          'actionsJson': actionsJson,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to create policy action: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error creating policy action: $e');
+    }
+  }
+
+  /// Update an existing policy action
+  Future<Map<String, dynamic>> updatePolicyAction({
+    required int policyActionId,
+    required String envName,
+    required int interfaceNum,
+    required String policyCat1,
+    required String policyCat2,
+    required String policyDescription,
+    required String actionsJson,
+  }) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/policy-actions/update/$policyActionId'),
+        headers: _jsonHeaders,
+        body: jsonEncode({
+          'envName': envName,
+          'interfaceNum': interfaceNum,
+          'policyCat1': policyCat1,
+          'policyCat2': policyCat2,
+          'policyDescription': policyDescription,
+          'actionsJson': actionsJson,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to update policy action: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error updating policy action: $e');
+    }
+  }
+
+  /// Delete a policy action
+  Future<Map<String, dynamic>> deletePolicyAction(int policyActionId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/policy-actions/delete/$policyActionId'),
+        headers: _jsonHeaders,
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to delete policy action: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error deleting policy action: $e');
+    }
+  }
+
+  /// Get policy action by ID
+  Future<Map<String, dynamic>> getPolicyActionById(int policyActionId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/policy-actions/$policyActionId'),
+        headers: _jsonHeaders,
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to get policy action: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error getting policy action: $e');
+    }
+  }
+
+  /// Get all policy actions
+  Future<Map<String, dynamic>> getAllPolicyActions() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/policy-actions/list'),
+        headers: _jsonHeaders,
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to get policy actions: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error getting policy actions: $e');
+    }
+  }
+
+  /// Get policy actions with filters
+  Future<Map<String, dynamic>> getPolicyActionsWithFilters({
+    required String envName,
+    required int interfaceNum,
+    String? policyCat1,
+    String? policyCat2,
+  }) async {
+    try {
+      final queryParams = <String, String>{
+        'envName': envName,
+        'interfaceNum': interfaceNum.toString(),
+        if (policyCat1 != null && policyCat1.isNotEmpty) 'policyCat1': policyCat1,
+        if (policyCat2 != null && policyCat2.isNotEmpty) 'policyCat2': policyCat2,
+      };
+
+      final uri = Uri.parse('$baseUrl/api/policy-actions/filter').replace(queryParameters: queryParams);
+      final response = await http.get(uri, headers: _jsonHeaders);
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to filter policy actions: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error filtering policy actions: $e');
+    }
+  }
+
+  /// Get distinct environment names
+  Future<List<String>> getDistinctEnvNames() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/policy-actions/distinct/env-names'),
+        headers: _jsonHeaders,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return List<String>.from(data['data'] ?? []);
+      } else {
+        throw Exception('Failed to get env names: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error getting env names: $e');
+    }
+  }
+
+  /// Get distinct interface numbers for an environment
+  Future<List<int>> getDistinctInterfaceNums(String envName) async {
+    try {
+      final uri = Uri.parse('$baseUrl/api/policy-actions/distinct/interface-nums')
+          .replace(queryParameters: {'envName': envName});
+      final response = await http.get(uri, headers: _jsonHeaders);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return List<int>.from(data['data'] ?? []);
+      } else {
+        throw Exception('Failed to get interface nums: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error getting interface nums: $e');
+    }
+  }
+
+  /// Get distinct policy_cat1 values
+  Future<List<String>> getDistinctPolicyCat1(String envName, int interfaceNum) async {
+    try {
+      final uri = Uri.parse('$baseUrl/api/policy-actions/distinct/policy-cat1')
+          .replace(queryParameters: {
+        'envName': envName,
+        'interfaceNum': interfaceNum.toString(),
+      });
+      final response = await http.get(uri, headers: _jsonHeaders);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return List<String>.from(data['data'] ?? []);
+      } else {
+        throw Exception('Failed to get policy cat1: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error getting policy cat1: $e');
+    }
+  }
+
+  /// Get distinct policy_cat2 values
+  Future<List<String>> getDistinctPolicyCat2(String envName, int interfaceNum, String policyCat1) async {
+    try {
+      final uri = Uri.parse('$baseUrl/api/policy-actions/distinct/policy-cat2')
+          .replace(queryParameters: {
+        'envName': envName,
+        'interfaceNum': interfaceNum.toString(),
+        'policyCat1': policyCat1,
+      });
+      final response = await http.get(uri, headers: _jsonHeaders);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return List<String>.from(data['data'] ?? []);
+      } else {
+        throw Exception('Failed to get policy cat2: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error getting policy cat2: $e');
+    }
+  }
 }

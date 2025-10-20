@@ -10,6 +10,7 @@ import 'instruction_validation_screen.dart';
 import 'task_interface_converter_screen.dart';
 import 'edge_merger_screen.dart';
 import 'task_refiner_screen.dart';
+import 'policy_actions_builder_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -141,6 +142,10 @@ class _MainScreenState extends State<MainScreen>
                 const PopupMenuItem(
                   value: 'instruction_validation',
                   child: Text('Instruction Validation'),
+                ),
+                const PopupMenuItem(
+                  value: 'policy_actions_builder',
+                  child: Text('Policy Actions Builder'),
                 ),
                 const PopupMenuItem(
                   value: 'hr_interface_changer',
@@ -305,6 +310,14 @@ class _MainScreenState extends State<MainScreen>
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const TaskInterfaceConverterScreen(),
+      ),
+    );
+  }
+
+  void _navigateToPolicyActionsBuilder() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const PolicyActionsBuilderScreen(),
       ),
     );
   }
@@ -727,6 +740,9 @@ class _MainScreenState extends State<MainScreen>
     switch (value) {
       case 'instruction_validation':
         _navigateToInstructionValidation();
+        break;
+      case 'policy_actions_builder':
+        _navigateToPolicyActionsBuilder();
         break;
       case 'hr_interface_changer':
         _navigateToHRInterfaceChanger();

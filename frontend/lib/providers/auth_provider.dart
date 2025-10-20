@@ -52,7 +52,7 @@ class AuthProvider with ChangeNotifier {
   }
 
   /// Login with username and password
-  Future<bool> login(String userId, String password) async {
+  Future<bool> login(String userId, String password, {bool rememberMe = false}) async {
     _setLoading(true);
     _clearError();
 
@@ -66,6 +66,13 @@ class AuthProvider with ChangeNotifier {
         
         // Store session locally
         await _storeSession();
+        
+        // Store credentials if remember me is checked
+        if (rememberMe) {
+          await _storeCredentials(userId, password);
+        } else {
+          await _clearCredentials();
+        }
         
         _setLoading(false);
         return true;
@@ -93,6 +100,11 @@ class AuthProvider with ChangeNotifier {
       }
     } finally {
       await _clearSession();
+      // Keep credentials if remember me is enabled
+      final rememberMe = await isRememberMeEnabled();
+      if (!rememberMe) {
+        await _clearCredentials();
+      }
       _isAuthenticated = false;
       _userId = null;
       _sessionId = null;
@@ -152,6 +164,66 @@ class AuthProvider with ChangeNotifier {
       if (kDebugMode) {
         print('Error clearing session: $e');
       }
+    }
+  }
+
+  /// Store credentials for "Remember Me" feature
+  Future<void> _storeCredentials(String userId, String password) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('rememberedUserId', userId);
+      await prefs.setString('rememberedPassword', password);
+      await prefs.setBool('rememberMe', true);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error storing credentials: $e');
+      }
+    }
+  }
+
+  /// Clear stored credentials
+  Future<void> _clearCredentials() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('rememberedUserId');
+      await prefs.remove('rememberedPassword');
+      await prefs.remove('rememberMe');
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error clearing credentials: $e');
+      }
+    }
+  }
+
+  /// Get stored credentials
+  Future<Map<String, String?>> getStoredCredentials() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rememberMe = prefs.getBool('rememberMe') ?? false;
+      if (rememberMe) {
+        return {
+          'userId': prefs.getString('rememberedUserId'),
+          'password': prefs.getString('rememberedPassword'),
+        };
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting stored credentials: $e');
+      }
+    }
+    return {'userId': null, 'password': null};
+  }
+
+  /// Check if remember me is enabled
+  Future<bool> isRememberMeEnabled() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool('rememberMe') ?? false;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error checking remember me: $e');
+      }
+      return false;
     }
   }
 

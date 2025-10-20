@@ -86,36 +86,7 @@ class _JsonEditorViewerState extends State<JsonEditorViewer> with TickerProvider
   }
 
   String _getDefaultJson() {
-    return '''
-{
-  "env": "finance",
-  "interface_num": 4,
-  "task": {
-    "instruction": "Sample task instruction",
-    "actions": [
-      {
-        "name": "sample_action",
-        "arguments": {
-          "param1": "value1",
-          "param2": 123,
-          "param3": true
-        }
-      }
-    ],
-    "user_id": "user123",
-    "outputs": ["output1", "output2"],
-    "edges": [
-      {
-        "from": "instruction",
-        "to": "sample_action",
-        "connection": {
-          "output": "result",
-          "input": "data"
-        }
-      }
-    ]
-  }
-}''';
+    return '{}';
   }
 
   void _parseJson({bool immediate = false}) {

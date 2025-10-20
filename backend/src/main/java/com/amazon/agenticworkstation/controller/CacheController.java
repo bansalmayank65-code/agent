@@ -99,16 +99,16 @@ public class CacheController {
     @PostMapping("/validate/{step}")
     public ResponseEntity<?> validateStep(@PathVariable String step, @RequestBody(required = false) Map<String,String> body) {
         String dir = body != null ? body.get("directory") : null;
-        log.info("Validation request received for step: '{}' with directory: '{}'", step, dir);
+        log.info("===POST=== Validation request for step: '{}' with directory: '{}'", step, dir);
         
         try {
             String effectiveDir = dir != null ? dir : cacheService.getRepositoryPath();
-            log.debug("Using effective directory for validation: '{}'", effectiveDir);
+            log.info("POST Effective directory: '{}'", effectiveDir);
             
             Map<String,Object> result;
             // Handle web directories differently since they're not real filesystem paths
             if (effectiveDir != null && effectiveDir.startsWith("web:")) {
-                log.info("Web directory detected for validation, returning mock result: '{}'", effectiveDir);
+                log.info("POST Web directory detected, returning mock result");
                 // For web directories, return a mock validation result
                 result = Map.of(
                     "step", step,
@@ -117,7 +117,90 @@ public class CacheController {
                     "isWebDirectory", true
                 );
             } else if (effectiveDir != null) {
+                log.info("POST Running validation service for step: {}", step);
                 result = validationService.run(step, Path.of(effectiveDir));
+                log.info("POST Validation result success: {}, result keys: {}", result.get("success"), result.keySet());
+                
+                // If run_task step completed successfully, save result.json to database (FAIL-FAST)
+                if ("run_task".equalsIgnoreCase(step) && result != null && Boolean.TRUE.equals(result.get("success"))) {
+                    log.info("POST *** run_task succeeded - STARTING result.json database save process ***");
+                    
+                    // Check if result_file was created by the notebook
+                    Object resultFile = result.get("result_file");
+                    log.info("POST result_file value: {}", resultFile);
+                    if (resultFile == null) {
+                        String error = "run_task validation succeeded but no result_file found in validation result";
+                        log.error("POST ERROR: {}", error);
+                        throw new IllegalStateException(error);
+                    }
+                    
+                    Path resultFilePath = Path.of(resultFile.toString());
+                    log.info("POST Checking file existence at: {}", resultFilePath);
+                    if (!Files.exists(resultFilePath)) {
+                        String error = "run_task validation succeeded but result.json file does not exist at: " + resultFilePath;
+                        log.error("POST ERROR: {}", error);
+                        throw new IllegalStateException(error);
+                    }
+                    
+                    log.info("POST Reading result.json file...");
+                    String resultJsonContent = Files.readString(resultFilePath);
+                    log.info("POST Result.json loaded: {} bytes", resultJsonContent.length());
+                    
+                    // Extract userId and taskId from the directory path or load from task.json
+                    String userId = null;
+                    String taskId = null;
+                    
+                    // Try to read task.json to get userId and taskId
+                    Path taskJsonPath = Path.of(effectiveDir, "task.json");
+                    log.info("POST Looking for task.json at: {}", taskJsonPath);
+                    if (Files.exists(taskJsonPath)) {
+                        log.info("POST task.json found, extracting userId/taskId...");
+                        try {
+                            String taskJsonContent = Files.readString(taskJsonPath);
+                            com.fasterxml.jackson.databind.JsonNode taskNode = 
+                                new com.fasterxml.jackson.databind.ObjectMapper().readTree(taskJsonContent);
+                            
+                            if (taskNode.has("task_details") && taskNode.get("task_details").has("user_id")) {
+                                userId = taskNode.get("task_details").get("user_id").asText();
+                            }
+                            if (taskNode.has("task_details") && taskNode.get("task_details").has("task_id")) {
+                                taskId = taskNode.get("task_details").get("task_id").asText();
+                            }
+                            
+                            log.info("POST Extracted from task.json - userId: '{}', taskId: '{}'", userId, taskId);
+                        } catch (Exception e) {
+                            log.warn("POST Failed to extract userId/taskId from task.json: {}", e.getMessage());
+                        }
+                    } else {
+                        log.warn("POST task.json NOT FOUND at {}", taskJsonPath);
+                    }
+                    
+                    // If we couldn't extract from task.json, try current cache context
+                    if (userId == null || userId.isEmpty()) {
+                        String cachedUserId = cacheService.getCurrentUserId();
+                        log.info("POST Fallback to cache userId: {}", cachedUserId);
+                        userId = cachedUserId;
+                    }
+                    if (taskId == null || taskId.isEmpty()) {
+                        String cachedTaskId = cacheService.getCurrentTaskId();
+                        log.info("POST Fallback to cache taskId: {}", cachedTaskId);
+                        taskId = cachedTaskId;
+                    }
+                    
+                    log.info("POST Final IDs - userId: '{}', taskId: '{}'", userId, taskId);
+                    
+                    if (userId == null || userId.isEmpty() || taskId == null || taskId.isEmpty()) {
+                        String error = "Cannot save result.json to database: userId or taskId not found in task.json or cache context (userId=" + userId + ", taskId=" + taskId + ")";
+                        log.error("POST ERROR: {}", error);
+                        throw new IllegalStateException(error);
+                    }
+                    
+                    log.info("POST *** Calling saveResultJsonToDatabase for user={}, task={} ***", userId, taskId);
+                    cacheService.saveResultJsonToDatabase(userId, taskId, resultJsonContent);
+                    log.info("POST *** SUCCESS: result.json saved to database! ***");
+                } else {
+                    log.info("POST Skipping result.json save (step={}, success={})", step, result.get("success"));
+                }
             } else {
                 throw new IllegalArgumentException("No directory available for validation");
             }
@@ -153,6 +236,79 @@ public class CacheController {
                 );
             } else if (effectiveDir != null) {
                 result = validationService.run(step, Path.of(effectiveDir));
+                
+                // If run_task step completed successfully, save result.json to database (FAIL-FAST)
+                if ("run_task".equalsIgnoreCase(step) && result != null && Boolean.TRUE.equals(result.get("success"))) {
+                    log.info("run_task validation completed successfully, saving result.json to database");
+                    
+                    // Check if result_file was created by the notebook
+                    Object resultFile = result.get("result_file");
+                    if (resultFile == null) {
+                        String error = "run_task validation succeeded but no result_file found in validation result";
+                        log.error(error);
+                        throw new IllegalStateException(error);
+                    }
+                    
+                    Path resultFilePath = Path.of(resultFile.toString());
+                    if (!Files.exists(resultFilePath)) {
+                        String error = "run_task validation succeeded but result.json file does not exist at: " + resultFilePath;
+                        log.error(error);
+                        throw new IllegalStateException(error);
+                    }
+                    
+                    log.info("Reading result.json from: {}", resultFilePath);
+                    String resultJsonContent = Files.readString(resultFilePath);
+                    
+                    // Extract userId and taskId from the directory path or load from task.json
+                    String userId = null;
+                    String taskId = null;
+                    
+                    // Try to read task.json to get userId and taskId
+                    Path taskJsonPath = Path.of(effectiveDir, "task.json");
+                    if (Files.exists(taskJsonPath)) {
+                        try {
+                            String taskJsonContent = Files.readString(taskJsonPath);
+                            com.fasterxml.jackson.databind.JsonNode taskNode = 
+                                new com.fasterxml.jackson.databind.ObjectMapper().readTree(taskJsonContent);
+                            
+                            if (taskNode.has("task_details") && taskNode.get("task_details").has("user_id")) {
+                                userId = taskNode.get("task_details").get("user_id").asText();
+                            }
+                            if (taskNode.has("task_details") && taskNode.get("task_details").has("task_id")) {
+                                taskId = taskNode.get("task_details").get("task_id").asText();
+                            }
+                            
+                            log.info("Extracted from task.json - userId: '{}', taskId: '{}'", userId, taskId);
+                        } catch (Exception e) {
+                            log.warn("Failed to extract userId/taskId from task.json: {}", e.getMessage());
+                        }
+                    }
+                    
+                    // If we couldn't extract from task.json, try current cache context
+                    if (userId == null || userId.isEmpty()) {
+                        userId = cacheService.getCurrentUserId();
+                    }
+                    if (taskId == null || taskId.isEmpty()) {
+                        taskId = cacheService.getCurrentTaskId();
+                    }
+                    // If we couldn't extract from task.json, try current cache context
+                    if (userId == null || userId.isEmpty()) {
+                        userId = cacheService.getCurrentUserId();
+                    }
+                    if (taskId == null || taskId.isEmpty()) {
+                        taskId = cacheService.getCurrentTaskId();
+                    }
+                    
+                    if (userId == null || userId.isEmpty() || taskId == null || taskId.isEmpty()) {
+                        String error = "Cannot save result.json to database: userId or taskId not found in task.json or cache context (userId=" + userId + ", taskId=" + taskId + ")";
+                        log.error(error);
+                        throw new IllegalStateException(error);
+                    }
+                    
+                    log.info("Saving result.json to database for user {} task {}", userId, taskId);
+                    cacheService.saveResultJsonToDatabase(userId, taskId, resultJsonContent);
+                    log.info("Successfully saved result.json to database for user {} task {}", userId, taskId);
+                }
             } else {
                 throw new IllegalArgumentException("No directory available for validation");
             }

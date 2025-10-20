@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/json_editor_viewer.dart';
+import '../widgets/dialogs/changes_summary_dialog.dart';
 import '../data/hr_experts_interface_method_mappings.dart';
 import 'dart:convert';
 
@@ -164,6 +165,10 @@ void _convertAndShow(BuildContext context, Map<String, dynamic> mapping, TextEdi
 
   // Perform a traversal and replace method names according to mapping.
   final methodMappings = mapping['method_mappings'] as Map<String, dynamic>;
+  
+  // Track changes for summary
+  final translatedMethods = <String, String>{};
+  int totalReplacements = 0;
 
   // Helper to map a single method name from source interface to target interface
   String mapMethodName(String methodName, String sourceInterface, String targetInterface) {
@@ -173,7 +178,12 @@ void _convertAndShow(BuildContext context, Map<String, dynamic> mapping, TextEdi
       final sourceVal = mapEntry[sourceInterface];
       final targetVal = mapEntry[targetInterface];
       if (sourceVal != null && sourceVal == methodName && targetVal != null) {
-        return targetVal as String;
+        // Only count as a translation if the names are actually different
+        if (sourceVal != targetVal) {
+          translatedMethods[methodName] = targetVal.toString();
+          totalReplacements++;
+        }
+        return targetVal.toString();
       }
     }
     // If not found, return original
@@ -213,8 +223,63 @@ void _convertAndShow(BuildContext context, Map<String, dynamic> mapping, TextEdi
   // Write formatted JSON to afterController
   try {
     const encoder = JsonEncoder.withIndent('  ');
-  afterController.text = encoder.convert(decoded);
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Translation complete ($src -> $tgt)')));
+    afterController.text = encoder.convert(decoded);
+    
+    // Show success snackbar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Translation complete ($src -> $tgt)'),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+    
+    // Build changes summary
+    final changes = <ChangeItem>[];
+    
+    if (totalReplacements > 0) {
+      final uniqueMethods = translatedMethods.length;
+      changes.add(ChangeItem(
+        type: ChangeType.translated,
+        title: 'Interface Translation Complete',
+        description: '$totalReplacements method name(s) translated from $src to $tgt',
+        details: [
+          '$uniqueMethods unique method(s) converted',
+        ],
+      ));
+      
+      // Show top 10 translations as examples
+      final translations = translatedMethods.entries.take(10).toList();
+      if (translations.isNotEmpty) {
+        changes.add(ChangeItem(
+          type: ChangeType.info,
+          title: 'Sample Translations',
+          description: 'Examples of method names changed:',
+          details: translations.map((e) => '${e.key} → ${e.value}').toList(),
+        ));
+      }
+      
+      if (translatedMethods.length > 10) {
+        changes.add(ChangeItem(
+          type: ChangeType.info,
+          title: 'Additional Changes',
+          description: 'And ${translatedMethods.length - 10} more method(s) translated',
+        ));
+      }
+    } else {
+      changes.add(ChangeItem(
+        type: ChangeType.info,
+        title: 'No Changes Made',
+        description: 'No method names matching $src interface were found in the task',
+      ));
+    }
+    
+    // Show changes summary dialog
+    ChangesSummaryDialog.show(
+      context,
+      title: 'Interface Translation - Summary',
+      changes: changes,
+    );
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error during translation: $e')));
   }

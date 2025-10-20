@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/json_editor_viewer.dart';
+import '../widgets/dialogs/changes_summary_dialog.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -175,16 +176,58 @@ class _EdgeMergerBodyState extends State<_EdgeMergerBody> {
           const encoder = JsonEncoder.withIndent('  ');
           afterController.text = encoder.convert(mergedTask);
           
-          // Show success message with statistics
-          final message = responseData['message'] ?? 'Edges merged successfully';
+          // Extract statistics for summary
+          final stats = responseData['statistics'] as Map<String, dynamic>?;
+          final changes = <ChangeItem>[];
           
+          if (stats != null) {
+            final originalCount = stats['original_edges_count'] ?? 0;
+            final mergedCount = stats['merged_edges_count'] ?? 0;
+            final duplicatesRemoved = stats['duplicates_removed'] ?? 0;
+            
+            changes.add(ChangeItem(
+              type: ChangeType.info,
+              title: 'Original Edges',
+              description: '$originalCount edges in the original task',
+            ));
+            
+            if (duplicatesRemoved > 0) {
+              changes.add(ChangeItem(
+                type: ChangeType.merged,
+                title: 'Merged Duplicate Edges',
+                description: '$duplicatesRemoved duplicate edge(s) were merged',
+                details: [
+                  'Edges with identical "from" and "to" values were combined',
+                  'Their inputs and outputs were merged into single edges',
+                ],
+              ));
+            }
+            
+            changes.add(ChangeItem(
+              type: ChangeType.modified,
+              title: 'Final Edge Count',
+              description: '$mergedCount edges after merging',
+            ));
+          }
+          
+          // Show success snackbar
+          final message = responseData['message'] ?? 'Edges merged successfully';
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(message),
               backgroundColor: Colors.green,
-              duration: const Duration(seconds: 5),
+              duration: const Duration(seconds: 3),
             )
           );
+          
+          // Show changes summary dialog
+          if (changes.isNotEmpty && mounted) {
+            ChangesSummaryDialog.show(
+              context,
+              title: 'Merge Edges - Summary',
+              changes: changes,
+            );
+          }
         } else {
           // API returned success=false
           final errorMsg = responseData['message'] ?? 'Unknown error';

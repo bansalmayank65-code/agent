@@ -292,68 +292,65 @@ public class ComputeComplexityService {
 	 */
 	private ObjectNode prepareErrorEvaluationPayload(String taskFilePath, JsonNode taskJson) {
 		try {
-			// First try to get results data from memory cache
+			// First try to get results data from database or file system
 			JsonNode resultsData = null;
 			String dataSource = null;
 			
-			if (taskCacheService != null && taskCacheService.hasResultData()) {
-				// Get result data from memory cache
-				Map<String, Object> resultDataMap = taskCacheService.getResultData();
-				if (resultDataMap != null) {
-					resultsData = objectMapper.valueToTree(resultDataMap);
-					dataSource = "memory cache";
-					logger.info("Loaded results data from memory cache");
-				}
-			}
-			
-			// Fallback to database or file system if memory cache doesn't have data
-			if (resultsData == null) {
-				// Check if taskFilePath is provided
-				if (taskFilePath == null || taskFilePath.trim().isEmpty()) {
-					throw new IllegalArgumentException("No task file path provided for error evaluation");
-				}
+			// Check if taskFilePath is a memory path (from execute-by-id endpoint)
+			if (taskFilePath != null && taskFilePath.startsWith("memory://")) {
+				// Parse memory path: memory://userId_taskId.json
+				String pathPart = taskFilePath.replace("memory://", "").replace(".json", "");
+				String[] parts = pathPart.split("_", 2); // Split only on first underscore
 				
-				// For memory paths, try to fetch from database
-				if (taskFilePath.startsWith("memory://")) {
-					// Parse memory path: memory://userId_taskId.json
-					String pathPart = taskFilePath.replace("memory://", "").replace(".json", "");
-					String[] parts = pathPart.split("_", 2); // Split only on first underscore
-					if (parts.length == 2) {
-						String userId = parts[0];
-						String taskId = parts[1];
+				if (parts.length == 2) {
+					// parts[0] is the requested userId (might be incorrect)
+					String taskId = parts[1];
+					
+					logger.info("Attempting to load result.json from database for taskId {}", taskId);
+					
+					// First, get the actual userId that owns this task
+					String actualUserId = null;
+					if (taskCacheService != null) {
+						actualUserId = taskCacheService.getUserIdForTask(taskId);
+						if (actualUserId == null) {
+							throw new IllegalStateException("Task " + taskId + " not found in database");
+						}
+						logger.info("Task {} belongs to user {}", taskId, actualUserId);
 						
-						// Try to get results from database via TaskCacheService
-						if (taskCacheService != null) {
-							String resultJsonString = taskCacheService.getResultJsonFromDatabase(userId, taskId);
-							if (resultJsonString != null && !resultJsonString.trim().isEmpty()) {
-								resultsData = objectMapper.readTree(resultJsonString);
-								dataSource = "database: " + userId + "/" + taskId;
-								logger.info("Loaded results data from database for user {} task {}", userId, taskId);
-							}
+						// Now try to get results from database using the correct userId
+						String resultJsonString = taskCacheService.getResultJsonFromDatabase(actualUserId, taskId);
+						if (resultJsonString != null && !resultJsonString.trim().isEmpty()) {
+							resultsData = objectMapper.readTree(resultJsonString);
+							dataSource = "database: " + actualUserId + "/" + taskId;
+							logger.info("Successfully loaded results data from database for user {} task {}", actualUserId, taskId);
+						} else {
+							logger.warn("No result.json found in database for user {} task {}", actualUserId, taskId);
 						}
 					}
-					
-					if (resultsData == null) {
-						throw new IllegalStateException("No results data available in memory cache or database for memory path: " + taskFilePath);
-					}
-				} else {
-					// For file paths, look for result.json in the same directory as the task file
-					Path taskPath = Paths.get(taskFilePath);
-					Path taskDir = taskPath.getParent();
-					if (taskDir == null) {
-						throw new IllegalArgumentException("Task file path has no parent directory: " + taskFilePath);
-					}
-					Path resultsFilePath = taskDir.resolve("result.json");
-
-					if (!Files.exists(resultsFilePath)) {
-						throw new IllegalStateException("No results data available in memory cache or file system: " + resultsFilePath);
-					}
-
-					// Read results data from file
-					resultsData = objectMapper.readTree(resultsFilePath.toFile());
-					dataSource = "file: " + resultsFilePath;
-					logger.info("Loaded results data from file: {}", resultsFilePath);
 				}
+				
+				if (resultsData == null) {
+					throw new IllegalStateException("No results data available in database for memory path: " + taskFilePath + ". Please run 'Run Task' first to generate results.");
+				}
+			} else if (taskFilePath != null && !taskFilePath.trim().isEmpty()) {
+				// For file paths, look for result.json in the same directory as the task file
+				Path taskPath = Paths.get(taskFilePath);
+				Path taskDir = taskPath.getParent();
+				if (taskDir == null) {
+					throw new IllegalArgumentException("Task file path has no parent directory: " + taskFilePath);
+				}
+				Path resultsFilePath = taskDir.resolve("result.json");
+
+				if (!Files.exists(resultsFilePath)) {
+					throw new IllegalStateException("No results file found at: " + resultsFilePath + ". Please run 'Run Task' first to generate results.");
+				}
+
+				// Read results data from file
+				resultsData = objectMapper.readTree(resultsFilePath.toFile());
+				dataSource = "file: " + resultsFilePath;
+				logger.info("Loaded results data from file: {}", resultsFilePath);
+			} else {
+				throw new IllegalArgumentException("No task file path provided for error evaluation");
 			}
 
 			// Create error evaluation payload - NO HARDCODED VALUES
@@ -555,8 +552,7 @@ public class ComputeComplexityService {
 				// Convert response data to JSON string for database storage
 				String resultJsonString = objectMapper.writeValueAsString(responseData);
 				
-				// Extract userId and taskId from memory path or use current context
-				String userId = null;
+				// Extract taskId from memory path
 				String taskId = null;
 				
 				if (taskFilePath.startsWith("memory://")) {
@@ -564,17 +560,22 @@ public class ComputeComplexityService {
 					String pathPart = taskFilePath.replace("memory://", "").replace(".json", "");
 					String[] parts = pathPart.split("_", 2); // Split only on first underscore
 					if (parts.length == 2) {
-						userId = parts[0];
+						// parts[0] would be userId from path, but we'll look it up from DB instead
 						taskId = parts[1];
 					}
 				}
 				
-				// Store result JSON directly in database
-				if (userId != null && taskId != null) {
-					taskCacheService.saveResultJsonToDatabase(userId, taskId, resultJsonString);
-					logger.info("Result JSON stored in database for user {} task {}", userId, taskId);
+				// Get the actual userId from the task in the database (don't trust the path)
+				if (taskId != null) {
+					String userId = taskCacheService.getUserIdForTask(taskId);
+					if (userId != null) {
+						taskCacheService.saveResultJsonToDatabase(userId, taskId, resultJsonString);
+						logger.info("Result JSON stored in database for user {} task {}", userId, taskId);
+					} else {
+						logger.warn("Could not find userId for taskId {} in database", taskId);
+					}
 				} else {
-					logger.warn("Could not extract userId/taskId from path: {}", taskFilePath);
+					logger.warn("Could not extract taskId from path: {}", taskFilePath);
 				}
 				
 				return new ApiResponse(true, "Task executed successfully, results stored in database",
@@ -619,6 +620,8 @@ public class ComputeComplexityService {
 	private ApiResponse handleEvaluateResponse(JsonNode responseData) {
 		try {
 			StringBuilder summary = new StringBuilder();
+			boolean hasErrors = false;
+			String errorType = null;
 
 			if (responseData.has("success") && responseData.get("success").asBoolean()) {
 				JsonNode summaryNode = responseData.get("summary");
@@ -630,20 +633,88 @@ public class ComputeComplexityService {
 					summary.append("  Analyzed results: ").append(summaryNode.path("analyzed_results").asInt())
 							.append("\n");
 
-					// Add fault distribution info
+					// Add fault distribution info and check for errors
 					JsonNode faultDist = summaryNode.get("fault_distribution");
 					if (faultDist != null) {
 						summary.append("\nFault Distribution:\n");
-						faultDist.fields().forEachRemaining(entry -> {
-							JsonNode data = entry.getValue();
-							summary.append("  ").append(capitalize(entry.getKey())).append(": ")
-									.append(data.path("count").asInt()).append(" (")
-									.append(data.path("percentage").asDouble()).append("%)\n");
-						});
+						
+						// Check for User errors
+						if (faultDist.has("user")) {
+							JsonNode userData = faultDist.get("user");
+							int userCount = userData.path("count").asInt();
+							double userPercentage = userData.path("percentage").asDouble();
+							summary.append("  User: ").append(userCount).append(" (")
+									.append(userPercentage).append("%)\n");
+							
+							if (userCount > 0) {
+								hasErrors = true;
+								errorType = "USER";
+							}
+						}
+						
+						// Check for Agent errors
+						if (faultDist.has("agent")) {
+							JsonNode agentData = faultDist.get("agent");
+							int agentCount = agentData.path("count").asInt();
+							double agentPercentage = agentData.path("percentage").asDouble();
+							summary.append("  Agent: ").append(agentCount).append(" (")
+									.append(agentPercentage).append("%)\n");
+							
+							if (agentCount > 0) {
+								hasErrors = true;
+								if (errorType == null) {
+									errorType = "AGENT";
+								} else {
+									errorType = "BOTH";
+								}
+							}
+						}
+						
+						// Check for Environment errors
+						if (faultDist.has("environment")) {
+							JsonNode envData = faultDist.get("environment");
+							int envCount = envData.path("count").asInt();
+							double envPercentage = envData.path("percentage").asDouble();
+							summary.append("  Environment: ").append(envCount).append(" (")
+									.append(envPercentage).append("%)\n");
+							
+							if (envCount > 0) {
+								hasErrors = true;
+								if (errorType == null) {
+									errorType = "ENVIRONMENT";
+								} else if (!errorType.equals("BOTH")) {
+									errorType = "BOTH";
+								}
+							}
+						}
+					}
+					
+					// Add error interpretation to summary
+					if (hasErrors) {
+						summary.append("\n⚠️ VALIDATION FAILED\n");
+						if (errorType != null) {
+							switch (errorType) {
+								case "USER":
+									summary.append("Error Type: Task definition error - The task.json has incorrect or invalid data.\n");
+									break;
+								case "AGENT":
+									summary.append("Error Type: Agent execution error - The agent failed to execute the task correctly.\n");
+									break;
+								case "ENVIRONMENT":
+									summary.append("Error Type: Environment error - The test environment has issues.\n");
+									break;
+								case "BOTH":
+									summary.append("Error Type: Multiple errors detected in task, agent, or environment.\n");
+									break;
+							}
+						}
+					} else {
+						summary.append("\n✅ VALIDATION PASSED - No errors detected.\n");
 					}
 				}
 
-				return new ApiResponse(true, summary.toString(), responseData, null);
+				// Return success=false if there are validation errors
+				return new ApiResponse(!hasErrors, summary.toString(), responseData, null);
 			} else {
 				String error = responseData.path("error").asText("Unknown error");
 				return new ApiResponse(false, "Error evaluation failed: " + error, responseData, null);
@@ -666,16 +737,6 @@ public class ComputeComplexityService {
 			}
 		}
 		return null;
-	}
-
-	/**
-	 * Capitalize first letter of a string
-	 */
-	private String capitalize(String str) {
-		if (str == null || str.isEmpty()) {
-			return str;
-		}
-		return str.substring(0, 1).toUpperCase() + str.substring(1);
 	}
 
 	/**

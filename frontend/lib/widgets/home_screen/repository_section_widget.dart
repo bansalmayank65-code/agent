@@ -5,6 +5,7 @@ import '../../providers/task_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/home_screen/file_operations_service.dart';
 import '../../services/home_screen/ui_helper_service.dart';
+import '../common/inline_import_progress.dart';
 
 /// Repository section widget
 class RepositorySectionWidget extends StatefulWidget {
@@ -20,6 +21,7 @@ class RepositorySectionWidget extends StatefulWidget {
 }
 
 class _RepositorySectionWidgetState extends State<RepositorySectionWidget> {
+  final ImportProgressController _progressController = ImportProgressController();
 
   @override
   void initState() {
@@ -28,6 +30,7 @@ class _RepositorySectionWidgetState extends State<RepositorySectionWidget> {
 
   @override
   void dispose() {
+    _progressController.dispose();
     super.dispose();
   }
 
@@ -36,6 +39,24 @@ class _RepositorySectionWidgetState extends State<RepositorySectionWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Inline Import Progress
+        InlineImportProgress(
+          controller: _progressController,
+          onRetry: _retryImport,
+          onDismiss: () {
+            _progressController.hide();
+            // Navigate to task workflow if completed successfully
+            if (_progressController.isComplete) {
+              final taskId = _progressController.currentStep?.contains('taskId:') == true
+                  ? _progressController.currentStep!.split('taskId:').last.trim()
+                  : null;
+              if (taskId != null && mounted) {
+                Navigator.pushNamed(context, '/task/$taskId');
+              }
+            }
+          },
+        ),
+        
         // Task Import Card
         Card(
           elevation: 2,
@@ -168,33 +189,86 @@ class _RepositorySectionWidgetState extends State<RepositorySectionWidget> {
       }
       
       if (result != null) {
+        // Show progress
+        _progressController.show();
+        _progressController.updateProgress(
+          currentStep: 'Reading task.json file...',
+          progress: 0.1,
+        );
+        
         final authProvider = context.read<AuthProvider>();
+        
+        // Update progress
+        await Future.delayed(const Duration(milliseconds: 200));
+        _progressController.updateProgress(
+          currentStep: 'Validating task structure...',
+          progress: 0.2,
+        );
+        
+        await Future.delayed(const Duration(milliseconds: 200));
+        
+        // Update progress
+        _progressController.updateProgress(
+          currentStep: 'Clearing cache...',
+          progress: 0.3,
+        );
+        
+        await Future.delayed(const Duration(milliseconds: 200));
+        
+        // Update progress
+        _progressController.updateProgress(
+          currentStep: 'Uploading to server...',
+          progress: 0.5,
+        );
+        
         // Import without overriding the user ID from JSON - let users edit it in step 4
         // But pass the logged-in user ID separately for database foreign key constraint
-        final importResult = await widget.provider.importTaskJson(result['data'], dbUserId: authProvider.userId);
+        final importResult = await widget.provider.importTaskJson(
+          result['data'], 
+          dbUserId: authProvider.userId,
+        );
+        
         if (importResult['success'] == true) {
+          // Update progress
+          _progressController.updateProgress(
+            currentStep: 'Saving to database...',
+            progress: 0.8,
+          );
+          
+          await Future.delayed(const Duration(milliseconds: 300));
+          
           widget.provider.setImportedJsonPath(importedPath);
+          
+          // Complete
+          _progressController.updateProgress(
+            currentStep: 'Import completed! taskId: ${importResult['taskId']}',
+            progress: 1.0,
+          );
+          _progressController.complete();
+          
           if (mounted) {
             UIHelperService.showToast(context, 'task.json imported successfully from: $importedPath');
-            
-            // Navigate to task workflow after successful import
-            final taskId = importResult['taskId'];
-            if (taskId != null) {
-              Navigator.pushNamed(context, '/task/$taskId');
-            }
           }
         } else {
+          final errorMsg = importResult['message'] ?? 'Import failed';
+          _progressController.setError(errorMsg);
+          
           if (mounted) {
-            final errorMsg = importResult['message'] ?? 'Import failed';
             UIHelperService.showToast(context, 'Import failed: $errorMsg');
           }
         }
       }
     } catch (e) {
+      _progressController.setError('Import failed: $e');
       if (mounted) {
         UIHelperService.showToast(context, 'Import failed: $e');
       }
     }
+  }
+
+  void _retryImport() {
+    _progressController.reset();
+    _importTaskJson();
   }
 
 

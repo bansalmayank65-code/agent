@@ -70,41 +70,55 @@ class LeftNavigationWidget extends StatelessWidget {
                 final dirty = FormValidationService.isSectionDirty(provider, item.sectionKey);
                 final enabled = _isNavigationEnabled(provider, index);
                 
-                return ListTile(
-                  leading: Icon(
-                    item.icon,
-                    color: enabled 
-                      ? (selected ? Colors.white : Colors.grey[400])
-                      : Colors.grey[600],
-                  ),
-                  title: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          item.label,
-                          style: TextStyle(
-                            color: enabled
-                              ? (selected ? Colors.white : Colors.grey[300])
-                              : Colors.grey[600],
-                            fontSize: 14,
+                return Container(
+                  decoration: selected
+                      ? BoxDecoration(
+                          border: Border(
+                            left: BorderSide(
+                              color: const Color(0xFF3b82f6), // Blue indicator
+                              width: 4,
+                            ),
+                          ),
+                          color: const Color(0xFF374151),
+                        )
+                      : null,
+                  child: ListTile(
+                    leading: Icon(
+                      item.icon,
+                      color: enabled 
+                        ? (selected ? const Color(0xFF3b82f6) : Colors.grey[400])
+                        : Colors.grey[600],
+                      size: selected ? 22 : 20,
+                    ),
+                    title: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.label,
+                            style: TextStyle(
+                              color: enabled
+                                ? (selected ? Colors.white : Colors.grey[300])
+                                : Colors.grey[600],
+                              fontSize: 14,
+                              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                            ),
                           ),
                         ),
-                      ),
-                      if (dirty && enabled)
-                        const Text(
-                          '•',
-                          style: TextStyle(
-                            color: Colors.orangeAccent,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                        if (dirty && enabled)
+                          const Text(
+                            '•',
+                            style: TextStyle(
+                              color: Colors.orangeAccent,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
+                    selected: selected,
+                    enabled: enabled,
+                    onTap: enabled ? () => _handleItemTap(context, index, provider) : null,
                   ),
-                  selected: selected,
-                  selectedTileColor: const Color(0xFF374151),
-                  enabled: enabled,
-                  onTap: enabled ? () => _handleItemTap(context, index, provider) : null,
                 );
               },
             ),
@@ -151,6 +165,7 @@ class LeftNavigationWidget extends StatelessWidget {
       case 'tasks_history':
       case 'repo': // Import JSON
       case 'separator': // Visual separator
+      case 'policy_actions_builder': // Utility tool - always available
       case 'hr_interface_changer': // Utility tool - always available
       case 'merge_edges': // Utility tool - always available
       case 'task_refiner': // Utility tool - always available

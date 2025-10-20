@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/common/developer_footer.dart';
@@ -48,6 +49,24 @@ class _LoginScreenState extends State<LoginScreen>
     ));
     
     _animationController.forward();
+    
+    // Load stored credentials if remember me was checked
+    _loadStoredCredentials();
+  }
+
+  /// Load stored credentials
+  Future<void> _loadStoredCredentials() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final credentials = await authProvider.getStoredCredentials();
+    final rememberMe = await authProvider.isRememberMeEnabled();
+    
+    if (mounted && credentials['userId'] != null) {
+      setState(() {
+        _userIdController.text = credentials['userId'] ?? '';
+        _passwordController.text = credentials['password'] ?? '';
+        _rememberMe = rememberMe;
+      });
+    }
   }
 
   @override
@@ -161,14 +180,16 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildLoginForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          _buildUserIdField(),
-          const SizedBox(height: 16),
-          _buildPasswordField(),
-        ],
+    return AutofillGroup(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            _buildUserIdField(),
+            const SizedBox(height: 16),
+            _buildPasswordField(),
+          ],
+        ),
       ),
     );
   }
@@ -176,6 +197,9 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildUserIdField() {
     return TextFormField(
       controller: _userIdController,
+      autofillHints: const [AutofillHints.username],
+      keyboardType: TextInputType.text,
+      textInputAction: TextInputAction.next,
       decoration: InputDecoration(
         labelText: 'Username',
         hintText: 'Enter your username',
@@ -210,6 +234,10 @@ class _LoginScreenState extends State<LoginScreen>
     return TextFormField(
       controller: _passwordController,
       obscureText: _obscurePassword,
+      autofillHints: const [AutofillHints.password],
+      keyboardType: TextInputType.visiblePassword,
+      textInputAction: TextInputAction.done,
+      onFieldSubmitted: (_) => _handleLogin(),
       decoration: InputDecoration(
         labelText: 'Password',
         hintText: 'Enter your password',
@@ -328,9 +356,13 @@ class _LoginScreenState extends State<LoginScreen>
     final success = await authProvider.login(
       _userIdController.text.trim(),
       _passwordController.text,
+      rememberMe: _rememberMe,
     );
 
     if (success) {
+      // Commit autofill to save credentials in browser
+      TextInput.finishAutofillContext();
+      
       // Login successful, navigation will be handled by main app
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

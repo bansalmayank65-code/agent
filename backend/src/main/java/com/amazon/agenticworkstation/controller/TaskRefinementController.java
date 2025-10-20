@@ -72,13 +72,18 @@ public class TaskRefinementController {
             }
             
             // Perform refinement with options
-            Map<String, Object> refinedTask = taskRefinementService.refineTask(taskData, options);
+            Map<String, Object> result = taskRefinementService.refineTask(taskData, options);
             
-            // Build response
+            // Build response - extract refined_task and statistics from result
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("refined_task", refinedTask);
+            response.put("refined_task", result.get("refined_task"));
             response.put("message", "Task refined successfully");
+            
+            // Add statistics if available
+            if (result.containsKey("statistics")) {
+                response.put("statistics", result.get("statistics"));
+            }
             
             return ResponseEntity.ok(response);
             

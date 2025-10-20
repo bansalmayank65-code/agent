@@ -15,6 +15,7 @@ import '../../widgets/home_screen/task_json_section_widget.dart';
 import '../../widgets/home_screen/validation_section_widget.dart';
 import '../../widgets/home_screen/results_section_widget.dart';
 import '../../services/home_screen/ui_helper_service.dart';
+import '../../screens/policy_actions_builder_screen.dart';
 import '../../screens/task_interface_converter_screen.dart';
 import '../../screens/edge_merger_screen.dart';
 import '../../screens/task_refiner_screen.dart';
@@ -141,18 +142,25 @@ class ContentRouterService {
       case 12:
         return _sectionWrapper(
           key,
+          'Policy Actions Builder',
+          const PolicyActionsBuilderScreen(standalone: false),
+          scrollController,
+        );
+      case 13:
+        return _sectionWrapper(
+          key,
           'HR Expert Interface Changer',
           const TaskInterfaceConverterScreen(standalone: false),
           scrollController,
         );
-      case 13:
+      case 14:
         return _sectionWrapper(
           key,
           'Merge Edges',
           const EdgeMergerScreen(standalone: false),
           scrollController,
         );
-      case 14:
+      case 15:
         return _sectionWrapper(
           key,
           'Refine task.json',

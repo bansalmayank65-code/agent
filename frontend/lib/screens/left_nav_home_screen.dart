@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 
 import '../widgets/json_editor_viewer.dart';
 import '../widgets/schema_display_widget.dart';
+import '../widgets/common/inline_import_progress.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 
@@ -35,6 +36,7 @@ class _LeftNavHomeScreenState extends State<LeftNavHomeScreen> {
   final TextEditingController _userIdController = TextEditingController();
   final TextEditingController _outputsController = TextEditingController();
   final ScrollController _rightScroll = ScrollController();
+  final ImportProgressController _importProgressController = ImportProgressController();
   
   String? _importedJsonPath; // Track imported JSON file path
 
@@ -47,6 +49,7 @@ class _LeftNavHomeScreenState extends State<LeftNavHomeScreen> {
     _userIdController.dispose();
     _outputsController.dispose();
     _rightScroll.dispose();
+    _importProgressController.dispose();
     super.dispose();
   }
 
@@ -194,6 +197,12 @@ class _LeftNavHomeScreenState extends State<LeftNavHomeScreen> {
           controller: _rightScroll,
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            // Inline import progress - shown at top when active
+            InlineImportProgress(
+              controller: _importProgressController,
+              onRetry: _retryImportWeb,
+              onDismiss: () => _importProgressController.hide(),
+            ),
             Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
             const SizedBox(height: 16),
             child
@@ -1233,38 +1242,92 @@ class _LeftNavHomeScreenState extends State<LeftNavHomeScreen> {
   }
 
   void _importTaskJsonWeb() async {
-    final result = await pickAndReadJsonFile();
-    if (result == null) { _toast('Import cancelled/failed'); return; }
-    
-    final decoded = result['data'];
-    final fileName = result['fileName'] as String?;
-    
-    if (decoded == null) { _toast('Import failed - invalid JSON'); return; }
-    
-    final provider = context.read<TaskProvider>();
-    final authProvider = context.read<AuthProvider>();
-    // Import without overriding the user ID from JSON - let users edit it in step 4
-    // But pass the logged-in user ID separately for database foreign key constraint
-    final importResult = await provider.importTaskJson(decoded, dbUserId: authProvider.userId);
-    
-    if (importResult['success'] == true && fileName != null) {
-      setState(() {
-        _importedJsonPath = fileName;
-        _instructionController.text = provider.task.instruction;
-        _userIdController.text = provider.task.userId;
-        _outputsController.text = provider.task.outputs.join(', ');
-      });
-      _toast('Imported task.json from: $fileName');
-      
-      // Navigate to task workflow after successful import
-      final taskId = importResult['taskId'];
-      if (taskId != null && mounted) {
-        Navigator.pushNamed(context, '/task/$taskId');
+    try {
+      final result = await pickAndReadJsonFile();
+      if (result == null) { 
+        _toast('Import cancelled/failed'); 
+        return; 
       }
-    } else {
-      final errorMsg = importResult['message'] ?? 'Import failed';
-      _toast('Import failed: $errorMsg');
+      
+      final decoded = result['data'];
+      final fileName = result['fileName'] as String?;
+      
+      if (decoded == null) { 
+        _toast('Import failed - invalid JSON'); 
+        return; 
+      }
+      
+      final provider = context.read<TaskProvider>();
+      final authProvider = context.read<AuthProvider>();
+      
+      // Show progress
+      _importProgressController.show();
+      _importProgressController.updateProgress(
+        currentStep: 'Reading task.json file...',
+        progress: 0.1,
+      );
+      
+      if (!mounted) return;
+      
+      // Update progress
+      await Future.delayed(const Duration(milliseconds: 200));
+      _importProgressController.updateProgress(
+        currentStep: 'Validating task structure...',
+        progress: 0.3,
+      );
+      
+      await Future.delayed(const Duration(milliseconds: 200));
+      
+      // Update progress
+      _importProgressController.updateProgress(
+        currentStep: 'Uploading to server...',
+        progress: 0.5,
+      );
+      
+      // Import without overriding the user ID from JSON - let users edit it in step 4
+      // But pass the logged-in user ID separately for database foreign key constraint
+      final importResult = await provider.importTaskJson(decoded, dbUserId: authProvider.userId);
+      
+      if (importResult['success'] == true) {
+        // Update progress
+        _importProgressController.updateProgress(
+          currentStep: 'Saving to database...',
+          progress: 0.8,
+        );
+        
+        await Future.delayed(const Duration(milliseconds: 300));
+        
+        if (fileName != null) {
+          setState(() {
+            _importedJsonPath = fileName;
+            _instructionController.text = provider.task.instruction;
+            _userIdController.text = provider.task.userId;
+            _outputsController.text = provider.task.outputs.join(', ');
+          });
+        }
+        
+        // Complete
+        _importProgressController.updateProgress(
+          currentStep: 'Import completed! taskId: ${importResult['taskId']}',
+          progress: 1.0,
+        );
+        _importProgressController.complete();
+        
+        _toast('Imported task.json from: $fileName');
+      } else {
+        final errorMsg = importResult['message'] ?? 'Import failed';
+        _importProgressController.setError(errorMsg);
+        _toast('Import failed: $errorMsg');
+      }
+    } catch (e) {
+      _importProgressController.setError('Import failed: $e');
+      _toast('Import failed: $e');
     }
+  }
+
+  void _retryImportWeb() {
+    _importProgressController.hide();
+    _importTaskJsonWeb();
   }
 
   void _saveCurrentSection(TaskProvider provider, {required bool advance}) async {

@@ -28,7 +28,7 @@ public class TaskRefinementService {
      * 
      * @param taskData The task data to refine
      * @param options Map of operation flags (mergeDuplicates, moveAuditLogs, generateEdges, updateNumEdges)
-     * @return Refined task data
+     * @return Map containing refined task and statistics
      */
     public Map<String, Object> refineTask(Map<String, Object> taskData, Map<String, Object> options) {
         // Extract options with defaults (all enabled by default)
@@ -36,6 +36,14 @@ public class TaskRefinementService {
         boolean moveAuditLogs = getBooleanOption(options, "moveAuditLogs", true);
         boolean generateEdges = getBooleanOption(options, "generateEdges", true);
         boolean updateNumEdges = getBooleanOption(options, "updateNumEdges", true);
+        
+        // Statistics tracking
+        Map<String, Object> statistics = new LinkedHashMap<>();
+        int duplicatesRemoved = 0;
+        int auditLogsMoved = 0;
+        int edgesGenerated = 0;
+        Integer numEdgesBefore = null;
+        Integer numEdgesAfter = null;
         
         // Create a copy to avoid mutating the original
         Map<String, Object> refinedTask = new LinkedHashMap<>(taskData);
@@ -47,19 +55,39 @@ public class TaskRefinementService {
         List<Map<String, Object>> actions = extractActions(task);
         if (actions != null && !actions.isEmpty()) {
             List<Map<String, Object>> processedActions = actions;
+            int originalActionsCount = actions.size();
             
             // Step 1: Merge duplicate actions (if enabled)
             if (mergeDuplicates) {
                 processedActions = mergeDuplicateActions(processedActions);
+                duplicatesRemoved = originalActionsCount - processedActions.size();
             }
             
             // Step 2: Move audit log actions to end (if enabled)
             if (moveAuditLogs) {
+                int auditLogsCount = countAuditLogActions(processedActions);
                 processedActions = moveAuditLogsToEnd(processedActions);
+                auditLogsMoved = auditLogsCount;
             }
             
             // Update actions in task
             task.put("actions", processedActions);
+            
+            // Track num_edges before changes
+            Integer originalEdgesCount = null;
+            if (task.containsKey("edges")) {
+                Object edgesObj = task.get("edges");
+                if (edgesObj instanceof List) {
+                    originalEdgesCount = ((List<?>) edgesObj).size();
+                }
+            }
+            
+            if (task.containsKey("num_edges")) {
+                Object numEdgesObj = task.get("num_edges");
+                if (numEdgesObj instanceof Number) {
+                    numEdgesBefore = ((Number) numEdgesObj).intValue();
+                }
+            }
             
             // Step 3: Generate edges using EdgeGenerator (if enabled)
             if (generateEdges) {
@@ -70,11 +98,28 @@ public class TaskRefinementService {
                     
                     // Convert EdgeDto back to Map for JSON
                     List<Map<String, Object>> edgesMap = convertEdgesToMap(generatedEdges);
+                    int newEdgesCount = edgesMap.size();
+                    
+                    // Only update edges if they changed
+                    boolean edgesChanged = originalEdgesCount == null || originalEdgesCount != newEdgesCount;
+                    
                     task.put("edges", edgesMap);
+                    
+                    // Only report edges generated if they actually changed
+                    if (edgesChanged) {
+                        if (originalEdgesCount == null || originalEdgesCount == 0) {
+                            // New edges were created
+                            edgesGenerated = newEdgesCount;
+                        } else {
+                            // Edges were regenerated - report the delta
+                            edgesGenerated = newEdgesCount - originalEdgesCount;
+                        }
+                    }
                     
                     // Step 4: Fix num_of_edges (if enabled)
                     if (updateNumEdges) {
-                        task.put("num_edges", edgesMap.size());
+                        task.put("num_edges", newEdgesCount);
+                        numEdgesAfter = newEdgesCount;
                     }
                     
                 } catch (Exception e) {
@@ -84,6 +129,7 @@ public class TaskRefinementService {
                         task.put("edges", new ArrayList<>());
                         if (updateNumEdges) {
                             task.put("num_edges", 0);
+                            numEdgesAfter = 0;
                         }
                     }
                 }
@@ -93,8 +139,37 @@ public class TaskRefinementService {
                 if (task.containsKey("edges")) {
                     Object edgesObj = task.get("edges");
                     if (edgesObj instanceof List) {
-                        task.put("num_edges", ((List<?>) edgesObj).size());
+                        int edgeCount = ((List<?>) edgesObj).size();
+                        task.put("num_edges", edgeCount);
+                        numEdgesAfter = edgeCount;
                     }
+                }
+            }
+            
+            // Build statistics
+            if (duplicatesRemoved > 0) {
+                statistics.put("duplicates_removed", duplicatesRemoved);
+            }
+            if (auditLogsMoved > 0) {
+                statistics.put("audit_logs_moved", auditLogsMoved);
+            }
+            if (edgesGenerated > 0) {
+                statistics.put("edges_generated", edgesGenerated);
+            }
+            if (numEdgesBefore != null) {
+                statistics.put("num_of_edges_before", numEdgesBefore);
+            }
+            if (numEdgesAfter != null) {
+                statistics.put("num_of_edges_after", numEdgesAfter);
+                statistics.put("num_of_edges_updated", !Objects.equals(numEdgesBefore, numEdgesAfter));
+            }
+            statistics.put("total_actions", processedActions.size());
+            
+            // Count total edges
+            if (task.containsKey("edges")) {
+                Object edgesObj = task.get("edges");
+                if (edgesObj instanceof List) {
+                    statistics.put("total_edges", ((List<?>) edgesObj).size());
                 }
             }
         }
@@ -106,7 +181,12 @@ public class TaskRefinementService {
             refinedTask = task;
         }
         
-        return refinedTask;
+        // Return both refined task and statistics
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("refined_task", refinedTask);
+        result.put("statistics", statistics);
+        
+        return result;
     }
     
     /**
@@ -230,6 +310,19 @@ public class TaskRefinementService {
                name.contains("process_audit") ||
                name.contains("administer_audit") ||
                name.contains("execute_audit");
+    }
+    
+    /**
+     * Count audit log actions in a list
+     */
+    private int countAuditLogActions(List<Map<String, Object>> actions) {
+        int count = 0;
+        for (Map<String, Object> action : actions) {
+            if (isAuditLogAction(action)) {
+                count++;
+            }
+        }
+        return count;
     }
     
     /**

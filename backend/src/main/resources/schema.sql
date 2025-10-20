@@ -94,5 +94,59 @@ CREATE INDEX IF NOT EXISTS idx_task_history_timestamp ON task_history(change_tim
 CREATE INDEX IF NOT EXISTS idx_task_history_action_type ON task_history(action_type);
 CREATE INDEX IF NOT EXISTS idx_task_history_task_action ON task_history(task_id, action_type);
 
+-- Policy Actions Table for Policy Actions Builder
+CREATE TABLE IF NOT EXISTS policy_actions (
+    policy_action_id BIGSERIAL PRIMARY KEY,
+    env_name VARCHAR(100) NOT NULL,
+    interface_num INT NOT NULL,
+    policy_cat1 VARCHAR(100) NOT NULL,
+    policy_cat2 VARCHAR(100) NOT NULL,
+    policy_description TEXT,
+    actions_json TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Basic indexes for individual column lookups
+CREATE INDEX IF NOT EXISTS idx_policy_actions_env_name ON policy_actions(env_name);
+CREATE INDEX IF NOT EXISTS idx_policy_actions_interface_num ON policy_actions(interface_num);
+CREATE INDEX IF NOT EXISTS idx_policy_actions_policy_cat1 ON policy_actions(policy_cat1);
+CREATE INDEX IF NOT EXISTS idx_policy_actions_policy_cat2 ON policy_actions(policy_cat2);
+
+-- Composite indexes for query performance optimization
+-- Optimizes: WHERE env_name=? AND interface_num=? ORDER BY last_updated_at DESC
+CREATE INDEX IF NOT EXISTS idx_policy_actions_env_interface_updated 
+    ON policy_actions(env_name, interface_num, last_updated_at DESC);
+
+-- Optimizes: WHERE env_name=? AND interface_num=? ORDER BY policy_cat1
+CREATE INDEX IF NOT EXISTS idx_policy_actions_env_interface_cat1 
+    ON policy_actions(env_name, interface_num, policy_cat1);
+
+-- Optimizes: WHERE env_name=? AND interface_num=? AND policy_cat1=? ORDER BY policy_cat2
+CREATE INDEX IF NOT EXISTS idx_policy_actions_env_interface_cat1_cat2 
+    ON policy_actions(env_name, interface_num, policy_cat1, policy_cat2);
+
+-- Optimizes: WHERE env_name=? AND interface_num=? AND policy_cat1=? ORDER BY last_updated_at DESC
+CREATE INDEX IF NOT EXISTS idx_policy_actions_env_interface_cat1_updated 
+    ON policy_actions(env_name, interface_num, policy_cat1, last_updated_at DESC);
+
+-- Unique constraint to prevent duplicate policy combinations
+ALTER TABLE policy_actions 
+ADD CONSTRAINT uk_policy_actions_combination 
+UNIQUE (env_name, interface_num, policy_cat1, policy_cat2);
+
+CREATE OR REPLACE TRIGGER policy_actions_update_timestamp
+    BEFORE UPDATE ON policy_actions
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp_last_updated();
+
+CREATE OR REPLACE FUNCTION update_timestamp_last_updated()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.last_updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 INSERT INTO login (user_id, password) VALUES 
 ('mayank', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/json_editor_viewer.dart';
+import '../widgets/dialogs/changes_summary_dialog.dart';
 import '../services/api_service.dart';
 import 'dart:convert';
 
@@ -454,11 +455,113 @@ class _TaskRefinerBodyState extends State<_TaskRefinerBody> {
           currentStep = '';
         });
         
+        // Build changes summary
+        final changes = <ChangeItem>[];
+        final stats = response['statistics'] as Map<String, dynamic>?;
+        
+        if (stats != null) {
+          // Duplicate actions merged
+          if (mergeDuplicates && stats['duplicates_removed'] != null) {
+            final duplicatesRemoved = stats['duplicates_removed'] ?? 0;
+            if (duplicatesRemoved > 0) {
+              changes.add(ChangeItem(
+                type: ChangeType.merged,
+                title: 'Merged Duplicate Actions',
+                description: '$duplicatesRemoved duplicate action(s) removed',
+                details: [
+                  'Kept first occurrence of each action',
+                  'Removed subsequent duplicates to clean up the task',
+                ],
+              ));
+            }
+          }
+          
+          // Audit logs moved
+          if (moveAuditLogs && stats['audit_logs_moved'] != null) {
+            final auditLogsMoved = stats['audit_logs_moved'] ?? 0;
+            if (auditLogsMoved > 0) {
+              changes.add(ChangeItem(
+                type: ChangeType.moved,
+                title: 'Moved Audit Log Actions',
+                description: '$auditLogsMoved audit log action(s) moved to end',
+                details: [
+                  'All *_audit_logs actions relocated to the end',
+                  'Maintains logical execution order',
+                ],
+              ));
+            }
+          }
+          
+          // Edges generated
+          if (generateEdges && stats['edges_generated'] != null) {
+            final edgesGenerated = stats['edges_generated'] ?? 0;
+            if (edgesGenerated != 0) {
+              final isPositive = edgesGenerated > 0;
+              final absoluteCount = edgesGenerated.abs();
+              changes.add(ChangeItem(
+                type: isPositive ? ChangeType.added : ChangeType.removed,
+                title: isPositive ? 'Generated Edges' : 'Removed Edges',
+                description: '$absoluteCount edge(s) ${isPositive ? "added" : "removed"} from action dependencies',
+                details: [
+                  'Analyzed action inputs/outputs to create dependencies',
+                  'Automatically connected actions based on data flow',
+                ],
+              ));
+            }
+          }
+          
+          // Number of edges updated
+          if (updateNumEdges && stats['num_of_edges_updated'] != null) {
+            final numEdgesBefore = stats['num_of_edges_before'] ?? 0;
+            final numEdgesAfter = stats['num_of_edges_after'] ?? 0;
+            if (numEdgesBefore != numEdgesAfter) {
+              changes.add(ChangeItem(
+                type: ChangeType.modified,
+                title: 'Updated num_of_edges',
+                description: 'Changed from $numEdgesBefore to $numEdgesAfter',
+                details: [
+                  'Reflects the actual count of edges in the task',
+                ],
+              ));
+            }
+          }
+          
+          // Overall statistics - only show if there were actual changes
+          if (changes.isNotEmpty) {
+            final totalActions = stats['total_actions'] ?? 0;
+            final totalEdges = stats['total_edges'] ?? 0;
+            changes.add(ChangeItem(
+              type: ChangeType.info,
+              title: 'Final Statistics',
+              description: 'Task now contains $totalActions action(s) and $totalEdges edge(s)',
+            ));
+          }
+        }
+        
         _showSnackBar(
           context, 
           response['message'] ?? 'Task refined successfully',
           isError: false,
         );
+        
+        // Show changes summary dialog only if there were actual changes (excluding the final stats)
+        // Count meaningful changes (exclude info type)
+        final meaningfulChanges = changes.where((c) => c.type != ChangeType.info).length;
+        
+        if (meaningfulChanges > 0 && mounted) {
+          ChangesSummaryDialog.show(
+            context,
+            title: 'Refine Task - Summary',
+            changes: changes,
+          );
+        } else if (mounted) {
+          // Show a simple message if no changes were made
+          _showSnackBar(
+            context,
+            'No changes needed - task is already optimized',
+            isError: false,
+          );
+        }
       } else {
         _resetSteps();
         _showSnackBar(

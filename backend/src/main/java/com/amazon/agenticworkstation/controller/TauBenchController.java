@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -31,6 +33,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 @RequestMapping("/api/tau-bench")
 @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8080"}, allowCredentials = "false")
 public class TauBenchController {
+
+	private static final Logger logger = LoggerFactory.getLogger(TauBenchController.class);
 
 	@Autowired
 	private ComputeComplexityService computeComplexityService;
@@ -230,11 +234,78 @@ public class TauBenchController {
 	/**
 	 * Get raw result.json content from run_task validation (database storage)
 	 */
+	/**
+	 * Get result.json by taskId only (looks up userId from database automatically)
+	 */
+	@GetMapping("/result.json/by-task")
+	public ResponseEntity<Map<String, Object>> getResultJsonByTaskId(@RequestParam String taskId) {
+		try {
+			// Look up the actual userId for this task from database
+			String userId = taskCacheService.getUserIdForTask(taskId);
+			
+			if (userId == null) {
+				Map<String, Object> response = new HashMap<>();
+				response.put("success", false);
+				response.put("message", "Task not found: " + taskId);
+				response.put("data", null);
+				return ResponseEntity.ok(response);
+			}
+			
+			// Get raw result.json data directly from database using the correct userId
+			String resultJson = taskCacheService.getResultJsonFromDatabase(userId, taskId);
+			
+			if (resultJson == null || resultJson.trim().isEmpty()) {
+				Map<String, Object> response = new HashMap<>();
+				response.put("success", false);
+				response.put("message", "No result.json data available for taskId: " + taskId);
+				response.put("data", null);
+				return ResponseEntity.ok(response);
+			}
+
+			// Parse the JSON and return as object
+			@SuppressWarnings("unchecked")
+			Map<String, Object> resultData = objectMapper.readValue(resultJson, Map.class);
+			
+			Map<String, Object> response = new HashMap<>();
+			response.put("success", true);
+			response.put("message", "result.json retrieved successfully");
+			response.put("data", resultData);
+			response.put("userId", userId);
+			response.put("taskId", taskId);
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			Map<String, Object> response = new HashMap<>();
+			response.put("success", false);
+			response.put("message", "Error retrieving result.json: " + e.getMessage());
+			response.put("data", null);
+			return ResponseEntity.ok(response);
+		}
+	}
+	
 	@GetMapping("/result.json")
 	public ResponseEntity<Map<String, Object>> getResultJson(
 			@RequestParam String userId, 
 			@RequestParam String taskId) {
 		try {
+			// First, verify the task exists and get its actual owner
+			String actualUserId = taskCacheService.getUserIdForTask(taskId);
+			
+			if (actualUserId == null) {
+				Map<String, Object> response = new HashMap<>();
+				response.put("success", false);
+				response.put("message", "Task not found: " + taskId);
+				response.put("data", null);
+				return ResponseEntity.ok(response);
+			}
+			
+			// If provided userId doesn't match, use the actual userId from database
+			if (!userId.equals(actualUserId)) {
+				logger.warn("UserId mismatch for task {}: provided='{}', actual='{}'. Using actual userId.", 
+					taskId, userId, actualUserId);
+				userId = actualUserId;
+			}
+			
 			// Get raw result.json data directly from database
 			String resultJson = taskCacheService.getResultJsonFromDatabase(userId, taskId);
 			
@@ -275,11 +346,54 @@ public class TauBenchController {
 			@RequestParam String userId, 
 			@RequestParam String taskId) {
 		try {
+			// Look up the ACTUAL userId from database first
+			String actualUserId = taskCacheService.getUserIdForTask(taskId);
+			
+			if (actualUserId == null) {
+				Map<String, Object> response = new HashMap<>();
+				response.put("success", false);
+				response.put("message", "Task not found: " + taskId);
+				response.put("data", null);
+				return ResponseEntity.ok(response);
+			}
+			
+			// If provided userId doesn't match, use the actual userId and log warning
+			if (!userId.equals(actualUserId)) {
+				logger.warn("UserId mismatch for task {}: provided='{}', actual='{}'. Using actual userId.", 
+					taskId, userId, actualUserId);
+				userId = actualUserId;  // Auto-correct to actual userId
+			}
+			
 			// Set current context for the specified user and task
 			taskCacheService.setCurrentContext(userId, taskId);
 			
-			// Check if result data exists for this specific user/task
-			if (!taskCacheService.hasResultData()) {
+			// Try to get from database first
+			String resultJson = taskCacheService.getResultJsonFromDatabase(userId, taskId);
+			Object resultData = null;  // Changed to Object to handle both arrays and objects
+			String filePath = null;
+			
+			if (resultJson != null && !resultJson.trim().isEmpty()) {
+				// Parse JSON from database - can be array or object
+				try {
+					// Parse as generic Object - Jackson will determine if it's List or Map
+					resultData = objectMapper.readValue(resultJson, Object.class);
+					filePath = "database://" + userId + "_" + taskId + ".result.json";
+					logger.info("Result.json retrieved from database for user {} task {} (type: {})", 
+						userId, taskId, resultData.getClass().getSimpleName());
+				} catch (Exception e) {
+					logger.error("Failed to parse result.json from database: {}", e.getMessage());
+				}
+			}
+			
+			// If not in database, check memory cache
+			if (resultData == null && taskCacheService.hasResultData()) {
+				resultData = taskCacheService.getResultData();
+				filePath = taskCacheService.getResultFilePath();
+				logger.info("Result.json retrieved from memory cache for user {} task {}", userId, taskId);
+			}
+			
+			// If still no data found
+			if (resultData == null) {
 				Map<String, Object> response = new HashMap<>();
 				response.put("success", false);
 				response.put("message", "No result data available for userId: " + userId + ", taskId: " + taskId);
@@ -287,17 +401,13 @@ public class TauBenchController {
 				return ResponseEntity.ok(response);
 			}
 
-			// Get result data from memory cache for current context
-			Map<String, Object> resultData = taskCacheService.getResultData();
-			String cachedFilePath = taskCacheService.getResultFilePath();
-
 			Map<String, Object> response = new HashMap<>();
 			response.put("success", true);
 			response.put("message", "Result retrieved successfully for userId: " + userId + ", taskId: " + taskId);
 			response.put("data", resultData);
 			response.put("userId", userId);
 			response.put("taskId", taskId);
-			response.put("filePath", cachedFilePath != null ? cachedFilePath : "memory://" + userId + "_" + taskId + ".result.json");
+			response.put("filePath", filePath != null ? filePath : "memory://" + userId + "_" + taskId + ".result.json");
 			return ResponseEntity.ok(response);
 
 		} catch (Exception e) {

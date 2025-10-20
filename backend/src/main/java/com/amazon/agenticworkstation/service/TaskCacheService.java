@@ -289,6 +289,20 @@ public class TaskCacheService {
         loadTaskIntoCache(userId, taskId);
     }
     
+    /**
+     * Get current user ID from context
+     */
+    public synchronized String getCurrentUserId() {
+        return this.currentUserId;
+    }
+    
+    /**
+     * Get current task ID from context
+     */
+    public synchronized String getCurrentTaskId() {
+        return this.currentTaskId;
+    }
+    
 
     
     private TaskDto createEmptyTaskDto() {
@@ -724,6 +738,27 @@ public class TaskCacheService {
     }
 
     /**
+     * Get the userId for a specific taskId from the database
+     * This is used to verify task ownership before saving result.json
+     */
+    public String getUserIdForTask(String taskId) {
+        try {
+            Optional<TaskEntity> taskEntityOpt = taskRepository.findById(taskId);
+            if (taskEntityOpt.isPresent()) {
+                String userId = taskEntityOpt.get().getUserId();
+                logger.debug("Found userId '{}' for taskId '{}'", userId, taskId);
+                return userId;
+            } else {
+                logger.warn("Task {} not found in database", taskId);
+                return null;
+            }
+        } catch (Exception e) {
+            logger.error("Error looking up userId for task {}: {}", taskId, e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
      * Save result JSON string directly to database for a specific task
      * 
      * *** IMPORTANT: This is the ONLY method that should store result_json in the database ***
@@ -732,26 +767,33 @@ public class TaskCacheService {
     public void saveResultJsonToDatabase(String userId, String taskId, String resultJsonString) {
         try {
             Optional<TaskEntity> taskEntityOpt = taskRepository.findById(taskId);
-            if (taskEntityOpt.isPresent()) {
-                TaskEntity taskEntity = taskEntityOpt.get();
-                
-                // Verify the task belongs to the specified user
-                if (!userId.equals(taskEntity.getUserId())) {
-                    logger.warn("Task {} belongs to user {} but requested by user {} - access denied", 
-                        taskId, taskEntity.getUserId(), userId);
-                    return;
-                }
-                
-                // Store the raw JSON string directly
-                taskEntity.setResultJson(resultJsonString);
-                taskRepository.save(taskEntity);
-                
-                logger.info("Saved result.json for task {} user {}", taskId, userId);
-            } else {
-                logger.warn("Task {} not found in database for saving result.json", taskId);
+            if (!taskEntityOpt.isPresent()) {
+                String error = "Task " + taskId + " not found in database for saving result.json";
+                logger.error(error);
+                throw new IllegalStateException(error);
             }
+            
+            TaskEntity taskEntity = taskEntityOpt.get();
+            
+            // Verify the task belongs to the specified user
+            if (!userId.equals(taskEntity.getUserId())) {
+                String error = "Task " + taskId + " belongs to user " + taskEntity.getUserId() + " but requested by user " + userId + " - access denied";
+                logger.error(error);
+                throw new IllegalStateException(error);
+            }
+            
+            // Store the raw JSON string directly
+            taskEntity.setResultJson(resultJsonString);
+            taskRepository.save(taskEntity);
+            
+            logger.info("Saved result.json for task {} user {} - {} bytes", taskId, userId, resultJsonString.length());
+        } catch (IllegalStateException e) {
+            // Re-throw our custom exceptions
+            throw e;
         } catch (Exception e) {
-            logger.error("Error saving result.json for task {} user {}: {}", taskId, userId, e.getMessage());
+            String error = "Error saving result.json for task " + taskId + " user " + userId + ": " + e.getMessage();
+            logger.error(error, e);
+            throw new IllegalStateException(error, e);
         }
     }
 
