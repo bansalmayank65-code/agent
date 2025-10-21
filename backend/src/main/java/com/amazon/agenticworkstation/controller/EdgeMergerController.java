@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.amazon.agenticworkstation.constants.EdgeGeneratorUtility;
 import com.amazon.agenticworkstation.dto.TaskDto;
 import com.amazon.agenticworkstation.service.EdgeMergeService;
 
@@ -51,8 +52,20 @@ public class EdgeMergerController {
             List<TaskDto.EdgeDto> originalEdges = taskDto.getTask().getEdges();
             logger.info("Original edge count: {}", originalEdges.size());
             
+            // Extract environment parameters from TaskDto - no fallback to defaults
+            if (taskDto.getEnv() == null || taskDto.getEnv().trim().isEmpty()) {
+                throw new IllegalArgumentException("Environment name (env) is required and cannot be null or empty");
+            }
+            if (taskDto.getInterfaceNum() == null) {
+                throw new IllegalArgumentException("Interface number (interfaceNum) is required and cannot be null");
+            }
+            
+            String envName = taskDto.getEnv();
+            Integer interfaceNum = taskDto.getInterfaceNum();
+            EdgeGeneratorUtility utility = new EdgeGeneratorUtility(envName, interfaceNum);
+            
             // Perform the merge using EdgeMergeService with detailed results
-            EdgeMergeService.EdgeMergeResult mergeResult = edgeMergeService.mergeAndDeduplicateEdgesDetailed(originalEdges);
+            EdgeMergeService.EdgeMergeResult mergeResult = edgeMergeService.mergeAndDeduplicateEdgesDetailed(originalEdges, utility);
             List<TaskDto.EdgeDto> mergedEdges = mergeResult.getEdges();
             logger.info("Final edge count after merge: {}", mergedEdges.size());
             logger.info("Merge statistics - Exact duplicates: {}, Same from/to merged: {}, Redundant connections: {}", 

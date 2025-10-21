@@ -92,9 +92,21 @@ public class TaskRefinementService {
             // Step 3: Generate edges using EdgeGenerator (if enabled)
             if (generateEdges) {
                 try {
+                    // Extract environment parameters from taskData - no fallback to defaults
+                    if (!taskData.containsKey("env") || taskData.get("env") == null || 
+                        String.valueOf(taskData.get("env")).trim().isEmpty()) {
+                        throw new IllegalArgumentException("Environment name (env) is required and cannot be null or empty");
+                    }
+                    if (!taskData.containsKey("interface_num") || taskData.get("interface_num") == null) {
+                        throw new IllegalArgumentException("Interface number (interface_num) is required and cannot be null");
+                    }
+                    
+                    String envName = String.valueOf(taskData.get("env"));
+                    Integer interfaceNum = ((Number) taskData.get("interface_num")).intValue();
+                    
                     // Convert actions to ActionDto for EdgeGenerator
                     List<TaskDto.ActionDto> actionDtos = convertToActionDtos(processedActions);
-                    List<TaskDto.EdgeDto> generatedEdges = EdgeGenerator.edgesFromActions(actionDtos);
+                    List<TaskDto.EdgeDto> generatedEdges = EdgeGenerator.edgesFromActions(actionDtos, envName, interfaceNum);
                     
                     // Convert EdgeDto back to Map for JSON
                     List<Map<String, Object>> edgesMap = convertEdgesToMap(generatedEdges);

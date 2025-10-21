@@ -32,15 +32,47 @@ public final class EdgeGenerator {
 	}
 
 	/**
+	 * Main method to generate edges from a TaskDto. Extracts environment parameters
+	 * from the TaskDto itself.
+	 * 
+	 * @param taskDto Complete task DTO containing actions and environment configuration
+	 */
+	public static List<TaskDto.EdgeDto> edgesFromTaskDto(TaskDto taskDto) {
+		if (taskDto == null || taskDto.getTask() == null) {
+			return new ArrayList<>();
+		}
+		
+		// Extract environment parameters from TaskDto - no fallback to defaults
+		if (taskDto.getEnv() == null || taskDto.getEnv().trim().isEmpty()) {
+			throw new IllegalArgumentException("Environment name (env) is required and cannot be null or empty");
+		}
+		if (taskDto.getInterfaceNum() == null) {
+			throw new IllegalArgumentException("Interface number (interfaceNum) is required and cannot be null");
+		}
+		
+		String envName = taskDto.getEnv();
+		Integer interfaceNum = taskDto.getInterfaceNum();
+		
+		return edgesFromActions(taskDto.getTask().getActions(), envName, interfaceNum);
+	}
+
+	/**
 	 * Main method to generate edges from a list of actions. PRIORITIZES INSTRUCTION
 	 * EDGES: If an input could come from instruction or previous action, prefer
 	 * instruction to avoid redundant action->action edges.
+	 * 
+	 * @param actions List of actions to process
+	 * @param envname Environment name for configuration
+	 * @param interfaceNum Interface number for configuration
 	 */
-	public static List<TaskDto.EdgeDto> edgesFromActions(List<TaskDto.ActionDto> actions) {
+	public static List<TaskDto.EdgeDto> edgesFromActions(List<TaskDto.ActionDto> actions, String envname, Integer interfaceNum) {
 		List<TaskDto.EdgeDto> edges = new ArrayList<>();
 		if (actions == null || actions.isEmpty()) {
 			return edges;
 		}
+
+		// Create EdgeGeneratorUtility instance with environment parameters
+		EdgeGeneratorUtility utility = new EdgeGeneratorUtility(envname, interfaceNum);
 
 		// Create action order map for sorting
 		Map<String, Integer> actionOrderMap = new HashMap<>();
@@ -70,7 +102,7 @@ public final class EdgeGenerator {
 				Object inputValue = currentInputs.get(inputKey);
 
 				// Check if this field must come from instruction (hardcoded list)
-				if (mustComeFromInstruction(inputKey, inputValue)) {
+				if (mustComeFromInstruction(inputKey, inputValue, utility)) {
 					instructionInputs.add(inputKey);
 				} else {
 					// Check if any previous action can provide this input
@@ -83,7 +115,7 @@ public final class EdgeGenerator {
 						}
 						Map<String, Object> previousOutputs = extractOutputs(previousAction.getOutput());
 						String matchKey = findBestMatch(inputKey, inputValue, previousOutputs, currentAction.getName(),
-								previousAction.getName());
+								previousAction.getName(), utility);
 						if (matchKey != null) {
 							canComeFromAction = true;
 
@@ -128,7 +160,7 @@ public final class EdgeGenerator {
 					String previousName = previousAction.getName();
 					Map<String, Object> previousOutputs = extractOutputs(previousAction.getOutput());
 					String outputKey = findBestMatch(inputKey, inputValue, previousOutputs, currentAction.getName(),
-							previousAction.getName());
+							previousAction.getName(), utility);
 
 					if (outputKey != null) {
 						// Check if this is a value match (Priority 1)
@@ -168,27 +200,27 @@ public final class EdgeGenerator {
 				String previousName = entry.getKey();
 				List<String> outputKeys = entry.getValue();
 				List<String> inputKeys = actionToInputs.get(previousName);
-				edges.add(createActionEdge(previousName, currentName, outputKeys, inputKeys));
+				edges.add(createActionEdge(previousName, currentName, outputKeys, inputKeys, utility));
 			}
 
 			// Create single instruction edge for all instruction inputs
 			if (!instructionInputs.isEmpty()) {
-				edges.add(createInstructionEdge(currentName, instructionInputs));
+				edges.add(createInstructionEdge(currentName, instructionInputs, utility));
 			}
 		}
 
 		// Use EdgeMergeService for deduplication and merging with instruction
 		// prioritization
 		EdgeMergeService edgeMergeService = new EdgeMergeService();
-		return edgeMergeService.mergeAndDeduplicateEdges(edges);
+		return edgeMergeService.mergeAndDeduplicateEdges(edges, utility);
 	}
 
 	/**
 	 * Determine if an input MUST come from instruction (hardcoded list). These are
 	 * fields that should never come from previous actions.
 	 */
-	private static boolean mustComeFromInstruction(String inputKey, Object inputValue) {
-		String fieldName = getFieldName(inputKey).toLowerCase();
+	private static boolean mustComeFromInstruction(String inputKey, Object inputValue, EdgeGeneratorUtility utility) {
+		String fieldName = utility.getFieldName(inputKey).toLowerCase();
 
 		// Fields that MUST come from instruction based on expected output analysis
 		return EdgeGeneratorUtility.INSTRUCTION_ONLY_FIELDS.stream().anyMatch(field -> field.equals(fieldName));
@@ -198,8 +230,8 @@ public final class EdgeGenerator {
 	 * Find the best matching output key for a given input key and value
 	 */
 	private static String findBestMatch(String inputKey, Object inputValue, Map<String, Object> prevOutputs,
-			String currentAction, String previousAction) {
-		String inputFieldName = getFieldName(inputKey);
+			String currentAction, String previousAction, EdgeGeneratorUtility utility) {
+		String inputFieldName = utility.getFieldName(inputKey);
 		boolean isAuditCurrentAction = isAuditAction(currentAction);
 		boolean isAuditPreviousAction = isAuditAction(previousAction);
 
@@ -210,7 +242,7 @@ public final class EdgeGenerator {
 			for (Map.Entry<String, Object> outputEntry : prevOutputs.entrySet()) {
 				String outputKey = outputEntry.getKey();
 				Object outputValue = outputEntry.getValue();
-				String outputFieldName = getFieldName(outputKey);
+				String outputFieldName = utility.getFieldName(outputKey);
 
 				// Ensure both values are not null and match exactly
 				if (outputValue != null
@@ -305,7 +337,9 @@ public final class EdgeGenerator {
 	}
 
 	/**
-	 * Read task JSON and generate edges
+	 * Read task JSON and generate edges, extracting environment parameters from the JSON
+	 * 
+	 * @param taskJsonPath Path to the task JSON file
 	 */
 	public static List<TaskDto.EdgeDto> edgesFromTaskJson(Path taskJsonPath) {
 		if (taskJsonPath == null) {
@@ -320,7 +354,45 @@ public final class EdgeGenerator {
 			if (dto == null || dto.getTask() == null) {
 				return new ArrayList<>();
 			}
-			return edgesFromActions(dto.getTask().getActions());
+			
+			// Extract environment parameters from TaskDto - no fallback to defaults
+			if (dto.getEnv() == null || dto.getEnv().trim().isEmpty()) {
+				throw new IllegalArgumentException("Environment name (env) is required and cannot be null or empty");
+			}
+			if (dto.getInterfaceNum() == null) {
+				throw new IllegalArgumentException("Interface number (interfaceNum) is required and cannot be null");
+			}
+			
+			String envName = dto.getEnv();
+			Integer interfaceNum = dto.getInterfaceNum();
+			
+			return edgesFromActions(dto.getTask().getActions(), envName, interfaceNum);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Read task JSON and generate edges with explicit environment parameters
+	 * 
+	 * @param taskJsonPath Path to the task JSON file
+	 * @param envname Environment name for configuration
+	 * @param interfaceNum Interface number for configuration
+	 */
+	public static List<TaskDto.EdgeDto> edgesFromTaskJson(Path taskJsonPath, String envname, Integer interfaceNum) {
+		if (taskJsonPath == null) {
+			return new ArrayList<>();
+		}
+		try {
+			if (!Files.exists(taskJsonPath)) {
+				return new ArrayList<>();
+			}
+			String content = Files.readString(taskJsonPath);
+			TaskDto dto = mapper.readValue(content, TaskDto.class);
+			if (dto == null || dto.getTask() == null) {
+				return new ArrayList<>();
+			}
+			return edgesFromActions(dto.getTask().getActions(), envname, interfaceNum);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -413,18 +485,10 @@ public final class EdgeGenerator {
 	}
 
 	/**
-	 * Get field name from a potentially nested key (e.g., "filters.email" ->
-	 * "email")
-	 */
-	private static String getFieldName(String key) {
-		return EdgeGeneratorUtility.getFieldName(key);
-	}
-
-	/**
 	 * Create an action->action edge with properly ordered output/input pairs
 	 */
 	private static TaskDto.EdgeDto createActionEdge(String fromAction, String toAction, List<String> outputKeys,
-			List<String> inputKeys) {
+			List<String> inputKeys, EdgeGeneratorUtility utility) {
 		TaskDto.EdgeDto edge = new TaskDto.EdgeDto();
 		edge.setFrom(fromAction);
 		edge.setTo(toAction);
@@ -437,7 +501,7 @@ public final class EdgeGenerator {
 
 		int size = Math.min(outputKeys.size(), inputKeys.size());
 		for (int i = 0; i < size; i++) {
-			cleanedOutputs.add(EdgeGeneratorUtility.cleanFieldName(outputKeys.get(i), false)); // Don't clean for
+			cleanedOutputs.add(utility.cleanFieldName(outputKeys.get(i), false)); // Don't clean for
 																									// action edges
 			cleanedInputs.add(inputKeys.get(i));
 		}
@@ -453,7 +517,7 @@ public final class EdgeGenerator {
 	 * Create an instruction->action edge for unmatched inputs with proper field
 	 * ordering
 	 */
-	private static TaskDto.EdgeDto createInstructionEdge(String actionName, List<String> inputs) {
+	private static TaskDto.EdgeDto createInstructionEdge(String actionName, List<String> inputs, EdgeGeneratorUtility utility) {
 		TaskDto.EdgeDto edge = new TaskDto.EdgeDto();
 		edge.setFrom(EdgeGeneratorUtility.INSTRUCTION);
 		edge.setTo(actionName);
@@ -463,8 +527,8 @@ public final class EdgeGenerator {
 		// Sort inputs to match expected order for consistent output
 		List<String> sortedInputs = new ArrayList<>(inputs);
 		sortedInputs.sort((a, b) -> {
-			String fieldA = getFieldName(a).toLowerCase();
-			String fieldB = getFieldName(b).toLowerCase();
+			String fieldA = utility.getFieldName(a).toLowerCase();
+			String fieldB = utility.getFieldName(b).toLowerCase();
 
 			int priorityA = EdgeGeneratorUtility.FIELD_PRIORITY.getOrDefault(fieldA,
 					EdgeGeneratorUtility.DEFAULT_FIELD_PRIORITY);
@@ -484,7 +548,7 @@ public final class EdgeGenerator {
 		List<String> cleanedInputs = new ArrayList<>();
 
 		for (String input : sortedInputs) {
-			cleanedOutputs.add(EdgeGeneratorUtility.cleanFieldName(input, true)); // Clean for instruction edges
+			cleanedOutputs.add(utility.cleanFieldName(input, true)); // Clean for instruction edges
 			cleanedInputs.add(input);
 		}
 

@@ -46,13 +46,33 @@ public class EdgeMergeService {
 			this.finalCount = edges.size();
 		}
 
-		public List<TaskDto.EdgeDto> getEdges() { return edges; }
-		public int getOriginalCount() { return originalCount; }
-		public int getExactDuplicatesRemoved() { return exactDuplicatesRemoved; }
-		public int getSameFromToMerged() { return sameFromToMerged; }
-		public int getRedundantConnectionsRemoved() { return redundantConnectionsRemoved; }
-		public int getFinalCount() { return finalCount; }
-		public int getTotalRemoved() { return originalCount - finalCount; }
+		public List<TaskDto.EdgeDto> getEdges() {
+			return edges;
+		}
+
+		public int getOriginalCount() {
+			return originalCount;
+		}
+
+		public int getExactDuplicatesRemoved() {
+			return exactDuplicatesRemoved;
+		}
+
+		public int getSameFromToMerged() {
+			return sameFromToMerged;
+		}
+
+		public int getRedundantConnectionsRemoved() {
+			return redundantConnectionsRemoved;
+		}
+
+		public int getFinalCount() {
+			return finalCount;
+		}
+
+		public int getTotalRemoved() {
+			return originalCount - finalCount;
+		}
 	}
 
 	/**
@@ -67,9 +87,15 @@ public class EdgeMergeService {
 			this.mergeOperationsPerformed = mergeOperationsPerformed;
 		}
 
-		public List<TaskDto.EdgeDto> getEdges() { return edges; }
-		public int getMergeOperationsPerformed() { return mergeOperationsPerformed; }
+		public List<TaskDto.EdgeDto> getEdges() {
+			return edges;
+		}
+
+		public int getMergeOperationsPerformed() {
+			return mergeOperationsPerformed;
+		}
 	}
+
 	public static class RedundantRemovalResult {
 		private final List<TaskDto.EdgeDto> edges;
 		private final int redundantConnectionsRemoved;
@@ -79,29 +105,50 @@ public class EdgeMergeService {
 			this.redundantConnectionsRemoved = redundantConnectionsRemoved;
 		}
 
-		public List<TaskDto.EdgeDto> getEdges() { return edges; }
-		public int getRedundantConnectionsRemoved() { return redundantConnectionsRemoved; }
+		public List<TaskDto.EdgeDto> getEdges() {
+			return edges;
+		}
+
+		public int getRedundantConnectionsRemoved() {
+			return redundantConnectionsRemoved;
+		}
+	}
+
+	/**
+	 * Merge and deduplicate edges with detailed statistics (backward compatibility)
+	 * 
+	 * @param edges List of edges to merge
+	 * @return Detailed merge result with statistics
+	 * @deprecated Use mergeAndDeduplicateEdgesDetailed(edges, utility) with proper EdgeGeneratorUtility
+	 */
+	@Deprecated
+	public EdgeMergeResult mergeAndDeduplicateEdgesDetailed(List<TaskDto.EdgeDto> edges) {
+		throw new UnsupportedOperationException(
+			"Environment parameters are required. Use mergeAndDeduplicateEdgesDetailed(edges, utility) instead."
+		);
 	}
 
 	/**
 	 * Merge and deduplicate edges with instruction prioritization. This is the main
 	 * entry point for edge merging logic.
 	 * 
-	 * @param edges List of edges to merge
+	 * @param edges   List of edges to merge
+	 * @param utility EdgeGeneratorUtility instance for field operations
 	 * @return List of merged and deduplicated edges
 	 */
-	public List<TaskDto.EdgeDto> mergeAndDeduplicateEdges(List<TaskDto.EdgeDto> edges) {
-		EdgeMergeResult result = mergeAndDeduplicateEdgesDetailed(edges);
+	public List<TaskDto.EdgeDto> mergeAndDeduplicateEdges(List<TaskDto.EdgeDto> edges, EdgeGeneratorUtility utility) {
+		EdgeMergeResult result = mergeAndDeduplicateEdgesDetailed(edges, utility);
 		return result.getEdges();
 	}
 
 	/**
 	 * Merge and deduplicate edges with detailed statistics
 	 * 
-	 * @param edges List of edges to merge
+	 * @param edges   List of edges to merge
+	 * @param utility EdgeGeneratorUtility instance for field operations
 	 * @return Detailed merge result with statistics
 	 */
-	public EdgeMergeResult mergeAndDeduplicateEdgesDetailed(List<TaskDto.EdgeDto> edges) {
+	public EdgeMergeResult mergeAndDeduplicateEdgesDetailed(List<TaskDto.EdgeDto> edges, EdgeGeneratorUtility utility) {
 		if (edges == null || edges.isEmpty()) {
 			return new EdgeMergeResult(new ArrayList<>(), 0, 0, 0, 0);
 		}
@@ -111,25 +158,29 @@ public class EdgeMergeService {
 		// Step 1: Remove exact duplicate edges
 		List<TaskDto.EdgeDto> deduplicatedEdges = removeExactDuplicates(edges);
 		int exactDuplicatesRemoved = originalCount - deduplicatedEdges.size();
-		logger.debug("After deduplication: {} edges ({} exact duplicates removed)", deduplicatedEdges.size(), exactDuplicatesRemoved);
+		logger.debug("After deduplication: {} edges ({} exact duplicates removed)", deduplicatedEdges.size(),
+				exactDuplicatesRemoved);
 
 		// Step 2: Merge edges with same "from" and "to" values
 		SameFromToMergeResult sameFromToResult = mergeEdgesWithSameFromToDetailed(deduplicatedEdges);
 		List<TaskDto.EdgeDto> mergedEdges = sameFromToResult.getEdges();
 		int sameFromToMerged = sameFromToResult.getMergeOperationsPerformed();
-		logger.debug("After merging same from/to: {} edges ({} merge operations performed)", mergedEdges.size(), sameFromToMerged);
+		logger.debug("After merging same from/to: {} edges ({} merge operations performed)", mergedEdges.size(),
+				sameFromToMerged);
 
 		// Step 3: Collect instruction-provided inputs
 		Map<String, List<String>> instructionProvidedInputs = collectInstructionInputs(mergedEdges);
 
 		// Step 4: Remove redundant action->action connections
-		RedundantRemovalResult redundantResult = removeRedundantActionEdgesDetailed(mergedEdges, instructionProvidedInputs);
+		RedundantRemovalResult redundantResult = removeRedundantActionEdgesDetailed(mergedEdges,
+				instructionProvidedInputs, utility);
 		List<TaskDto.EdgeDto> finalEdges = redundantResult.getEdges();
 		int redundantConnectionsRemoved = redundantResult.getRedundantConnectionsRemoved();
-		logger.info("After removing redundant action->action connections: {} edges ({} connections removed)", 
-			finalEdges.size(), redundantConnectionsRemoved);
+		logger.info("After removing redundant action->action connections: {} edges ({} connections removed)",
+				finalEdges.size(), redundantConnectionsRemoved);
 
-		return new EdgeMergeResult(finalEdges, originalCount, exactDuplicatesRemoved, sameFromToMerged, redundantConnectionsRemoved);
+		return new EdgeMergeResult(finalEdges, originalCount, exactDuplicatesRemoved, sameFromToMerged,
+				redundantConnectionsRemoved);
 	}
 
 	/**
@@ -198,6 +249,7 @@ public class EdgeMergeService {
 	 * @param edges List of edges to merge
 	 * @return List with merged edges
 	 */
+	@SuppressWarnings("unused")
 	private List<TaskDto.EdgeDto> mergeEdgesWithSameFromTo(List<TaskDto.EdgeDto> edges) {
 		SameFromToMergeResult result = mergeEdgesWithSameFromToDetailed(edges);
 		return result.getEdges();
@@ -232,10 +284,12 @@ public class EdgeMergeService {
 	 * 
 	 * @param edges                     List of edges to filter
 	 * @param instructionProvidedInputs Map of inputs provided by instruction
+	 * @param utility                   EdgeGeneratorUtility instance for field
+	 *                                  operations
 	 * @return Result with edges and count of redundant connections removed
 	 */
 	private RedundantRemovalResult removeRedundantActionEdgesDetailed(List<TaskDto.EdgeDto> edges,
-			Map<String, List<String>> instructionProvidedInputs) {
+			Map<String, List<String>> instructionProvidedInputs, EdgeGeneratorUtility utility) {
 		List<TaskDto.EdgeDto> finalEdges = new ArrayList<>();
 		int redundantConnectionsRemoved = 0;
 
@@ -261,7 +315,7 @@ public class EdgeMergeService {
 
 					int originalConnectionCount = Math.min(outputs.size(), inputs.size());
 					int size = originalConnectionCount;
-					
+
 					for (int i = 0; i < size; i++) {
 						String input = inputs.get(i);
 						String output = outputs.get(i);
@@ -270,7 +324,7 @@ public class EdgeMergeService {
 						// comparison
 						boolean providedByInstruction = false;
 						for (String instructionInput : instructionInputs) {
-							if (EdgeGeneratorUtility.areFieldNamesEquivalent(input, instructionInput)) {
+							if (utility.areFieldNamesEquivalent(input, instructionInput)) {
 								providedByInstruction = true;
 								break;
 							}
@@ -303,20 +357,6 @@ public class EdgeMergeService {
 		}
 
 		return new RedundantRemovalResult(finalEdges, redundantConnectionsRemoved);
-	}
-
-	/**
-	 * Remove redundant action->action edges when instruction already provides the
-	 * same input (backward compatibility method).
-	 * 
-	 * @param edges                     List of edges to filter
-	 * @param instructionProvidedInputs Map of inputs provided by instruction
-	 * @return List with redundant edges removed
-	 */
-	private List<TaskDto.EdgeDto> removeRedundantActionEdges(List<TaskDto.EdgeDto> edges,
-			Map<String, List<String>> instructionProvidedInputs) {
-		RedundantRemovalResult result = removeRedundantActionEdgesDetailed(edges, instructionProvidedInputs);
-		return result.getEdges();
 	}
 
 	/**

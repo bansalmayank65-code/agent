@@ -138,6 +138,23 @@ public class TauBenchController {
 				taskCacheService.storeResultData(userId, taskId, resultData, "memory://" + userId + "_" + taskId);
 			}
 			
+			// Special handling for evaluate endpoint to match frontend expectations
+			if ("evaluate".equalsIgnoreCase(endpoint) && response.isSuccess() && response.getData() != null) {
+				// Create the notebook_result structure that the frontend expects
+				Map<String, Object> notebookResult = new HashMap<>();
+				notebookResult.put("evaluation_data", response.getData());
+				
+				// Wrap the response data to match frontend expectations
+				Map<String, Object> wrappedData = new HashMap<>();
+				wrappedData.put("notebook_result", notebookResult);
+				
+				// Convert to JsonNode for consistency with existing response structure
+				JsonNode wrappedDataNode = objectMapper.valueToTree(wrappedData);
+				
+				return ResponseEntity.ok(new TaskExecutionResponse(response.isSuccess(), response.getMessage(),
+						wrappedDataNode, response.getPlotBase64(), response.hasPlot()));
+			}
+			
 			return ResponseEntity.ok(new TaskExecutionResponse(response.isSuccess(), response.getMessage(),
 					response.getData(), response.getPlotBase64(), response.hasPlot()));
 		} catch (Exception e) {
@@ -438,7 +455,7 @@ public class TauBenchController {
 
 			// Generate edges using EdgeGenerator
 			List<com.amazon.agenticworkstation.dto.TaskDto.EdgeDto> generatedEdges = 
-				com.amazon.agenticworkstation.service.EdgeGenerator.edgesFromActions(currentTask.getTask().getActions());
+				com.amazon.agenticworkstation.service.EdgeGenerator.edgesFromTaskDto(currentTask);
 
 			// Convert EdgeDto to Map format for response
 			List<Map<String, Object>> edgesList = new ArrayList<>();

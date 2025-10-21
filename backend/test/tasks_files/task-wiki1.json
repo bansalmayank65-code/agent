@@ -1,0 +1,305 @@
+{
+    "env": "wiki_confluence",
+    "model_provider": "fireworks",
+    "model": "qwen3-coder-480b-a35b-instruct",
+    "num_trials": 3,
+    "temperature": 1,
+    "interface_num": 3,
+    "task": {
+        "user_id": "1",
+        "instruction": "You are Danielle Johnson (danielle.johnson@siemens.com), a global admin at Siemens. You want to create a new user account for a recently hired content contributor named Sarah Mitchell with the email sarah.mitchell@siemens.com and add him in Engineering Team group, ensuring she receives system alerts and message 'You has been added in Engineering Team' for adding in group.",
+        "actions": [
+            {
+                "name": "retrieve_user",
+                "arguments": {
+                    "identifier": "danielle.johnson@siemens.com",
+                    "identifier_type": "email"
+                },
+                "output": {
+                    "success": true,
+                    "user_data": {
+                        "account_id": "ADM_46913810",
+                        "created_at": "2023-01-29T22:32:16.592034",
+                        "email": "danielle.johnson@siemens.com",
+                        "full_name": "Danielle Johnson",
+                        "global_role": "global_admin",
+                        "user_id": "1"
+                    }
+                }
+            },
+            {
+                "name": "retrieve_user",
+                "arguments": {
+                    "identifier": "sarah.mitchell@siemens.com",
+                    "identifier_type": "email"
+                },
+                "output": {
+                    "error": "User with email 'sarah.mitchell@siemens.com' not found",
+                    "success": false
+                }
+            },
+            {
+                "name": "manipulate_users",
+                "arguments": {
+                    "action": "create",
+                    "email": "sarah.mitchell@siemens.com",
+                    "full_name": "Sarah Mitchell",
+                    "global_role": "content_contributor",
+                    "user_id": "1"
+                },
+                "output": {
+                    "action": "create",
+                    "message": "User created successfully with email 'sarah.mitchell@siemens.com'",
+                    "success": true,
+                    "user_data": {
+                        "account_id": null,
+                        "created_at": "2025-10-01T12:00:00",
+                        "email": "sarah.mitchell@siemens.com",
+                        "full_name": "Sarah Mitchell",
+                        "global_role": "content_contributor",
+                        "user_id": "51"
+                    },
+                    "user_id": "51"
+                }
+            },
+            {
+                "name": "register_new_audit_trail",
+                "arguments": {
+                    "action_type": "create_space",
+                    "actor_user_id": "1",
+                    "target_entity_id": "51",
+                    "target_entity_type": "users"
+                },
+                "output": {
+                    "log_data": {
+                        "action_type": "create_space",
+                        "actor_user_id": "1",
+                        "details": null,
+                        "log_id": "101",
+                        "occurred_at": "2025-10-01T12:00:00",
+                        "target_entity_id": "51",
+                        "target_entity_type": "users"
+                    },
+                    "log_id": "101",
+                    "message": "Audit log created for action 'create_space' by user 1",
+                    "success": true
+                }
+            },
+            {
+                "name": "retrieve_group",
+                "arguments": {
+                    "identifier": "Engineering Team",
+                    "identifier_type": "group_name"
+                },
+                "output": {
+                    "group_data": {
+                        "created_at": "2025-05-05T22:33:25.299446",
+                        "group_id": "1",
+                        "group_name": "Engineering Team"
+                    },
+                    "success": true
+                }
+            },
+            {
+                "name": "manipulate_group_memberships",
+                "arguments": {
+                    "action": "add",
+                    "group_id": "1",
+                    "user_id": "51"
+                },
+                "output": {
+                    "action": "add",
+                    "membership_data": {
+                        "group_id": "1",
+                        "joined_at": "2025-10-01T12:00:00",
+                        "user_id": "51"
+                    },
+                    "message": "User 51 added to group 1 successfully",
+                    "success": true
+                }
+            },
+            {
+                "name": "register_new_audit_trail",
+                "arguments": {
+                    "action_type": "update_space",
+                    "actor_user_id": "1",
+                    "target_entity_id": "1",
+                    "target_entity_type": "user_group"
+                },
+                "output": {
+                    "log_data": {
+                        "action_type": "update_space",
+                        "actor_user_id": "1",
+                        "details": null,
+                        "log_id": "102",
+                        "occurred_at": "2025-10-01T12:00:00",
+                        "target_entity_id": "1",
+                        "target_entity_type": "user_group"
+                    },
+                    "log_id": "102",
+                    "message": "Audit log created for action 'update_space' by user 1",
+                    "success": true
+                }
+            },
+            {
+                "name": "send_notification",
+                "arguments": {
+                    "event_type": "system_alert",
+                    "message": "You has been added in Engineering Team",
+                    "recipient_user_id": "51",
+                    "related_entity_type": "space",
+                    "sender_user_id": "1"
+                },
+                "output": {
+                    "message": "Notification sent to user 51",
+                    "notification_data": {
+                        "channel": "system",
+                        "created_at": "2025-10-01T12:00:00",
+                        "delivery_status": "pending",
+                        "event_type": "system_alert",
+                        "message": "You has been added in Engineering Team",
+                        "metadata": null,
+                        "notification_id": "101",
+                        "read_at": null,
+                        "recipient_user_id": "51",
+                        "related_entity_id": null,
+                        "related_entity_type": "space",
+                        "sender_user_id": "1",
+                        "sent_at": null
+                    },
+                    "notification_id": "101",
+                    "success": true
+                }
+            },
+            {
+                "name": "register_new_audit_trail",
+                "arguments": {
+                    "action_type": "create",
+                    "actor_user_id": "1",
+                    "target_entity_id": "101",
+                    "target_entity_type": "update_space"
+                },
+                "output": {
+                    "error": "Invalid action_type. Must be one of: create_space, update_space, delete_space, manage_permissions, grant_admin_rights, configure_settings, export_space, import_space, create_page, update_page, delete_page, move_page, rename_page, restore_version, clone_page, publish_page, unpublish_page, archive_content, watch_content, unwatch_content",
+                    "success": false
+                }
+            }
+        ],
+        "outputs": [],
+        "edges": [
+            {
+                "from": "instruction",
+                "connection": {
+                    "output": "identifier_type, identifier",
+                    "input": "identifier_type, identifier"
+                },
+                "to": "retrieve_user"
+            },
+            {
+                "from": "retrieve_user",
+                "connection": {
+                    "output": "user_data.user_id",
+                    "input": "user_id"
+                },
+                "to": "manipulate_users"
+            },
+            {
+                "from": "instruction",
+                "connection": {
+                    "output": "email, action, full_name, global_role",
+                    "input": "email, action, full_name, global_role"
+                },
+                "to": "manipulate_users"
+            },
+            {
+                "from": "manipulate_users",
+                "connection": {
+                    "output": "user_data.user_id",
+                    "input": "target_entity_id"
+                },
+                "to": "register_new_audit_trail"
+            },
+            {
+                "from": "instruction",
+                "connection": {
+                    "output": "action_type, target_entity_type",
+                    "input": "action_type, target_entity_type"
+                },
+                "to": "register_new_audit_trail"
+            },
+            {
+                "from": "retrieve_user",
+                "connection": {
+                    "output": "user_data.user_id",
+                    "input": "actor_user_id"
+                },
+                "to": "register_new_audit_trail"
+            },
+            {
+                "from": "instruction",
+                "connection": {
+                    "output": "identifier_type, identifier",
+                    "input": "identifier_type, identifier"
+                },
+                "to": "retrieve_group"
+            },
+            {
+                "from": "manipulate_users",
+                "connection": {
+                    "output": "user_data.user_id",
+                    "input": "user_id"
+                },
+                "to": "manipulate_group_memberships"
+            },
+            {
+                "from": "retrieve_group",
+                "connection": {
+                    "output": "group_data.group_id",
+                    "input": "group_id"
+                },
+                "to": "manipulate_group_memberships"
+            },
+            {
+                "from": "instruction",
+                "connection": {
+                    "output": "action",
+                    "input": "action"
+                },
+                "to": "manipulate_group_memberships"
+            },
+            {
+                "from": "retrieve_user",
+                "connection": {
+                    "output": "group_data.group_id",
+                    "input": "target_entity_id"
+                },
+                "to": "register_new_audit_trail"
+            },
+            {
+                "from": "instruction",
+                "connection": {
+                    "output": "event_type, message, related_entity_type",
+                    "input": "event_type, message, related_entity_type"
+                },
+                "to": "send_notification"
+            },
+            {
+                "from": "manipulate_users",
+                "connection": {
+                    "output": "user_data.user_id",
+                    "input": "recipient_user_id"
+                },
+                "to": "send_notification"
+            },
+            {
+                "from": "retrieve_user",
+                "connection": {
+                    "output": "user_data.user_id",
+                    "input": "sender_user_id"
+                },
+                "to": "send_notification"
+            }
+        ],
+        "num_edges": 14
+    }
+}

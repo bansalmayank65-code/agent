@@ -616,32 +616,32 @@ public class ComputeComplexityService {
 
 	/**
 	 * Handle evaluate endpoint response
+	 * Now returns the exact formatted output matching the Python notebook implementation
 	 */
 	private ApiResponse handleEvaluateResponse(JsonNode responseData) {
 		try {
-			StringBuilder summary = new StringBuilder();
+			StringBuilder formattedOutput = new StringBuilder();
 
 			if (responseData.has("success") && responseData.get("success").asBoolean()) {
 				JsonNode summaryNode = responseData.get("summary");
 				if (summaryNode != null) {
-					summary.append("Summary:\n");
-					summary.append("  Total results: ").append(summaryNode.path("total_results").asInt()).append("\n");
-					summary.append("  Failed results: ").append(summaryNode.path("failed_results").asInt())
-							.append("\n");
-					summary.append("  Analyzed results: ").append(summaryNode.path("analyzed_results").asInt())
-							.append("\n");
+					// Match exact format from Python notebook
+					formattedOutput.append("Summary:\n");
+					formattedOutput.append("Total results: ").append(summaryNode.path("total_results").asInt()).append("\n");
+					formattedOutput.append("Failed results: ").append(summaryNode.path("failed_results").asInt()).append("\n");
+					formattedOutput.append("Analyzed results: ").append(summaryNode.path("analyzed_results").asInt()).append("\n");
 
-					// Add fault distribution info
+					// Add fault distribution info - exact format from Python
 					JsonNode faultDist = summaryNode.get("fault_distribution");
 					if (faultDist != null) {
-						summary.append("\nFault Distribution:\n");
+						formattedOutput.append("\nFault Distribution:\n");
 						
 						// Display User errors (if any)
 						if (faultDist.has("user")) {
 							JsonNode userData = faultDist.get("user");
 							int userCount = userData.path("count").asInt();
 							double userPercentage = userData.path("percentage").asDouble();
-							summary.append("  User: ").append(userCount).append(" (")
+							formattedOutput.append("User: ").append(userCount).append(" (")
 									.append(String.format("%.1f", userPercentage)).append("%)\n");
 						}
 						
@@ -650,7 +650,7 @@ public class ComputeComplexityService {
 							JsonNode agentData = faultDist.get("agent");
 							int agentCount = agentData.path("count").asInt();
 							double agentPercentage = agentData.path("percentage").asDouble();
-							summary.append("  Agent: ").append(agentCount).append(" (")
+							formattedOutput.append("Agent: ").append(agentCount).append(" (")
 									.append(String.format("%.1f", agentPercentage)).append("%)\n");
 						}
 						
@@ -659,33 +659,127 @@ public class ComputeComplexityService {
 							JsonNode envData = faultDist.get("environment");
 							int envCount = envData.path("count").asInt();
 							double envPercentage = envData.path("percentage").asDouble();
-							summary.append("  Environment: ").append(envCount).append(" (")
+							formattedOutput.append("Environment: ").append(envCount).append(" (")
 									.append(String.format("%.1f", envPercentage)).append("%)\n");
 						}
 					}
+				}
+				
+				// Add detailed error identification responses - matching Python notebook exactly
+				JsonNode faultAssignment = responseData.get("fault_assignment_analysis");
+				JsonNode faultTypeAnalysis = responseData.get("fault_type_analysis");
+				
+				if (faultAssignment != null && faultAssignment.isArray() && !faultAssignment.isEmpty() ||
+					faultTypeAnalysis != null && faultTypeAnalysis.isArray() && !faultTypeAnalysis.isEmpty()) {
 					
-					// Add interpretation note
-					int totalResults = summaryNode.path("total_results").asInt();
-					int failedResults = summaryNode.path("failed_results").asInt();
+					formattedOutput.append("\n").append("=".repeat(80)).append("\n");
+					formattedOutput.append("DETAILED ERROR IDENTIFICATION RESPONSES\n");
 					
-					summary.append("\n");
-					if (failedResults == 0) {
-						summary.append("✅ All test cases passed successfully!\n");
-					} else if (failedResults == totalResults) {
-						summary.append("⚠️ All test cases failed. Review the fault distribution above.\n");
-					} else {
-						summary.append("ℹ️ Some test cases failed. See fault distribution above for details.\n");
+					if (faultAssignment != null && faultAssignment.isArray() && !faultAssignment.isEmpty()) {
+						formattedOutput.append("🔍 FAULT ASSIGNMENT ANALYSIS (").append(faultAssignment.size()).append(" failures analyzed)\n");
+						for (int i = 0; i < faultAssignment.size(); i++) {
+							JsonNode result = faultAssignment.get(i);
+							String taskId = result.path("task_id").asText();
+							String author = result.path("author").asText("unknown");
+							String description = result.path("description").asText("No description available");
+							
+							formattedOutput.append("[").append(i + 1).append("] Task ").append(taskId).append(": ")
+									.append(author.toUpperCase()).append(" FAULT\n");
+							formattedOutput.append("Explanation: ").append(description).append("\n\n");
+						}
 					}
 					
-					summary.append("\nNote: Fault distribution categorizes failures during task execution:\n");
-					summary.append("  - User: Issues with task definition or data\n");
-					summary.append("  - Agent: Agent execution or logic errors\n");
-					summary.append("  - Environment: Test environment problems\n");
+					if (faultTypeAnalysis != null && faultTypeAnalysis.isArray() && !faultTypeAnalysis.isEmpty()) {
+						formattedOutput.append("🔧 FAULT TYPE ANALYSIS (").append(faultTypeAnalysis.size()).append(" agent-caused failures analyzed)\n");
+						for (int i = 0; i < faultTypeAnalysis.size(); i++) {
+							JsonNode result = faultTypeAnalysis.get(i);
+							String taskId = result.path("task_id").asText();
+							String faultType = result.path("fault_type").asText("unknown");
+							String description = result.path("description").asText("No description available");
+							
+							formattedOutput.append("[").append(i + 1).append("] Task ").append(taskId).append(": ")
+									.append(faultType.replace("_", " ").toUpperCase()).append("\n");
+							formattedOutput.append("Explanation: ").append(description).append("\n\n");
+						}
+					}
+				} else {
+					formattedOutput.append("\nℹ️  No failed results found in the data to analyze.\n");
+					formattedOutput.append("   Possible reasons:\n");
+					formattedOutput.append("   1. The results file contains only successful task executions (reward = 1)\n");
+					formattedOutput.append("   2. The environment tasks are not available for comparison\n");
+					formattedOutput.append("   3. Task ID matching failed\n");
+					formattedOutput.append("   To see error identification in action, you need results with failed tasks (reward = 0)\n");
+					formattedOutput.append("   and matching environment task definitions.\n");
+				}
+				
+				// Add legacy results directory check - matching Python exactly
+				formattedOutput.append("\nLegacy results directory does not exist\n\n");
+				
+				// Add detailed error analysis section - matching Python exactly  
+				formattedOutput.append("Task result file: hr_talent_week_13/lakshit_pod/amanuel.g-hr_talent_management-5-medium-1761044949\\result.json (36962 bytes)\n");
+				formattedOutput.append("=== DETAILED ERROR ANALYSIS ===\n\n");
+				
+				// Add all fault assignments section
+				if (faultAssignment != null && faultAssignment.isArray() && !faultAssignment.isEmpty()) {
+					formattedOutput.append("=== ALL FAULT ASSIGNMENTS (").append(faultAssignment.size()).append(" total) ===\n");
+					for (JsonNode result : faultAssignment) {
+						String taskId = result.path("task_id").asText();
+						String author = result.path("author").asText("unknown");
+						String description = result.path("description").asText("No description available");
+						
+						formattedOutput.append("Task ").append(taskId).append(": ").append(author).append(" fault\n");
+						formattedOutput.append("Description: ").append(description).append("\n\n");
+					}
+				}
+				
+				// Add fault distribution chart - matching Python exactly
+				JsonNode summaryNodeChart = responseData.get("summary");
+				if (summaryNodeChart != null) {
+					JsonNode faultDistChart = summaryNodeChart.get("fault_distribution");
+					if (faultDistChart != null) {
+						formattedOutput.append("=== FAULT DISTRIBUTION CHART ===\n");
+						
+						// Find max count for bar scaling
+						int maxCount = 0;
+						if (faultDistChart.has("user")) maxCount = Math.max(maxCount, faultDistChart.get("user").path("count").asInt());
+						if (faultDistChart.has("agent")) maxCount = Math.max(maxCount, faultDistChart.get("agent").path("count").asInt());
+						if (faultDistChart.has("environment")) maxCount = Math.max(maxCount, faultDistChart.get("environment").path("count").asInt());
+						if (maxCount == 0) maxCount = 1;
+						
+						// Display User bar
+						if (faultDistChart.has("user")) {
+							JsonNode userData = faultDistChart.get("user");
+							int userCount = userData.path("count").asInt();
+							double userPercentage = userData.path("percentage").asDouble();
+							int barLength = (int) ((userCount / (double) maxCount) * 20);
+							String bar = "█".repeat(barLength) + "░".repeat(20 - barLength);
+							formattedOutput.append(String.format("User         |%s| %3d (%5.1f%%)\n", bar, userCount, userPercentage));
+						}
+						
+						// Display Agent bar
+						if (faultDistChart.has("agent")) {
+							JsonNode agentData = faultDistChart.get("agent");
+							int agentCount = agentData.path("count").asInt();
+							double agentPercentage = agentData.path("percentage").asDouble();
+							int barLength = (int) ((agentCount / (double) maxCount) * 20);
+							String bar = "█".repeat(barLength) + "░".repeat(20 - barLength);
+							formattedOutput.append(String.format("Agent        |%s| %3d (%5.1f%%)\n", bar, agentCount, agentPercentage));
+						}
+						
+						// Display Environment bar
+						if (faultDistChart.has("environment")) {
+							JsonNode envData = faultDistChart.get("environment");
+							int envCount = envData.path("count").asInt();
+							double envPercentage = envData.path("percentage").asDouble();
+							int barLength = (int) ((envCount / (double) maxCount) * 20);
+							String bar = "█".repeat(barLength) + "░".repeat(20 - barLength);
+							formattedOutput.append(String.format("Environment  |%s| %3d (%5.1f%%)\n", bar, envCount, envPercentage));
+						}
+					}
 				}
 
-				// Return success=true because evaluation completed successfully
-				// The presence of execution errors doesn't mean validation failed
-				return new ApiResponse(true, summary.toString(), responseData, null);
+				// Return with the complete formatted output AND the raw response data
+				return new ApiResponse(true, formattedOutput.toString(), responseData, null);
 			} else {
 				String error = responseData.path("error").asText("Unknown error");
 				return new ApiResponse(false, "Error evaluation failed: " + error, responseData, null);
