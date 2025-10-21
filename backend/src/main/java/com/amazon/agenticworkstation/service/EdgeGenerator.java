@@ -197,7 +197,7 @@ public final class EdgeGenerator {
 			}
 		}
 
-		// Merge edges with same "from" and "to" values
+		// Merge edges with same "from" and "to" values, prioritizing instruction edges
 		List<TaskDto.EdgeDto> mergedEdges = new ArrayList<>();
 
 		for (TaskDto.EdgeDto edge : deduplicatedEdges) {
@@ -220,7 +220,86 @@ public final class EdgeGenerator {
 			}
 		}
 
-		return mergedEdges;
+		// First, collect all instruction edges to know which inputs are provided by
+		// instruction
+		Map<String, List<String>> instructionProvidedInputs = new HashMap<>();
+
+		for (TaskDto.EdgeDto edge : mergedEdges) {
+			if ("instruction".equals(edge.getFrom())) {
+				String toAction = edge.getTo();
+				TaskDto.ConnectionDto connection = edge.getConnection();
+				if (connection != null && connection.getInput() != null) {
+					List<String> inputs = parseFields(connection.getInput());
+					instructionProvidedInputs.put(toAction, inputs);
+				}
+			}
+		}
+
+		// Remove redundant action->action connections when instruction already provides
+		// the input
+		List<TaskDto.EdgeDto> finalEdges = new ArrayList<>();
+
+		for (TaskDto.EdgeDto edge : mergedEdges) {
+			// If this is an action->action edge, check if instruction already provides
+			// these inputs
+			if (!"instruction".equals(edge.getFrom())) {
+				String toAction = edge.getTo();
+				List<String> instructionInputs = instructionProvidedInputs.get(toAction);
+
+				if (instructionInputs != null && !instructionInputs.isEmpty()) {
+					// Filter out inputs that are already provided by instruction
+					TaskDto.ConnectionDto connection = edge.getConnection();
+					if (connection != null) {
+						List<String> outputs = parseFields(connection.getOutput());
+						List<String> inputs = parseFields(connection.getInput());
+
+						List<String> filteredOutputs = new ArrayList<>();
+						List<String> filteredInputs = new ArrayList<>();
+
+						int size = Math.min(outputs.size(), inputs.size());
+						for (int i = 0; i < size; i++) {
+							String input = inputs.get(i);
+							String output = outputs.get(i);
+
+							// Check if this INPUT field is provided by instruction (only compare input, not
+							// output)
+							boolean providedByInstruction = false;
+							for (String instructionInput : instructionInputs) {
+								// Only check if the input field name matches, regardless of output value
+								if (input.equals(instructionInput)) {
+									providedByInstruction = true;
+									break;
+								}
+							}
+
+							// Only keep the pair if the INPUT is NOT provided by instruction
+							if (!providedByInstruction) {
+								filteredOutputs.add(output);
+								filteredInputs.add(input);
+							}
+						}
+
+						// Only add the edge if there are remaining connections after filtering
+						if (!filteredInputs.isEmpty()) {
+							connection.setOutput(String.join(", ", filteredOutputs));
+							connection.setInput(String.join(", ", filteredInputs));
+							finalEdges.add(edge);
+						}
+					} else {
+						// No connection, add as-is
+						finalEdges.add(edge);
+					}
+				} else {
+					// No instruction inputs for this action, add as-is
+					finalEdges.add(edge);
+				}
+			} else {
+				// Instruction edge, always add
+				finalEdges.add(edge);
+			}
+		}
+
+		return finalEdges;
 	}
 
 	/**
@@ -349,6 +428,7 @@ public final class EdgeGenerator {
 		compatibleFields.put("uploaded_by", "results[0].user_id");
 		compatibleFields.put("created_by", "results[0].user_id");
 		compatibleFields.put("interviewer_id", "results[0].user_id");
+		compatibleFields.put("interviewer_id", "results[0].employee_id");
 		compatibleFields.put("candidate_id", "results[0].user_id");
 		compatibleFields.put("recruiter_id", "results[0].user_id");
 
@@ -356,11 +436,17 @@ public final class EdgeGenerator {
 		compatibleFields.put("fund_data.compliance_officer_approval", "approval_valid");
 		compatibleFields.put("fund_manager_approval", "approval_valid");
 		compatibleFields.put("compliance_officer_approval", "approval_valid");
-		if ((compatibleFields.containsKey(outOrg)
-				&& (compatibleFields.get(outOrg).contains(inOrg) || inOrg.contains(compatibleFields.get(outOrg))))
-				|| (compatibleFields.containsKey(inOrg) && (compatibleFields.get(inOrg).contains(outOrg)
-						|| outOrg.contains(compatibleFields.get(inOrg))))) {
-			return true;
+
+		// Flexible containsKey: allow partial key matches
+		for (Map.Entry<String, String> entry : compatibleFields.entrySet()) {
+			String key = entry.getKey();
+			String value = entry.getValue();
+			if ((outOrg.contains(key) || key.contains(outOrg)) && (value.contains(inOrg) || inOrg.contains(value))) {
+				return true;
+			}
+			if ((inOrg.contains(key) || key.contains(inOrg)) && (value.contains(outOrg) || outOrg.contains(value))) {
+				return true;
+			}
 		}
 
 		return false;

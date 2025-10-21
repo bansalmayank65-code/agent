@@ -1019,7 +1019,7 @@ class _ValidationSectionWidgetState extends State<ValidationSectionWidget> {
             ),
             const SizedBox(height: 12),
             
-            _buildValidationButton(provider, 'Compute Complexity', 'compute_complexity'),
+            // _buildValidationButton(provider, 'Compute Complexity', 'compute_complexity'), // Temporarily disabled
             _buildValidationButton(provider, 'Task Verification', 'task_verification'),
             _buildValidationButton(provider, 'Run Task', 'run_task'),
             _buildValidationButton(provider, 'Evaluate', 'evaluate'),
@@ -1059,8 +1059,8 @@ class _ValidationSectionWidgetState extends State<ValidationSectionWidget> {
                 ],
                 TextButton.icon(
                   onPressed: () async {
-                    // Run all validation steps in sequence
-                    final steps = ['compute_complexity', 'task_verification', 'run_task', 'evaluate'];
+                    // Run all validation steps in sequence (excluding compute_complexity temporarily)
+                    final steps = ['task_verification', 'run_task', 'evaluate'];
                     for (final step in steps) {
                       await _runValidationStep(provider, step);
                       // Small delay between steps

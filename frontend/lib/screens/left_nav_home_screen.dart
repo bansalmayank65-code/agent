@@ -1153,7 +1153,7 @@ class _LeftNavHomeScreenState extends State<LeftNavHomeScreen> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children:[
       const Text('Validation Steps:', style: TextStyle(fontWeight: FontWeight.bold)),
       const SizedBox(height: 12),
-      _validationButton(provider, 'Compute Complexity', 'compute_complexity'),
+      // _validationButton(provider, 'Compute Complexity', 'compute_complexity'), // Temporarily disabled
       _validationButton(provider, 'Task Verification', 'task_verification'),
       _validationButton(provider, 'Run Task', 'run_task'),
       _validationButton(provider, 'Evaluate', 'evaluate'),
@@ -1173,7 +1173,47 @@ class _LeftNavHomeScreenState extends State<LeftNavHomeScreen> {
         onPressed: () async {
           final resp = await provider.runStep(step);
             if(resp!=null){
-              setState(()=> _latestResults[step] = (resp['result']?? resp['error']?? '').toString());
+              // For evaluate step, show complete response including all data
+              if (step == 'evaluate' && resp['success'] == true) {
+                String fullResponse = '';
+                
+                // Check for notebook_result which contains the evaluation data
+                final notebookResult = resp['notebook_result'];
+                if (notebookResult != null) {
+                  // Get evaluation_data directly - this is the raw API response
+                  final evaluationData = notebookResult['evaluation_data'];
+                  
+                  if (evaluationData != null) {
+                    try {
+                      // Pretty print the complete evaluation data (exact API response)
+                      final encoder = JsonEncoder.withIndent('  ');
+                      fullResponse = encoder.convert(evaluationData);
+                    } catch (e) {
+                      fullResponse = evaluationData.toString();
+                    }
+                  } else {
+                    // If no evaluation_data, show the whole notebook_result
+                    try {
+                      final encoder = JsonEncoder.withIndent('  ');
+                      fullResponse = encoder.convert(notebookResult);
+                    } catch (e) {
+                      fullResponse = notebookResult.toString();
+                    }
+                  }
+                } else {
+                  // Fallback to showing the whole response
+                  try {
+                    final encoder = JsonEncoder.withIndent('  ');
+                    fullResponse = encoder.convert(resp);
+                  } catch (e) {
+                    fullResponse = resp.toString();
+                  }
+                }
+                
+                setState(()=> _latestResults[step] = fullResponse);
+              } else {
+                setState(()=> _latestResults[step] = (resp['result']?? resp['error']?? '').toString());
+              }
               _toast('Step $step finished');
             }
         },
@@ -1194,7 +1234,10 @@ class _LeftNavHomeScreenState extends State<LeftNavHomeScreen> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children:[
           Text(e.key, style: const TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height:4),
-          Text(e.value, style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Text(e.value, style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
+          ),
         ]),
       )).toList(),
     );
