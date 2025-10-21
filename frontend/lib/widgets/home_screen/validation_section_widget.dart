@@ -319,13 +319,35 @@ class _ValidationSectionWidgetState extends State<ValidationSectionWidget> {
             borderRadius: BorderRadius.circular(4),
             border: Border.all(color: Colors.red[200]!),
           ),
-          child: Text(
-            error,
-            style: const TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 12,
-              color: Colors.red,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Error Message (click to select text):',
+                      style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => _copyToClipboard(error, 'Error details'),
+                    icon: const Icon(Icons.copy, size: 16),
+                    tooltip: 'Copy error to clipboard',
+                    color: Colors.red,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              SelectableText(
+                error,
+                style: const TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  color: Colors.red,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -341,6 +363,21 @@ class _ValidationSectionWidgetState extends State<ValidationSectionWidget> {
         style: TextStyle(color: Colors.green, fontWeight: FontWeight.w500),
       ),
       leading: const Icon(Icons.check_circle, color: Colors.green),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            onPressed: () => _copyToClipboard(
+              JsonEncoder.withIndent('  ').convert(data), 
+              'Complete validation results'
+            ),
+            icon: const Icon(Icons.copy_all, size: 18),
+            tooltip: 'Copy all validation results',
+            color: Colors.green,
+          ),
+          const Icon(Icons.expand_more),
+        ],
+      ),
       initiallyExpanded: true, // Expand by default to show details
       children: [
         Padding(
@@ -372,7 +409,7 @@ class _ValidationSectionWidgetState extends State<ValidationSectionWidget> {
               
               // Response message
               if (data['message'] != null)
-                _buildInfoItem('Response Message', data['message'].toString()),
+                _buildSelectableInfoItem('Response Message', data['message'].toString()),
               
               // Show visualization if available (for compute_complexity)
               if (data['hasPlot'] == true || data['plotBase64'] != null)
@@ -774,22 +811,39 @@ class _ValidationSectionWidgetState extends State<ValidationSectionWidget> {
     );
   }
 
-  /// Build info item row
-  Widget _buildInfoItem(String label, String value) {
+  /// Build selectable info item row
+  Widget _buildSelectableInfoItem(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              '$label:',
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '$label:',
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+              ),
+              IconButton(
+                onPressed: () => _copyToClipboard(value, label),
+                icon: const Icon(Icons.copy, size: 16),
+                tooltip: 'Copy $label to clipboard',
+                color: Colors.grey[600],
+              ),
+            ],
           ),
-          Expanded(
-            child: Text(
+          const SizedBox(height: 4),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: SelectableText(
               value,
               style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
             ),
@@ -797,6 +851,26 @@ class _ValidationSectionWidgetState extends State<ValidationSectionWidget> {
         ],
       ),
     );
+  }
+
+  /// Copy text to clipboard helper
+  Future<void> _copyToClipboard(String text, String description) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: text));
+      if (mounted) {
+        UIHelperService.showToast(
+          context,
+          '$description copied to clipboard'
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        UIHelperService.showToast(
+          context,
+          'Failed to copy $description: $e'
+        );
+      }
+    }
   }
 
   /// Build comprehensive response data display
@@ -809,6 +883,21 @@ class _ValidationSectionWidgetState extends State<ValidationSectionWidget> {
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         leading: const Icon(Icons.data_object, size: 18),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: () => _copyToClipboard(
+                JsonEncoder.withIndent('  ').convert(data), 
+                'Raw response data'
+              ),
+              icon: const Icon(Icons.copy, size: 16),
+              tooltip: 'Copy raw response data',
+              color: Colors.grey[600],
+            ),
+            const Icon(Icons.expand_more),
+          ],
+        ),
         children: [
           Container(
             width: double.infinity,
@@ -846,33 +935,44 @@ class _ValidationSectionWidgetState extends State<ValidationSectionWidget> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              '$key:',
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 12,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(2),
-                border: Border.all(color: Colors.grey[200]!),
-              ),
-              child: Text(
-                displayValue,
-                style: const TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 11,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '$key:',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 12,
+                  ),
                 ),
+              ),
+              IconButton(
+                onPressed: () => _copyToClipboard(displayValue, key),
+                icon: const Icon(Icons.copy, size: 14),
+                tooltip: 'Copy $key to clipboard',
+                color: Colors.grey[600],
+                padding: const EdgeInsets.all(4),
+                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: SelectableText(
+              displayValue,
+              style: const TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 11,
               ),
             ),
           ),
