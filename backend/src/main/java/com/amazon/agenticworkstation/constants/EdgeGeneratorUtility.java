@@ -8,9 +8,9 @@ import java.util.Map;
  * Constants used by EdgeGenerator for edge creation and field compatibility
  * matching.
  */
-public final class EdgeGeneratorConstants {
+public final class EdgeGeneratorUtility {
 
-	private EdgeGeneratorConstants() {
+	private EdgeGeneratorUtility() {
 		// Private constructor to prevent instantiation
 	}
 
@@ -139,4 +139,63 @@ public final class EdgeGeneratorConstants {
 	public static final String FIELD_DELIMITER = ", ";
 	public static final String DOT_DELIMITER = ".";
 	public static final String ARRAY_INDEX_PATTERN = "\\[\\d+\\]";
+
+	// ========== Utility Methods ==========
+
+	/**
+	 * Extract field name from a key by removing array indices and getting the last
+	 * part
+	 */
+	public static String getFieldName(String key) {
+		if (key == null) {
+			return "";
+		}
+		// Remove array indices and get last part
+		String cleanKey = key.replaceAll(ARRAY_INDEX_PATTERN, "");
+		String[] parts = cleanKey.split("\\" + DOT_DELIMITER);
+		return parts[parts.length - 1];
+	}
+
+	/**
+	 * Clean field name by removing filters prefix and mapping special cases Only
+	 * cleans if isFromInstruction is true
+	 */
+	public static String cleanFieldName(String fieldName, boolean isFromInstruction) {
+		if (fieldName == null) {
+			return null;
+		}
+
+		// Only clean if this is from an instruction edge
+		if (!isFromInstruction) {
+			return fieldName; // Return as-is for action edges
+		}
+
+		// Generic cleaning: keep only the last part after any dot notation
+		String cleaned = fieldName;
+		int lastDotIndex = cleaned.lastIndexOf(DOT_DELIMITER);
+		if (lastDotIndex != -1 && lastDotIndex < cleaned.length() - 1) {
+			cleaned = cleaned.substring(lastDotIndex + 1);
+		}
+
+		// Map special cases for instruction output names
+		return FIELD_NAME_CLEANINGS.getOrDefault(cleaned, cleaned);
+	}
+
+	/**
+	 * Check if two field names are equivalent for comparison purposes
+	 */
+	public static boolean areFieldNamesEquivalent(String actionInput, String instructionInput) {
+		if (actionInput == null || instructionInput == null) {
+			return false;
+		}
+
+		// Clean the action input
+		String cleanedActionInput = getFieldName(actionInput);
+
+		// Instruction input is already cleaned, but we need to normalize it
+		String cleanedInstructionInput = cleanFieldName(instructionInput, true);
+
+		// Compare the cleaned field names
+		return cleanedActionInput.equals(cleanedInstructionInput);
+	}
 }

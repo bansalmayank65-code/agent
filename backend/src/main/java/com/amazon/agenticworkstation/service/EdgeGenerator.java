@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.amazon.agenticworkstation.constants.EdgeGeneratorConstants;
+import com.amazon.agenticworkstation.constants.EdgeGeneratorUtility;
 import com.amazon.agenticworkstation.dto.TaskDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -177,130 +177,10 @@ public final class EdgeGenerator {
 			}
 		}
 
-		// Remove exact duplicate edges - keep first occurrence of completely identical
-		// edges
-		List<TaskDto.EdgeDto> deduplicatedEdges = new ArrayList<>();
-
-		for (TaskDto.EdgeDto edge : edges) {
-			boolean isDuplicate = false;
-
-			// Check if this edge is an exact duplicate of any previously added edge
-			for (TaskDto.EdgeDto existingEdge : deduplicatedEdges) {
-				if (areEdgesExactlyEqual(edge, existingEdge)) {
-					isDuplicate = true;
-					break;
-				}
-			}
-
-			// Only add if not an exact duplicate
-			if (!isDuplicate) {
-				deduplicatedEdges.add(edge);
-			}
-		}
-
-		// Merge edges with same "from" and "to" values, prioritizing instruction edges
-		List<TaskDto.EdgeDto> mergedEdges = new ArrayList<>();
-
-		for (TaskDto.EdgeDto edge : deduplicatedEdges) {
-			boolean merged = false;
-
-			// Check if we already have an edge with the same from and to
-			for (TaskDto.EdgeDto existingEdge : mergedEdges) {
-				if (java.util.Objects.equals(edge.getFrom(), existingEdge.getFrom())
-						&& java.util.Objects.equals(edge.getTo(), existingEdge.getTo())) {
-					// Merge the connections
-					mergeConnections(existingEdge, edge);
-					merged = true;
-					break;
-				}
-			}
-
-			// If not merged, add as new edge
-			if (!merged) {
-				mergedEdges.add(edge);
-			}
-		}
-
-		// First, collect all instruction edges to know which inputs are provided by
-		// instruction
-		Map<String, List<String>> instructionProvidedInputs = new HashMap<>();
-
-		for (TaskDto.EdgeDto edge : mergedEdges) {
-			if (EdgeGeneratorConstants.INSTRUCTION.equals(edge.getFrom())) {
-				String toAction = edge.getTo();
-				TaskDto.ConnectionDto connection = edge.getConnection();
-				if (connection != null && connection.getInput() != null) {
-					List<String> inputs = parseFields(connection.getInput());
-					instructionProvidedInputs.put(toAction, inputs);
-				}
-			}
-		}
-
-		// Remove redundant action->action connections when instruction already provides
-		// the input
-		List<TaskDto.EdgeDto> finalEdges = new ArrayList<>();
-
-		for (TaskDto.EdgeDto edge : mergedEdges) {
-			// If this is an action->action edge, check if instruction already provides
-			// these inputs
-			if (!EdgeGeneratorConstants.INSTRUCTION.equals(edge.getFrom())) {
-				String toAction = edge.getTo();
-				List<String> instructionInputs = instructionProvidedInputs.get(toAction);
-
-				if (instructionInputs != null && !instructionInputs.isEmpty()) {
-					// Filter out inputs that are already provided by instruction
-					TaskDto.ConnectionDto connection = edge.getConnection();
-					if (connection != null) {
-						List<String> outputs = parseFields(connection.getOutput());
-						List<String> inputs = parseFields(connection.getInput());
-
-						List<String> filteredOutputs = new ArrayList<>();
-						List<String> filteredInputs = new ArrayList<>();
-
-						int size = Math.min(outputs.size(), inputs.size());
-						for (int i = 0; i < size; i++) {
-							String input = inputs.get(i);
-							String output = outputs.get(i);
-
-							// Check if this INPUT field is provided by instruction (only compare input, not
-							// output)
-							boolean providedByInstruction = false;
-							for (String instructionInput : instructionInputs) {
-								// Only check if the input field name matches, regardless of output value
-								if (input.equals(instructionInput)) {
-									providedByInstruction = true;
-									break;
-								}
-							}
-
-							// Only keep the pair if the INPUT is NOT provided by instruction
-							if (!providedByInstruction) {
-								filteredOutputs.add(output);
-								filteredInputs.add(input);
-							}
-						}
-
-						// Only add the edge if there are remaining connections after filtering
-						if (!filteredInputs.isEmpty()) {
-							connection.setOutput(String.join(EdgeGeneratorConstants.FIELD_DELIMITER, filteredOutputs));
-							connection.setInput(String.join(EdgeGeneratorConstants.FIELD_DELIMITER, filteredInputs));
-							finalEdges.add(edge);
-						}
-					} else {
-						// No connection, add as-is
-						finalEdges.add(edge);
-					}
-				} else {
-					// No instruction inputs for this action, add as-is
-					finalEdges.add(edge);
-				}
-			} else {
-				// Instruction edge, always add
-				finalEdges.add(edge);
-			}
-		}
-
-		return finalEdges;
+		// Use EdgeMergeService for deduplication and merging with instruction
+		// prioritization
+		EdgeMergeService edgeMergeService = new EdgeMergeService();
+		return edgeMergeService.mergeAndDeduplicateEdges(edges);
 	}
 
 	/**
@@ -311,7 +191,7 @@ public final class EdgeGenerator {
 		String fieldName = getFieldName(inputKey).toLowerCase();
 
 		// Fields that MUST come from instruction based on expected output analysis
-		return EdgeGeneratorConstants.INSTRUCTION_ONLY_FIELDS.stream().anyMatch(field -> field.equals(fieldName));
+		return EdgeGeneratorUtility.INSTRUCTION_ONLY_FIELDS.stream().anyMatch(field -> field.equals(fieldName));
 	}
 
 	/**
@@ -348,11 +228,11 @@ public final class EdgeGenerator {
 				}
 				if (isAuditCurrentAction) {
 					if (outputValue != null
-							&& (EdgeGeneratorConstants.FIELD_NAME.equalsIgnoreCase(inputFieldName)
-									|| EdgeGeneratorConstants.FIELD_NAME.equalsIgnoreCase(outputFieldName))
+							&& (EdgeGeneratorUtility.FIELD_NAME.equalsIgnoreCase(inputFieldName)
+									|| EdgeGeneratorUtility.FIELD_NAME.equalsIgnoreCase(outputFieldName))
 							&& (inputValue.toString().toLowerCase().equals(outputFieldName.toLowerCase())
 									|| outputValue.toString().toLowerCase().equals(inputFieldName.toLowerCase()))) {
-						return EdgeGeneratorConstants.FIELD_NAME; // *Case3: For audit - if fieldName = field_name then
+						return EdgeGeneratorUtility.FIELD_NAME; // *Case3: For audit - if fieldName = field_name then
 																	// - value
 						// (currentAction) - fieldName(Previous Actions) match and vice versa
 					}
@@ -364,7 +244,7 @@ public final class EdgeGenerator {
 			if (isAuditCurrentAction) {
 				if (valueMatchedOutputKey != null && valueMatchedInputKey != null) {
 					boolean isValidAuditField = false;
-					for (String field : EdgeGeneratorConstants.AUDIT_VALID_FIELDS) {
+					for (String field : EdgeGeneratorUtility.AUDIT_VALID_FIELDS) {
 						if (field.equalsIgnoreCase(valueMatchedInputKey)
 								|| field.equalsIgnoreCase(valueMatchedOutputKey)) {
 							isValidAuditField = true;
@@ -382,7 +262,7 @@ public final class EdgeGenerator {
 	}
 
 	private static boolean isAuditAction(String currentAction) {
-		return currentAction != null && EdgeGeneratorConstants.AUDIT_ACTION_NAMES.contains(currentAction.toLowerCase());
+		return currentAction != null && EdgeGeneratorUtility.AUDIT_ACTION_NAMES.contains(currentAction.toLowerCase());
 	}
 
 	/**
@@ -410,7 +290,7 @@ public final class EdgeGenerator {
 		String inOrg = inputField.toLowerCase();
 
 		// Flexible containsKey: allow partial key matches
-		for (Map.Entry<String, String> entry : EdgeGeneratorConstants.COMPATIBLE_FIELD_MAPPINGS.entrySet()) {
+		for (Map.Entry<String, String> entry : EdgeGeneratorUtility.COMPATIBLE_FIELD_MAPPINGS.entrySet()) {
 			String key = entry.getKey();
 			String value = entry.getValue();
 			if ((outOrg.contains(key) || key.contains(outOrg)) && (value.contains(inOrg) || inOrg.contains(value))) {
@@ -501,7 +381,7 @@ public final class EdgeGenerator {
 				String key = entry.getKey();
 				Object value = entry.getValue();
 
-				if (value instanceof List && EdgeGeneratorConstants.RESULTS.equals(key)) {
+				if (value instanceof List && EdgeGeneratorUtility.RESULTS.equals(key)) {
 					// Handle results[0].field format
 					List<?> list = (List<?>) value;
 					if (!list.isEmpty() && list.get(0) instanceof Map) {
@@ -537,13 +417,7 @@ public final class EdgeGenerator {
 	 * "email")
 	 */
 	private static String getFieldName(String key) {
-		if (key == null) {
-			return "";
-		}
-		// Remove array indices and get last part
-		String cleanKey = key.replaceAll(EdgeGeneratorConstants.ARRAY_INDEX_PATTERN, "");
-		String[] parts = cleanKey.split("\\" + EdgeGeneratorConstants.DOT_DELIMITER);
-		return parts[parts.length - 1];
+		return EdgeGeneratorUtility.getFieldName(key);
 	}
 
 	/**
@@ -563,12 +437,13 @@ public final class EdgeGenerator {
 
 		int size = Math.min(outputKeys.size(), inputKeys.size());
 		for (int i = 0; i < size; i++) {
-			cleanedOutputs.add(cleanFieldName(outputKeys.get(i), false)); // Don't clean for action edges
+			cleanedOutputs.add(EdgeGeneratorUtility.cleanFieldName(outputKeys.get(i), false)); // Don't clean for
+																									// action edges
 			cleanedInputs.add(inputKeys.get(i));
 		}
 
-		connection.setOutput(String.join(EdgeGeneratorConstants.FIELD_DELIMITER, cleanedOutputs));
-		connection.setInput(String.join(EdgeGeneratorConstants.FIELD_DELIMITER, cleanedInputs));
+		connection.setOutput(String.join(EdgeGeneratorUtility.FIELD_DELIMITER, cleanedOutputs));
+		connection.setInput(String.join(EdgeGeneratorUtility.FIELD_DELIMITER, cleanedInputs));
 		edge.setConnection(connection);
 
 		return edge;
@@ -580,7 +455,7 @@ public final class EdgeGenerator {
 	 */
 	private static TaskDto.EdgeDto createInstructionEdge(String actionName, List<String> inputs) {
 		TaskDto.EdgeDto edge = new TaskDto.EdgeDto();
-		edge.setFrom(EdgeGeneratorConstants.INSTRUCTION);
+		edge.setFrom(EdgeGeneratorUtility.INSTRUCTION);
 		edge.setTo(actionName);
 
 		TaskDto.ConnectionDto connection = new TaskDto.ConnectionDto();
@@ -591,10 +466,10 @@ public final class EdgeGenerator {
 			String fieldA = getFieldName(a).toLowerCase();
 			String fieldB = getFieldName(b).toLowerCase();
 
-			int priorityA = EdgeGeneratorConstants.FIELD_PRIORITY.getOrDefault(fieldA,
-					EdgeGeneratorConstants.DEFAULT_FIELD_PRIORITY);
-			int priorityB = EdgeGeneratorConstants.FIELD_PRIORITY.getOrDefault(fieldB,
-					EdgeGeneratorConstants.DEFAULT_FIELD_PRIORITY);
+			int priorityA = EdgeGeneratorUtility.FIELD_PRIORITY.getOrDefault(fieldA,
+					EdgeGeneratorUtility.DEFAULT_FIELD_PRIORITY);
+			int priorityB = EdgeGeneratorUtility.FIELD_PRIORITY.getOrDefault(fieldB,
+					EdgeGeneratorUtility.DEFAULT_FIELD_PRIORITY);
 
 			if (priorityA != priorityB) {
 				return Integer.compare(priorityA, priorityB);
@@ -609,151 +484,15 @@ public final class EdgeGenerator {
 		List<String> cleanedInputs = new ArrayList<>();
 
 		for (String input : sortedInputs) {
-			cleanedOutputs.add(cleanFieldName(input, true)); // Clean for instruction edges
+			cleanedOutputs.add(EdgeGeneratorUtility.cleanFieldName(input, true)); // Clean for instruction edges
 			cleanedInputs.add(input);
 		}
 
-		connection.setOutput(String.join(EdgeGeneratorConstants.FIELD_DELIMITER, cleanedOutputs));
-		connection.setInput(String.join(EdgeGeneratorConstants.FIELD_DELIMITER, cleanedInputs));
+		connection.setOutput(String.join(EdgeGeneratorUtility.FIELD_DELIMITER, cleanedOutputs));
+		connection.setInput(String.join(EdgeGeneratorUtility.FIELD_DELIMITER, cleanedInputs));
 		edge.setConnection(connection);
 
 		return edge;
-	}
-
-	/**
-	 * Check if two edges are exactly equal in all aspects
-	 */
-	private static boolean areEdgesExactlyEqual(TaskDto.EdgeDto edge1, TaskDto.EdgeDto edge2) {
-		if (edge1 == edge2) {
-			return true;
-		}
-		if (edge1 == null || edge2 == null) {
-			return false;
-		}
-
-		// Compare from and to
-		if (!java.util.Objects.equals(edge1.getFrom(), edge2.getFrom())
-				|| !java.util.Objects.equals(edge1.getTo(), edge2.getTo())) {
-			return false;
-		}
-
-		// Compare connections
-		TaskDto.ConnectionDto conn1 = edge1.getConnection();
-		TaskDto.ConnectionDto conn2 = edge2.getConnection();
-
-		if (conn1 == conn2) {
-			return true;
-		}
-		if (conn1 == null || conn2 == null) {
-			return false;
-		}
-
-		// Compare connection output and input
-		return java.util.Objects.equals(conn1.getOutput(), conn2.getOutput())
-				&& java.util.Objects.equals(conn1.getInput(), conn2.getInput());
-	}
-
-	/**
-	 * Clean field name by removing filters prefix and mapping special cases Only
-	 * cleans if isFromInstruction is true
-	 */
-	private static String cleanFieldName(String fieldName, boolean isFromInstruction) {
-		if (fieldName == null) {
-			return null;
-		}
-
-		// Only clean if this is from an instruction edge
-		if (!isFromInstruction) {
-			return fieldName; // Return as-is for action edges
-		}
-
-		// Generic cleaning: keep only the last part after any dot notation
-		// For example: "a.b.c.d" becomes "d", "filters.email" becomes "email"
-		// "results[0].email" becomes "email" (lastIndexOf finds the dot after [0])
-		String cleaned = fieldName;
-		int lastDotIndex = cleaned.lastIndexOf(EdgeGeneratorConstants.DOT_DELIMITER);
-		if (lastDotIndex != -1 && lastDotIndex < cleaned.length() - 1) {
-			cleaned = cleaned.substring(lastDotIndex + 1);
-		}
-
-		// Map special cases for instruction output names
-		return EdgeGeneratorConstants.FIELD_NAME_CLEANINGS.getOrDefault(cleaned, cleaned);
-	}
-
-	/**
-	 * Merge connections from the second edge into the first edge by combining their
-	 * inputs and outputs while maintaining proper input-output pairing
-	 */
-	private static void mergeConnections(TaskDto.EdgeDto targetEdge, TaskDto.EdgeDto sourceEdge) {
-		TaskDto.ConnectionDto targetConnection = targetEdge.getConnection();
-		TaskDto.ConnectionDto sourceConnection = sourceEdge.getConnection();
-
-		if (targetConnection == null) {
-			targetEdge.setConnection(sourceConnection);
-			return;
-		}
-
-		if (sourceConnection == null) {
-			return;
-		}
-
-		// Parse existing input-output pairs from target connection
-		List<String> targetOutputs = parseFields(targetConnection.getOutput());
-		List<String> targetInputs = parseFields(targetConnection.getInput());
-
-		// Parse input-output pairs from source connection
-		List<String> sourceOutputs = parseFields(sourceConnection.getOutput());
-		List<String> sourceInputs = parseFields(sourceConnection.getInput());
-
-		// Merge pairs while maintaining input-output correspondence
-		List<String> mergedOutputs = new ArrayList<>(targetOutputs);
-		List<String> mergedInputs = new ArrayList<>(targetInputs);
-
-		// Add source pairs, avoiding duplicates based on input-output combination
-		int sourceSize = Math.min(sourceOutputs.size(), sourceInputs.size());
-		for (int i = 0; i < sourceSize; i++) {
-			String sourceOutput = sourceOutputs.get(i);
-			String sourceInput = sourceInputs.get(i);
-
-			// Check if this input-output pair already exists
-			boolean pairExists = false;
-			int targetSize = Math.min(mergedOutputs.size(), mergedInputs.size());
-			for (int j = 0; j < targetSize; j++) {
-				if (mergedOutputs.get(j).equals(sourceOutput) && mergedInputs.get(j).equals(sourceInput)) {
-					pairExists = true;
-					break;
-				}
-			}
-
-			// Add the pair if it doesn't exist
-			if (!pairExists) {
-				mergedOutputs.add(sourceOutput);
-				mergedInputs.add(sourceInput);
-			}
-		}
-
-		// Set the merged results, ensuring equal lengths
-		targetConnection.setOutput(String.join(EdgeGeneratorConstants.FIELD_DELIMITER, mergedOutputs));
-		targetConnection.setInput(String.join(EdgeGeneratorConstants.FIELD_DELIMITER, mergedInputs));
-	}
-
-	/**
-	 * Parse comma-separated field string into a list of individual fields
-	 */
-	private static List<String> parseFields(String fieldString) {
-		List<String> fields = new ArrayList<>();
-		if (fieldString == null || fieldString.trim().isEmpty()) {
-			return fields;
-		}
-
-		for (String field : fieldString.split(",")) {
-			String trimmed = field.trim();
-			if (!trimmed.isEmpty()) {
-				fields.add(trimmed);
-			}
-		}
-
-		return fields;
 	}
 
 }
