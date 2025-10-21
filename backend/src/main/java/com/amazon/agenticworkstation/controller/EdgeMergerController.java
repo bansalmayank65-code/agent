@@ -51,12 +51,12 @@ public class EdgeMergerController {
             List<TaskDto.EdgeDto> originalEdges = taskDto.getTask().getEdges();
             logger.info("Original edge count: {}", originalEdges.size());
             
-            // Perform the merge using EdgeMergeService
-            List<TaskDto.EdgeDto> mergedEdges = edgeMergeService.mergeAndDeduplicateEdges(originalEdges);
+            // Perform the merge using EdgeMergeService with detailed results
+            EdgeMergeService.EdgeMergeResult mergeResult = edgeMergeService.mergeAndDeduplicateEdgesDetailed(originalEdges);
+            List<TaskDto.EdgeDto> mergedEdges = mergeResult.getEdges();
             logger.info("Final edge count after merge: {}", mergedEdges.size());
-            
-            // Calculate statistics
-            int duplicatesRemoved = originalEdges.size() - mergedEdges.size();
+            logger.info("Merge statistics - Exact duplicates: {}, Same from/to merged: {}, Redundant connections: {}", 
+                mergeResult.getExactDuplicatesRemoved(), mergeResult.getSameFromToMerged(), mergeResult.getRedundantConnectionsRemoved());
             
             // Update the task with merged edges
             taskDto.getTask().setEdges(mergedEdges);
@@ -69,12 +69,15 @@ public class EdgeMergerController {
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", String.format("Successfully merged edges. Original: %d, Final: %d (%d removed)", 
-                    originalEdges.size(), mergedEdges.size(), duplicatesRemoved),
+                    mergeResult.getOriginalCount(), mergeResult.getFinalCount(), mergeResult.getTotalRemoved()),
                 "task", taskDto,
                 "statistics", Map.of(
-                    "original_edges_count", originalEdges.size(),
-                    "merged_edges_count", mergedEdges.size(),
-                    "duplicates_removed", duplicatesRemoved
+                    "original_edges_count", mergeResult.getOriginalCount(),
+                    "merged_edges_count", mergeResult.getFinalCount(),
+                    "duplicates_removed", mergeResult.getTotalRemoved(),
+                    "exact_duplicates_removed", mergeResult.getExactDuplicatesRemoved(),
+                    "same_from_to_merged", mergeResult.getSameFromToMerged(),
+                    "redundant_connections_removed", mergeResult.getRedundantConnectionsRemoved()
                 )
             ));
             
