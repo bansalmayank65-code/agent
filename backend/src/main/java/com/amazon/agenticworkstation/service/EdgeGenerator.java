@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.amazon.agenticworkstation.constants.EdgeGeneratorConstants;
 import com.amazon.agenticworkstation.dto.TaskDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -225,7 +226,7 @@ public final class EdgeGenerator {
 		Map<String, List<String>> instructionProvidedInputs = new HashMap<>();
 
 		for (TaskDto.EdgeDto edge : mergedEdges) {
-			if ("instruction".equals(edge.getFrom())) {
+			if (EdgeGeneratorConstants.INSTRUCTION.equals(edge.getFrom())) {
 				String toAction = edge.getTo();
 				TaskDto.ConnectionDto connection = edge.getConnection();
 				if (connection != null && connection.getInput() != null) {
@@ -242,7 +243,7 @@ public final class EdgeGenerator {
 		for (TaskDto.EdgeDto edge : mergedEdges) {
 			// If this is an action->action edge, check if instruction already provides
 			// these inputs
-			if (!"instruction".equals(edge.getFrom())) {
+			if (!EdgeGeneratorConstants.INSTRUCTION.equals(edge.getFrom())) {
 				String toAction = edge.getTo();
 				List<String> instructionInputs = instructionProvidedInputs.get(toAction);
 
@@ -281,8 +282,8 @@ public final class EdgeGenerator {
 
 						// Only add the edge if there are remaining connections after filtering
 						if (!filteredInputs.isEmpty()) {
-							connection.setOutput(String.join(", ", filteredOutputs));
-							connection.setInput(String.join(", ", filteredInputs));
+							connection.setOutput(String.join(EdgeGeneratorConstants.FIELD_DELIMITER, filteredOutputs));
+							connection.setInput(String.join(EdgeGeneratorConstants.FIELD_DELIMITER, filteredInputs));
 							finalEdges.add(edge);
 						}
 					} else {
@@ -310,12 +311,7 @@ public final class EdgeGenerator {
 		String fieldName = getFieldName(inputKey).toLowerCase();
 
 		// Fields that MUST come from instruction based on expected output analysis
-		if (fieldName.equals("entity_type") || fieldName.equals("action") || fieldName.equals("operation")
-				|| fieldName.equals("reference_type") || fieldName.equals("field_name")) {
-			return true;
-		}
-
-		return false;
+		return EdgeGeneratorConstants.INSTRUCTION_ONLY_FIELDS.stream().anyMatch(field -> field.equals(fieldName));
 	}
 
 	/**
@@ -352,12 +348,13 @@ public final class EdgeGenerator {
 				}
 				if (isAuditCurrentAction) {
 					if (outputValue != null
-							&& ("field_name".equalsIgnoreCase(inputFieldName)
-									|| "field_name".equalsIgnoreCase(outputFieldName))
+							&& (EdgeGeneratorConstants.FIELD_NAME.equalsIgnoreCase(inputFieldName)
+									|| EdgeGeneratorConstants.FIELD_NAME.equalsIgnoreCase(outputFieldName))
 							&& (inputValue.toString().toLowerCase().equals(outputFieldName.toLowerCase())
 									|| outputValue.toString().toLowerCase().equals(inputFieldName.toLowerCase()))) {
-						return "field_name"; // *Case3: For audit - if fieldName = field_name then - value
-												// (currentAction) - fieldName(Previous Actions) match and vice versa
+						return EdgeGeneratorConstants.FIELD_NAME; // *Case3: For audit - if fieldName = field_name then
+																	// - value
+						// (currentAction) - fieldName(Previous Actions) match and vice versa
 					}
 				}
 			}
@@ -365,13 +362,19 @@ public final class EdgeGenerator {
 			// audit logs show that value matches with incompatible field names are
 			// sometimes valid
 			if (isAuditCurrentAction) {
-				if (valueMatchedOutputKey != null && valueMatchedInputKey != null
-						&& (valueMatchedInputKey.equalsIgnoreCase("reference_id")
-								|| valueMatchedOutputKey.equalsIgnoreCase("reference_id")
-								|| valueMatchedInputKey.equalsIgnoreCase("old_value")
-								|| valueMatchedOutputKey.equalsIgnoreCase("old_value"))) {
-					return valueMatchedOutputKey; // Return the value match even if field names aren't compatible
-					// *Case2: action and fieldName is audit related and value-value match
+				if (valueMatchedOutputKey != null && valueMatchedInputKey != null) {
+					boolean isValidAuditField = false;
+					for (String field : EdgeGeneratorConstants.AUDIT_VALID_FIELDS) {
+						if (field.equalsIgnoreCase(valueMatchedInputKey)
+								|| field.equalsIgnoreCase(valueMatchedOutputKey)) {
+							isValidAuditField = true;
+							break;
+						}
+					}
+					if (isValidAuditField) {
+						return valueMatchedOutputKey; // Return the value match even if field names aren't compatible
+						// *Case2: action and fieldName is audit related and value-value match
+					}
 				}
 			}
 		}
@@ -379,11 +382,7 @@ public final class EdgeGenerator {
 	}
 
 	private static boolean isAuditAction(String currentAction) {
-		return currentAction != null && List
-				.of("manage_audit_logs", "handle_audit_logs", "process_audit_logs", "administer_audit_logs",
-						"execute_audit_logs", "generate_new_audit_trail", "create_new_audit_trail",
-						"add_new_audit_trail", "register_new_audit_trail", "record_new_audit_trail")
-				.contains(currentAction.toLowerCase());
+		return currentAction != null && EdgeGeneratorConstants.AUDIT_ACTION_NAMES.contains(currentAction.toLowerCase());
 	}
 
 	/**
@@ -410,35 +409,8 @@ public final class EdgeGenerator {
 		String outOrg = outputField.toLowerCase();
 		String inOrg = inputField.toLowerCase();
 
-		Map<String, String> compatibleFields = new HashMap<>();
-		compatibleFields.put("results[0].contact_email", "notification_data.email");
-		compatibleFields.put("contact_email", "notification_data.email");
-		compatibleFields.put("results[0].subscription_id", "notification_data.reference_id");
-		compatibleFields.put("results[0].subscription_id", "notification_data.reference_id");
-		compatibleFields.put("results[0].status", "filters.employment_status");
-
-		compatibleFields.put("fund_data.manager_id", "results[0].user_id");
-		compatibleFields.put("manager_id", "results[0].user_id");
-		compatibleFields.put("employee_id", "results[0].user_id");
-		compatibleFields.put("requester_id", "results[0].user_id");
-		compatibleFields.put("reviewer_id", "results[0].user_id");
-		compatibleFields.put("approver_id", "results[0].user_id");
-		compatibleFields.put("approved_by", "results[0].user_id");
-		compatibleFields.put("approving_user_id", "results[0].user_id");
-		compatibleFields.put("uploaded_by", "results[0].user_id");
-		compatibleFields.put("created_by", "results[0].user_id");
-		compatibleFields.put("interviewer_id", "results[0].user_id");
-		compatibleFields.put("interviewer_id", "results[0].employee_id");
-		compatibleFields.put("candidate_id", "results[0].user_id");
-		compatibleFields.put("recruiter_id", "results[0].user_id");
-
-		compatibleFields.put("fund_data.fund_manager_approval", "approval_valid");
-		compatibleFields.put("fund_data.compliance_officer_approval", "approval_valid");
-		compatibleFields.put("fund_manager_approval", "approval_valid");
-		compatibleFields.put("compliance_officer_approval", "approval_valid");
-
 		// Flexible containsKey: allow partial key matches
-		for (Map.Entry<String, String> entry : compatibleFields.entrySet()) {
+		for (Map.Entry<String, String> entry : EdgeGeneratorConstants.COMPATIBLE_FIELD_MAPPINGS.entrySet()) {
 			String key = entry.getKey();
 			String value = entry.getValue();
 			if ((outOrg.contains(key) || key.contains(outOrg)) && (value.contains(inOrg) || inOrg.contains(value))) {
@@ -529,7 +501,7 @@ public final class EdgeGenerator {
 				String key = entry.getKey();
 				Object value = entry.getValue();
 
-				if (value instanceof List && "results".equals(key)) {
+				if (value instanceof List && EdgeGeneratorConstants.RESULTS.equals(key)) {
 					// Handle results[0].field format
 					List<?> list = (List<?>) value;
 					if (!list.isEmpty() && list.get(0) instanceof Map) {
@@ -569,8 +541,8 @@ public final class EdgeGenerator {
 			return "";
 		}
 		// Remove array indices and get last part
-		String cleanKey = key.replaceAll("\\[\\d+\\]", "");
-		String[] parts = cleanKey.split("\\.");
+		String cleanKey = key.replaceAll(EdgeGeneratorConstants.ARRAY_INDEX_PATTERN, "");
+		String[] parts = cleanKey.split("\\" + EdgeGeneratorConstants.DOT_DELIMITER);
 		return parts[parts.length - 1];
 	}
 
@@ -595,8 +567,8 @@ public final class EdgeGenerator {
 			cleanedInputs.add(inputKeys.get(i));
 		}
 
-		connection.setOutput(String.join(", ", cleanedOutputs));
-		connection.setInput(String.join(", ", cleanedInputs));
+		connection.setOutput(String.join(EdgeGeneratorConstants.FIELD_DELIMITER, cleanedOutputs));
+		connection.setInput(String.join(EdgeGeneratorConstants.FIELD_DELIMITER, cleanedInputs));
 		edge.setConnection(connection);
 
 		return edge;
@@ -608,7 +580,7 @@ public final class EdgeGenerator {
 	 */
 	private static TaskDto.EdgeDto createInstructionEdge(String actionName, List<String> inputs) {
 		TaskDto.EdgeDto edge = new TaskDto.EdgeDto();
-		edge.setFrom("instruction");
+		edge.setFrom(EdgeGeneratorConstants.INSTRUCTION);
 		edge.setTo(actionName);
 
 		TaskDto.ConnectionDto connection = new TaskDto.ConnectionDto();
@@ -619,23 +591,10 @@ public final class EdgeGenerator {
 			String fieldA = getFieldName(a).toLowerCase();
 			String fieldB = getFieldName(b).toLowerCase();
 
-			// Define order priority for common fields based on expected output patterns
-			Map<String, Integer> fieldPriority = new HashMap<>();
-			fieldPriority.put("entity_type", 1);
-			fieldPriority.put("email", 2);
-			fieldPriority.put("action", 3);
-			fieldPriority.put("first_name", 4);
-			fieldPriority.put("last_name", 5);
-			fieldPriority.put("skill_name", 6); // HR task specific
-			fieldPriority.put("name", 7);
-			fieldPriority.put("status", 8);
-			fieldPriority.put("cost_basis", 9);
-			fieldPriority.put("quantity", 10);
-			fieldPriority.put("operation", 11); // HR task - should come after action, before reference_type
-			fieldPriority.put("reference_type", 12);
-
-			int priorityA = fieldPriority.getOrDefault(fieldA, 100);
-			int priorityB = fieldPriority.getOrDefault(fieldB, 100);
+			int priorityA = EdgeGeneratorConstants.FIELD_PRIORITY.getOrDefault(fieldA,
+					EdgeGeneratorConstants.DEFAULT_FIELD_PRIORITY);
+			int priorityB = EdgeGeneratorConstants.FIELD_PRIORITY.getOrDefault(fieldB,
+					EdgeGeneratorConstants.DEFAULT_FIELD_PRIORITY);
 
 			if (priorityA != priorityB) {
 				return Integer.compare(priorityA, priorityB);
@@ -654,8 +613,8 @@ public final class EdgeGenerator {
 			cleanedInputs.add(input);
 		}
 
-		connection.setOutput(String.join(", ", cleanedOutputs));
-		connection.setInput(String.join(", ", cleanedInputs));
+		connection.setOutput(String.join(EdgeGeneratorConstants.FIELD_DELIMITER, cleanedOutputs));
+		connection.setInput(String.join(EdgeGeneratorConstants.FIELD_DELIMITER, cleanedInputs));
 		edge.setConnection(connection);
 
 		return edge;
@@ -712,21 +671,13 @@ public final class EdgeGenerator {
 		// For example: "a.b.c.d" becomes "d", "filters.email" becomes "email"
 		// "results[0].email" becomes "email" (lastIndexOf finds the dot after [0])
 		String cleaned = fieldName;
-		int lastDotIndex = cleaned.lastIndexOf('.');
+		int lastDotIndex = cleaned.lastIndexOf(EdgeGeneratorConstants.DOT_DELIMITER);
 		if (lastDotIndex != -1 && lastDotIndex < cleaned.length() - 1) {
 			cleaned = cleaned.substring(lastDotIndex + 1);
 		}
 
 		// Map special cases for instruction output names
-		if ("requester_email".equals(cleaned)) {
-			return "email";
-		} else if ("requester_id".equals(cleaned)) {
-			return "user_id";
-		} else if ("fund_manager_approval".equals(cleaned)) {
-			return "approval";
-		}
-
-		return cleaned;
+		return EdgeGeneratorConstants.FIELD_NAME_CLEANINGS.getOrDefault(cleaned, cleaned);
 	}
 
 	/**
@@ -782,8 +733,8 @@ public final class EdgeGenerator {
 		}
 
 		// Set the merged results, ensuring equal lengths
-		targetConnection.setOutput(String.join(", ", mergedOutputs));
-		targetConnection.setInput(String.join(", ", mergedInputs));
+		targetConnection.setOutput(String.join(EdgeGeneratorConstants.FIELD_DELIMITER, mergedOutputs));
+		targetConnection.setInput(String.join(EdgeGeneratorConstants.FIELD_DELIMITER, mergedInputs));
 	}
 
 	/**
