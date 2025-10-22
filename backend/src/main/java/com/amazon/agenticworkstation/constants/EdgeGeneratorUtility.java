@@ -4,10 +4,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
- * Utility class for EdgeGenerator operations. This class provides methods for 
- * edge creation and field compatibility matching with environment-specific behavior.
- * Each instance can be configured with specific environment parameters.
+ * Utility class for EdgeGenerator operations. This class provides methods for
+ * edge creation and field compatibility matching with environment-specific
+ * behavior. Each instance can be configured with specific environment
+ * parameters.
  */
 public class EdgeGeneratorUtility {
 
@@ -15,10 +19,13 @@ public class EdgeGeneratorUtility {
 	private final String envName;
 	private final Integer interfaceNum;
 
+	private static final Logger logger = LoggerFactory.getLogger(EdgeGeneratorUtility.class);
+
 	/**
 	 * Constructor to create EdgeGeneratorUtility with environment parameters.
 	 * 
-	 * @param envName Environment name for configuration (cannot be null or empty)
+	 * @param envName      Environment name for configuration (cannot be null or
+	 *                     empty)
 	 * @param interfaceNum Interface number for configuration (cannot be null)
 	 */
 	public EdgeGeneratorUtility(String envName, Integer interfaceNum) {
@@ -124,18 +131,23 @@ public class EdgeGeneratorUtility {
 	public static final int DEFAULT_FIELD_PRIORITY = 100;
 
 	// ========== Field Compatibility Mappings ==========
-	public static final Map<String, String> COMPATIBLE_FIELD_MAPPINGS = createCompatibleFieldMappings();
-
-	private static Map<String, String> createCompatibleFieldMappings() {
+	public Map<String, String> getCompatibleFieldMappings() {
 		Map<String, String> mappings = new HashMap<>();
 
-		addHrExpertMapping(mappings);
+		if ("hr_experts".equalsIgnoreCase(envName)) {
+			logger.info("Adding hr_experts field mappings");
+			addHrExpertMapping(mappings);
+		}
 
-		// hr_talent
-		addHrTalentMappings(mappings);
+		if ("hr_talent_management".equalsIgnoreCase(envName)) {
+			logger.info("Adding hr_talent_management field mappings");
+			addHrTalentMappings(mappings);
+		}
 
-		// wiki
-		addWikiConfluenceMappings(mappings);
+		if ("wiki_confluence".equalsIgnoreCase(envName)) {
+			logger.info("Adding wiki_confluence field mappings");
+			addWikiConfluenceMappings(mappings);
+		}
 
 		// Approval mappings
 		mappings.put("fund_data.fund_manager_approval", "approval_valid");

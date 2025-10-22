@@ -35,13 +35,14 @@ public final class EdgeGenerator {
 	 * Main method to generate edges from a TaskDto. Extracts environment parameters
 	 * from the TaskDto itself.
 	 * 
-	 * @param taskDto Complete task DTO containing actions and environment configuration
+	 * @param taskDto Complete task DTO containing actions and environment
+	 *                configuration
 	 */
 	public static List<TaskDto.EdgeDto> edgesFromTaskDto(TaskDto taskDto) {
 		if (taskDto == null || taskDto.getTask() == null) {
 			return new ArrayList<>();
 		}
-		
+
 		// Extract environment parameters from TaskDto - no fallback to defaults
 		if (taskDto.getEnv() == null || taskDto.getEnv().trim().isEmpty()) {
 			throw new IllegalArgumentException("Environment name (env) is required and cannot be null or empty");
@@ -49,10 +50,10 @@ public final class EdgeGenerator {
 		if (taskDto.getInterfaceNum() == null) {
 			throw new IllegalArgumentException("Interface number (interfaceNum) is required and cannot be null");
 		}
-		
+
 		String envName = taskDto.getEnv();
 		Integer interfaceNum = taskDto.getInterfaceNum();
-		
+
 		return edgesFromActions(taskDto.getTask().getActions(), envName, interfaceNum);
 	}
 
@@ -61,18 +62,19 @@ public final class EdgeGenerator {
 	 * EDGES: If an input could come from instruction or previous action, prefer
 	 * instruction to avoid redundant action->action edges.
 	 * 
-	 * @param actions List of actions to process
-	 * @param envname Environment name for configuration
+	 * @param actions      List of actions to process
+	 * @param envname      Environment name for configuration
 	 * @param interfaceNum Interface number for configuration
 	 */
-	public static List<TaskDto.EdgeDto> edgesFromActions(List<TaskDto.ActionDto> actions, String envname, Integer interfaceNum) {
+	public static List<TaskDto.EdgeDto> edgesFromActions(List<TaskDto.ActionDto> actions, String envname,
+			Integer interfaceNum) {
 		List<TaskDto.EdgeDto> edges = new ArrayList<>();
 		if (actions == null || actions.isEmpty()) {
 			return edges;
 		}
 
 		// Create EdgeGeneratorUtility instance with environment parameters
-		EdgeGeneratorUtility utility = new EdgeGeneratorUtility(envname, interfaceNum);
+		EdgeGeneratorUtility edgeGeneratorUtility = new EdgeGeneratorUtility(envname, interfaceNum);
 
 		// Create action order map for sorting
 		Map<String, Integer> actionOrderMap = new HashMap<>();
@@ -102,7 +104,7 @@ public final class EdgeGenerator {
 				Object inputValue = currentInputs.get(inputKey);
 
 				// Check if this field must come from instruction (hardcoded list)
-				if (mustComeFromInstruction(inputKey, inputValue, utility)) {
+				if (mustComeFromInstruction(inputKey, inputValue, edgeGeneratorUtility)) {
 					instructionInputs.add(inputKey);
 				} else {
 					// Check if any previous action can provide this input
@@ -115,7 +117,7 @@ public final class EdgeGenerator {
 						}
 						Map<String, Object> previousOutputs = extractOutputs(previousAction.getOutput());
 						String matchKey = findBestMatch(inputKey, inputValue, previousOutputs, currentAction.getName(),
-								previousAction.getName(), utility);
+								previousAction.getName(), edgeGeneratorUtility);
 						if (matchKey != null) {
 							canComeFromAction = true;
 
@@ -160,7 +162,7 @@ public final class EdgeGenerator {
 					String previousName = previousAction.getName();
 					Map<String, Object> previousOutputs = extractOutputs(previousAction.getOutput());
 					String outputKey = findBestMatch(inputKey, inputValue, previousOutputs, currentAction.getName(),
-							previousAction.getName(), utility);
+							previousAction.getName(), edgeGeneratorUtility);
 
 					if (outputKey != null) {
 						// Check if this is a value match (Priority 1)
@@ -200,19 +202,19 @@ public final class EdgeGenerator {
 				String previousName = entry.getKey();
 				List<String> outputKeys = entry.getValue();
 				List<String> inputKeys = actionToInputs.get(previousName);
-				edges.add(createActionEdge(previousName, currentName, outputKeys, inputKeys, utility));
+				edges.add(createActionEdge(previousName, currentName, outputKeys, inputKeys, edgeGeneratorUtility));
 			}
 
 			// Create single instruction edge for all instruction inputs
 			if (!instructionInputs.isEmpty()) {
-				edges.add(createInstructionEdge(currentName, instructionInputs, utility));
+				edges.add(createInstructionEdge(currentName, instructionInputs, edgeGeneratorUtility));
 			}
 		}
 
 		// Use EdgeMergeService for deduplication and merging with instruction
 		// prioritization
 		EdgeMergeService edgeMergeService = new EdgeMergeService();
-		return edgeMergeService.mergeAndDeduplicateEdges(edges, utility);
+		return edgeMergeService.mergeAndDeduplicateEdges(edges, edgeGeneratorUtility);
 	}
 
 	/**
@@ -230,8 +232,8 @@ public final class EdgeGenerator {
 	 * Find the best matching output key for a given input key and value
 	 */
 	private static String findBestMatch(String inputKey, Object inputValue, Map<String, Object> prevOutputs,
-			String currentAction, String previousAction, EdgeGeneratorUtility utility) {
-		String inputFieldName = utility.getFieldName(inputKey);
+			String currentAction, String previousAction, EdgeGeneratorUtility edgeGeneratorUtility) {
+		String inputFieldName = edgeGeneratorUtility.getFieldName(inputKey);
 		boolean isAuditCurrentAction = isAuditAction(currentAction);
 		boolean isAuditPreviousAction = isAuditAction(previousAction);
 
@@ -242,7 +244,7 @@ public final class EdgeGenerator {
 			for (Map.Entry<String, Object> outputEntry : prevOutputs.entrySet()) {
 				String outputKey = outputEntry.getKey();
 				Object outputValue = outputEntry.getValue();
-				String outputFieldName = utility.getFieldName(outputKey);
+				String outputFieldName = edgeGeneratorUtility.getFieldName(outputKey);
 
 				// Ensure both values are not null and match exactly
 				if (outputValue != null
@@ -252,7 +254,8 @@ public final class EdgeGenerator {
 					valueMatchedInputKey = inputKey;
 
 					// Check if field names are compatible for value matching
-					if (areFieldsCompatible(outputFieldName, inputFieldName, outputKey, inputKey)) {
+					if (areFieldsCompatible(outputFieldName, inputFieldName, outputKey, inputKey,
+							edgeGeneratorUtility)) {
 						if (!(isAuditCurrentAction && isAuditPreviousAction)) {// Avoid matching audit->audit actions
 							return outputKey; // *Case1: fieldName-fieldName and value-value match
 						}
@@ -265,7 +268,7 @@ public final class EdgeGenerator {
 							&& (inputValue.toString().toLowerCase().equals(outputFieldName.toLowerCase())
 									|| outputValue.toString().toLowerCase().equals(inputFieldName.toLowerCase()))) {
 						return EdgeGeneratorUtility.FIELD_NAME; // *Case3: For audit - if fieldName = field_name then
-																	// - value
+																// - value
 						// (currentAction) - fieldName(Previous Actions) match and vice versa
 					}
 				}
@@ -304,7 +307,7 @@ public final class EdgeGenerator {
 	 * share the same value.
 	 */
 	private static boolean areFieldsCompatible(String outputFieldCleaned, String inputFieldCleaned, String outputField,
-			String inputField) {
+			String inputField, EdgeGeneratorUtility edgeGeneratorUtility) {
 		if (outputFieldCleaned == null || inputFieldCleaned == null) {
 			return false;
 		}
@@ -322,7 +325,7 @@ public final class EdgeGenerator {
 		String inOrg = inputField.toLowerCase();
 
 		// Flexible containsKey: allow partial key matches
-		for (Map.Entry<String, String> entry : EdgeGeneratorUtility.COMPATIBLE_FIELD_MAPPINGS.entrySet()) {
+		for (Map.Entry<String, String> entry : edgeGeneratorUtility.getCompatibleFieldMappings().entrySet()) {
 			String key = entry.getKey();
 			String value = entry.getValue();
 			if ((outOrg.contains(key) || key.contains(outOrg)) && (value.contains(inOrg) || inOrg.contains(value))) {
@@ -337,7 +340,8 @@ public final class EdgeGenerator {
 	}
 
 	/**
-	 * Read task JSON and generate edges, extracting environment parameters from the JSON
+	 * Read task JSON and generate edges, extracting environment parameters from the
+	 * JSON
 	 * 
 	 * @param taskJsonPath Path to the task JSON file
 	 */
@@ -354,7 +358,7 @@ public final class EdgeGenerator {
 			if (dto == null || dto.getTask() == null) {
 				return new ArrayList<>();
 			}
-			
+
 			// Extract environment parameters from TaskDto - no fallback to defaults
 			if (dto.getEnv() == null || dto.getEnv().trim().isEmpty()) {
 				throw new IllegalArgumentException("Environment name (env) is required and cannot be null or empty");
@@ -362,10 +366,10 @@ public final class EdgeGenerator {
 			if (dto.getInterfaceNum() == null) {
 				throw new IllegalArgumentException("Interface number (interfaceNum) is required and cannot be null");
 			}
-			
+
 			String envName = dto.getEnv();
 			Integer interfaceNum = dto.getInterfaceNum();
-			
+
 			return edgesFromActions(dto.getTask().getActions(), envName, interfaceNum);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -376,7 +380,7 @@ public final class EdgeGenerator {
 	 * Read task JSON and generate edges with explicit environment parameters
 	 * 
 	 * @param taskJsonPath Path to the task JSON file
-	 * @param envname Environment name for configuration
+	 * @param envname      Environment name for configuration
 	 * @param interfaceNum Interface number for configuration
 	 */
 	public static List<TaskDto.EdgeDto> edgesFromTaskJson(Path taskJsonPath, String envname, Integer interfaceNum) {
@@ -502,7 +506,7 @@ public final class EdgeGenerator {
 		int size = Math.min(outputKeys.size(), inputKeys.size());
 		for (int i = 0; i < size; i++) {
 			cleanedOutputs.add(utility.cleanFieldName(outputKeys.get(i), false)); // Don't clean for
-																									// action edges
+																					// action edges
 			cleanedInputs.add(inputKeys.get(i));
 		}
 
@@ -517,7 +521,8 @@ public final class EdgeGenerator {
 	 * Create an instruction->action edge for unmatched inputs with proper field
 	 * ordering
 	 */
-	private static TaskDto.EdgeDto createInstructionEdge(String actionName, List<String> inputs, EdgeGeneratorUtility utility) {
+	private static TaskDto.EdgeDto createInstructionEdge(String actionName, List<String> inputs,
+			EdgeGeneratorUtility utility) {
 		TaskDto.EdgeDto edge = new TaskDto.EdgeDto();
 		edge.setFrom(EdgeGeneratorUtility.INSTRUCTION);
 		edge.setTo(actionName);
