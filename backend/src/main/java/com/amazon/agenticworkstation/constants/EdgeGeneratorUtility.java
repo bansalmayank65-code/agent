@@ -265,6 +265,7 @@ public class EdgeGeneratorUtility {
 		// Entity ID mappings - context-specific names for the same entity references
 		mappings.put("target_entity_id", "entity_data.id");
 		mappings.put("related_entity_id", "entity_data.id");
+		mappings.put("space_data.space_id", "entity_id");
 
 		// Grantee ID mappings - REVERSED to avoid override (multiple values for same
 		// key)
