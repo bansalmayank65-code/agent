@@ -224,6 +224,9 @@ public class EdgeGeneratorUtility {
 
 		// IT Provisioning entity mappings
 		mappings.put("task_id", "it_provisioning_tasks.task_id");
+		
+		mappings.put("location_id", "entities[0].location_id");
+		mappings.put("department_id", "entities[0].department_id");
 
 		// All field naming inconsistencies mapping to entities[0].user_id (from tool
 		// responses)
@@ -248,6 +251,9 @@ public class EdgeGeneratorUtility {
 		mappings.put("recipient_user_id", "entities[0].user_id");
 		mappings.put("manager_approved_by", "entities[0].user_id");
 		mappings.put("approved_by", "entities[0].user_id");
+		mappings.put("candidate_id", "entities[0].user_id");
+		mappings.put("user_id", "entities[0].user_id");
+		mappings.put("created_by", "entities[0].user_id");
 	}
 
 	private static void addWikiConfluenceMappings(Map<String, String> mappings) {
@@ -261,6 +267,7 @@ public class EdgeGeneratorUtility {
 		mappings.put("granted_by_user_id", "user_data.user_id");
 		mappings.put("approver_user_id", "user_data.user_id");
 		mappings.put("changed_by_user_id", "user_data.user_id");
+		mappings.put("editor_user_id", "user_data.user_id");
 
 		// Entity ID mappings - context-specific names for the same entity references
 		mappings.put("target_entity_id", "entity_data.id");

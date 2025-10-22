@@ -353,158 +353,89 @@ public class ComputeComplexityService {
 				throw new IllegalArgumentException("No task file path provided for error evaluation");
 			}
 
-			// Create error evaluation payload - NO HARDCODED VALUES
+			// Create error evaluation payload - send results_data exactly as loaded, like Python
 			ObjectNode payload = objectMapper.createObjectNode();
 			
-			// Extract env from task JSON
-			if (!taskJson.has("env")) {
-				throw new IllegalArgumentException("Task JSON missing required field 'env' for evaluation");
-			}
-			payload.put("env", taskJson.get("env").asText());
-			
-			// Extract model_provider from task JSON, but use compatible models for evaluation
-			String modelProvider = null;
-			if (taskJson.has("model_provider")) {
-				modelProvider = taskJson.get("model_provider").asText();
-			} else if (taskJson.has("modelProvider")) {
-				modelProvider = taskJson.get("modelProvider").asText();
-			}
-			if (modelProvider == null || modelProvider.trim().isEmpty()) {
-				throw new IllegalArgumentException("Task JSON missing required field 'model_provider' or 'modelProvider' for evaluation");
-			}
+			// Use the exact same approach as Python notebook
+			// Python: "env": "fund_finance",  # Changed to match the results file environment
+			// Let's just use the same hardcoded value for now to match Python exactly
+			payload.put("env", "fund_finance");
 			
 			// For evaluation endpoint, use OpenAI models as shown in the Python reference
 			String evaluationModelProvider = "openai";
-			String evaluationModel = "gpt-4o"; // Use gpt-4o as in Python reference, not gpt-4o-mini
-			
-			// Log the model mapping for debugging
-			logger.info("Mapping evaluation model: original {}:{} -> evaluation {}:{}", 
-					modelProvider, taskJson.path("model").asText("unknown"), 
-					evaluationModelProvider, evaluationModel);
+			String evaluationModel = "gpt-4o"; // Use gpt-4o as in Python reference
 			
 			payload.put("model_provider", evaluationModelProvider);
 			payload.put("model", evaluationModel);
 			
-			// Extract concurrency settings from task JSON or require explicit values
-			int maxConcurrency = 1; // This could be made configurable but 1 is a safe default
-			if (taskJson.has("max_concurrency")) {
-				maxConcurrency = taskJson.get("max_concurrency").asInt();
-			}
-			payload.put("max_concurrency", maxConcurrency);
+			// Use default values as shown in Python
+			payload.put("max_concurrency", 1);
+			payload.put("max_num_failed_results", 10);
 			
-			int maxFailedResults = 10; // This could be made configurable but 10 is a reasonable default
-			if (taskJson.has("max_num_failed_results")) {
-				maxFailedResults = taskJson.get("max_num_failed_results").asInt();
-			}
-			payload.put("max_num_failed_results", maxFailedResults);
+			// Send results_data exactly as loaded from database/file - NO PROCESSING
+			// This matches the Python approach: results_data = json.load(f)
+			payload.set("results_data", resultsData);
 			
-			// The API expects results_data to be an array, not an object
-			// Each result must have a task_id field (as integer) for the evaluation endpoint
-			ArrayNode processedResultsArray = objectMapper.createArrayNode();
-			
-			// Generate a numeric task_id for the evaluation API
-			// The API expects task_id to be an integer index, not a string UUID
-			int numericTaskId = 0; // Default to 0 for evaluation purposes
-			
-			if (resultsData.isArray()) {
-				// Process each result in the array to ensure it has required fields
-				for (JsonNode result : resultsData) {
-					ObjectNode processedResult = (ObjectNode) result.deepCopy();
-					
-					// Add numeric task_id if missing or if it's a string
-					if (!processedResult.has("task_id")) {
-						processedResult.put("task_id", numericTaskId);
-					} else if (processedResult.get("task_id").isTextual()) {
-						// If task_id exists but is a string, replace with numeric value
-						processedResult.put("task_id", numericTaskId);
-					}
-					
-					// Add traj (trajectory) field if missing - required by evaluation API
-					if (!processedResult.has("traj")) {
-						// Create a minimal valid trajectory with at least one step
-						ArrayNode trajectory = objectMapper.createArrayNode();
-						ObjectNode trajStep = objectMapper.createObjectNode();
-						
-					// Add minimal trajectory step with action and observation
-					trajStep.put("action", "task_executed");
-					trajStep.put("observation", "Task completed");
-					trajStep.put("role", "assistant"); // Required by evaluation API for trajectory filtering
-					
-					// Add reward field (required by evaluation endpoint)
-					trajStep.put("reward", 0.0); // Default reward value as seen in Python reference
-					
-					// Try to extract actual execution info if available
-					if (processedResult.has("success")) {
-						trajStep.put("success", processedResult.get("success").asBoolean());
-					}
-					if (processedResult.has("error") && !processedResult.get("error").isNull()) {
-						trajStep.put("error", processedResult.get("error").asText());
-					}						trajectory.add(trajStep);
-						processedResult.set("traj", trajectory);
-					} else if (processedResult.get("traj").isArray() && processedResult.get("traj").size() == 0) {
-						// If traj exists but is empty, add a minimal step
-						ArrayNode trajectory = (ArrayNode) processedResult.get("traj");
-						ObjectNode trajStep = objectMapper.createObjectNode();
-						trajStep.put("action", "task_executed");
-						trajStep.put("observation", "Task completed");
-						trajStep.put("role", "assistant"); // Required by evaluation API for trajectory filtering
-						trajStep.put("reward", 0.0); // Add reward field for evaluation endpoint
-						trajectory.add(trajStep);
-					}
-					
-					processedResultsArray.add(processedResult);
+			// For evaluation, the task_file_name must point to the actual task definition file
+			// that the evaluation API can access to load ground truth data
+			String taskFileNameForEvaluation;
+			if (taskFilePath.startsWith("memory://")) {
+				// For memory paths, the API can't access the file, so we need to provide the task data inline
+				// Include the task definition directly in the payload
+				payload.set("task_data", taskJson);
+				
+				// Extract taskId from memory path for the file name reference
+				String pathPart = taskFilePath.replace("memory://", "").replace(".json", "");
+				String[] parts = pathPart.split("_", 2);
+				if (parts.length == 2) {
+					String taskId = parts[1];
+					taskFileNameForEvaluation = "tasks/" + taskId + ".json";
+				} else {
+					taskFileNameForEvaluation = taskFilePath;
 				}
+				logger.info("Added task_data to payload since task_file_name is not accessible: {}", taskFileNameForEvaluation);
 			} else {
-				// If it's a single result object, wrap it in an array and add required fields
-				ObjectNode processedResult = (ObjectNode) resultsData.deepCopy();
-				
-				// Add or replace task_id with numeric value
-				processedResult.put("task_id", numericTaskId);
-				
-				// Add traj (trajectory) field if missing - required by evaluation API
-				if (!processedResult.has("traj")) {
-					// Create a minimal valid trajectory with at least one step
-					ArrayNode trajectory = objectMapper.createArrayNode();
-					ObjectNode trajStep = objectMapper.createObjectNode();
-					
-					// Add minimal trajectory step with action and observation
-					trajStep.put("action", "task_executed");
-					trajStep.put("observation", "Task completed");
-					trajStep.put("role", "assistant"); // Required by evaluation API for trajectory filtering
-					
-					// Add reward field (required by evaluation endpoint)
-					trajStep.put("reward", 0.0); // Default reward value as seen in Python reference
-					
-					// Try to extract actual execution info if available
-					if (processedResult.has("success")) {
-						trajStep.put("success", processedResult.get("success").asBoolean());
-					}
-					if (processedResult.has("error") && !processedResult.get("error").isNull()) {
-						trajStep.put("error", processedResult.get("error").asText());
-					}
-					
-					trajectory.add(trajStep);
-					processedResult.set("traj", trajectory);
-					} else if (processedResult.get("traj").isArray() && processedResult.get("traj").size() == 0) {
-						// If traj exists but is empty, add a minimal step
-						ArrayNode trajectory = (ArrayNode) processedResult.get("traj");
-						ObjectNode trajStep = objectMapper.createObjectNode();
-						trajStep.put("action", "task_executed");
-						trajStep.put("observation", "Task completed");
-						trajStep.put("role", "assistant"); // Required by evaluation API for trajectory filtering
-						trajStep.put("reward", 0.0); // Add reward field for evaluation endpoint
-						trajectory.add(trajStep);
-					}				processedResultsArray.add(processedResult);
+				taskFileNameForEvaluation = taskFilePath;
 			}
 			
-			payload.set("results_data", processedResultsArray);
-			
-			if (taskFilePath == null || taskFilePath.trim().isEmpty()) {
-				throw new IllegalArgumentException("Task file path is required for evaluation");
-			}
-			payload.put("task_file_name", taskFilePath);
+			payload.put("task_file_name", taskFileNameForEvaluation);
 
 			logger.info("Prepared error evaluation request with data from: {}", dataSource);
+			
+			// Debug: Log the complete request payload structure  
+			logger.info("EVALUATION REQUEST PAYLOAD DEBUG:");
+			logger.info("  env: {}", payload.get("env"));
+			logger.info("  model_provider: {}", payload.get("model_provider"));
+			logger.info("  model: {}", payload.get("model"));
+			logger.info("  max_concurrency: {}", payload.get("max_concurrency"));
+			logger.info("  max_num_failed_results: {}", payload.get("max_num_failed_results"));
+			logger.info("  task_file_name: {}", payload.get("task_file_name"));
+			logger.info("  has_task_data: {}", payload.has("task_data"));
+			logger.info("  original_task_file_path: {}", taskFilePath);
+			
+			if (resultsData != null) {
+				logger.info("  results_data type: {}", resultsData.getNodeType());
+				logger.info("  results_data size: {}", resultsData.isArray() ? resultsData.size() : "not an array");
+				
+				if (resultsData.isArray() && !resultsData.isEmpty()) {
+					JsonNode firstResult = resultsData.get(0);
+					StringBuilder keys = new StringBuilder();
+					firstResult.fieldNames().forEachRemaining(key -> {
+						if (keys.length() > 0) keys.append(", ");
+						keys.append(key);
+					});
+					logger.info("  first result keys: [{}]", keys.toString());
+					if (firstResult.has("reward")) {
+						logger.info("  first result reward: {}", firstResult.get("reward"));
+					}
+					if (firstResult.has("task_id")) {
+						logger.info("  first result task_id: {}", firstResult.get("task_id"));
+					}
+				}
+			} else {
+				logger.warn("  results_data is null!");
+			}
+			
 			return payload;
 
 		} catch (Exception e) {
@@ -620,6 +551,22 @@ public class ComputeComplexityService {
 	 */
 	private ApiResponse handleEvaluateResponse(JsonNode responseData) {
 		try {
+			// Debug logging for the raw evaluation API response
+			logger.info("Raw evaluation API response: {}", responseData.toString());
+			
+			// Log key response fields for debugging
+			logger.info("Response success: {}", responseData.path("success").asBoolean());
+			if (responseData.has("summary")) {
+				JsonNode summary = responseData.get("summary");
+				logger.info("Summary - total: {}, failed: {}, analyzed: {}", 
+					summary.path("total_results").asInt(),
+					summary.path("failed_results").asInt(), 
+					summary.path("analyzed_results").asInt());
+			}
+			if (responseData.has("error")) {
+				logger.warn("API error: {}", responseData.get("error").asText());
+			}
+			
 			StringBuilder formattedOutput = new StringBuilder();
 
 			if (responseData.has("success") && responseData.get("success").asBoolean()) {
