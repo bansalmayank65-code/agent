@@ -21,7 +21,7 @@ class NavigationService {
     // Utility tools section (separator)
     NavItem('', Icons.more_horiz, sectionKey: 'separator'), // Visual separator
     NavItem('Policy Actions Builder', Icons.build, sectionKey: 'policy_actions_builder'),
-    NavItem('HR Expert Interface Changer', Icons.swap_horiz, sectionKey: 'hr_interface_changer'),
+    NavItem('Interface Changer', Icons.swap_horiz, sectionKey: 'hr_interface_changer'),
     NavItem('Merge Edges', Icons.merge, sectionKey: 'merge_edges'),
     NavItem('Refine task.json', Icons.auto_fix_high, sectionKey: 'task_refiner'),
   ];

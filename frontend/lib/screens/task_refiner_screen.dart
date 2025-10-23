@@ -10,7 +10,7 @@ import 'dart:convert';
 /// 3. Add/fix edges using backend EdgeGenerator
 /// 4. Fix num_of_edges based on calculated edges
 ///
-/// Uses side-by-side JSON viewer similar to HR Expert Interface Changer
+/// Uses side-by-side JSON viewer similar to Interface Changer
 
 class TaskRefinerScreen extends StatelessWidget {
   /// If true, wraps content in Scaffold with AppBar (for standalone navigation).

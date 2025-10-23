@@ -18,7 +18,7 @@ import com.amazon.agenticworkstation.service.EdgeMergeService;
 
 /**
  * Controller for merging duplicate edges in task.json
- * Follows the same coding guidelines as HR Expert Interface Changer
+ * Follows the same coding guidelines as Interface Changer
  * Uses side-by-side JSON viewer pattern
  */
 @RestController

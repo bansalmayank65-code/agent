@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 /// Screen for merging duplicate edges in task.json
-/// Uses side-by-side JSON viewer similar to HR Expert Interface Changer
+/// Uses side-by-side JSON viewer similar to Interface Changer
 /// Follows the same coding guidelines and UI design pattern
 class EdgeMergerScreen extends StatelessWidget {
   /// If true, wraps content in Scaffold with AppBar (for standalone navigation).

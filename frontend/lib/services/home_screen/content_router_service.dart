@@ -149,7 +149,7 @@ class ContentRouterService {
       case 13:
         return _sectionWrapper(
           key,
-          'HR Expert Interface Changer',
+          'Interface Changer',
           const TaskInterfaceConverterScreen(standalone: false),
           scrollController,
         );
