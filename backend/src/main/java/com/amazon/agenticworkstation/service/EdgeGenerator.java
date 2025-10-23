@@ -457,14 +457,15 @@ public final class EdgeGenerator {
 				String key = entry.getKey();
 				Object value = entry.getValue();
 
-				if (value instanceof List && EdgeGeneratorUtility.RESULTS.equals(key)) {
+				if (value instanceof List
+						&& (EdgeGeneratorUtility.RESULTS.equals(key) || EdgeGeneratorUtility.ENTITIES.equals(key))) {
 					// Handle results[0].field format
 					List<?> list = (List<?>) value;
 					if (!list.isEmpty() && list.get(0) instanceof Map) {
 						@SuppressWarnings("unchecked")
 						Map<String, Object> firstResult = (Map<String, Object>) list.get(0);
 						for (Map.Entry<String, Object> resultEntry : firstResult.entrySet()) {
-							String resultKey = "results[0]." + resultEntry.getKey();
+							String resultKey = key + "[0]." + resultEntry.getKey();
 							// Only add nested field if top-level doesn't exist
 							if (!outputs.containsKey(resultEntry.getKey())) {
 								outputs.put(resultKey, resultEntry.getValue());
