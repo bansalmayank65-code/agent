@@ -135,17 +135,17 @@ public class EdgeGeneratorUtility {
 		Map<String, String> mappings = new HashMap<>();
 
 		if ("hr_experts".equalsIgnoreCase(envName)) {
-			logger.info("Adding hr_experts field mappings");
+			// logger.info("Adding hr_experts field mappings");
 			addHrExpertMapping(mappings);
 		}
 
 		if ("hr_talent_management".equalsIgnoreCase(envName)) {
-			logger.info("Adding hr_talent_management field mappings");
+			// logger.info("Adding hr_talent_management field mappings");
 			addHrTalentMappings(mappings);
 		}
 
 		if ("wiki_confluence".equalsIgnoreCase(envName)) {
-			logger.info("Adding wiki_confluence field mappings");
+			// logger.info("Adding wiki_confluence field mappings");
 			addWikiConfluenceMappings(mappings);
 		}
 
@@ -224,7 +224,7 @@ public class EdgeGeneratorUtility {
 
 		// IT Provisioning entity mappings
 		mappings.put("task_id", "it_provisioning_tasks.task_id");
-		
+
 		mappings.put("location_id", "entities[0].location_id");
 		mappings.put("department_id", "entities[0].department_id");
 
@@ -243,6 +243,7 @@ public class EdgeGeneratorUtility {
 		mappings.put("reporting_manager_id", "entities[0].user_id");
 		mappings.put("manager_id", "entities[0].user_id");
 		mappings.put("uploaded_by", "entities[0].user_id");
+		mappings.put("document_data.uploaded_by", "uploaded_by");
 		mappings.put("verified_by", "entities[0].user_id");
 		mappings.put("assigned_by", "entities[0].user_id");
 		mappings.put("assigned_to", "entities[0].user_id");
@@ -254,6 +255,31 @@ public class EdgeGeneratorUtility {
 		mappings.put("candidate_id", "entities[0].user_id");
 		mappings.put("user_id", "entities[0].user_id");
 		mappings.put("created_by", "entities[0].user_id");
+
+		mappings.put("screened_by", "user_id");
+		mappings.put("shortlist_approved_by", "user_id");
+		mappings.put("completed_by", "user_id");
+		mappings.put("hiring_manager_id", "user_id");
+		mappings.put("hr_manager_approver", "user_id");
+		mappings.put("finance_manager_approver", "user_id");
+		mappings.put("dept_head_approver", "user_id");
+		mappings.put("compliance_approved_by", "user_id");
+		mappings.put("hr_manager_approved_by", "user_id");
+		mappings.put("reporting_manager_id", "user_id");
+		mappings.put("manager_id", "user_id");
+		mappings.put("uploaded_by", "user_id");
+		mappings.put("document_data.uploaded_by", "uploaded_by");
+		mappings.put("verified_by", "user_id");
+		mappings.put("assigned_by", "user_id");
+		mappings.put("assigned_to", "user_id");
+		mappings.put("created_by", "user_id");
+		mappings.put("user_id", "user_id");
+		mappings.put("recipient_user_id", "user_id");
+		mappings.put("manager_approved_by", "user_id");
+		mappings.put("approved_by", "user_id");
+		mappings.put("candidate_id", "user_id");
+		mappings.put("user_id", "user_id");
+		mappings.put("created_by", "user_id");
 	}
 
 	private static void addWikiConfluenceMappings(Map<String, String> mappings) {

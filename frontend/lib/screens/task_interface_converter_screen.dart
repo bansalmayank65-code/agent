@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/json_editor_viewer.dart';
 import '../widgets/dialogs/changes_summary_dialog.dart';
-import '../data/hr_experts_interface_method_mappings.dart';
+import '../services/interface_mapping_service.dart';
 import 'dart:convert';
 
 /// Screen wrapper that provides UI controls and uses the existing JsonEditorViewer
@@ -23,7 +23,7 @@ class TaskInterfaceConverterScreen extends StatelessWidget {
     if (standalone) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('HR Expert Interface Changer'),
+          title: const Text('Interface Changer'),
           backgroundColor: Colors.white,
           foregroundColor: const Color(0xFF2d3748),
         ),
@@ -35,43 +35,156 @@ class TaskInterfaceConverterScreen extends StatelessWidget {
   }
 }
 
-/// The actual converter UI body (without Scaffold/AppBar)
-class _TaskInterfaceConverterBody extends StatelessWidget {
+/// The actual converter UI body (without Scaffold/AppBar) - now stateful to handle environment selection
+class _TaskInterfaceConverterBody extends StatefulWidget {
+  @override
+  State<_TaskInterfaceConverterBody> createState() => _TaskInterfaceConverterBodyState();
+}
+
+class _TaskInterfaceConverterBodyState extends State<_TaskInterfaceConverterBody> {
+  String _selectedEnvironment = 'hr_experts';
+  Map<String, dynamic>? _currentMapping;
+  List<String> _interfaces = [];
+  bool _isLoading = true;
+
+  final TextEditingController _beforeController = TextEditingController();
+  final TextEditingController _afterController = TextEditingController();
+  final ValueNotifier<String?> _sourceNotifier = ValueNotifier<String?>(null);
+  final ValueNotifier<String?> _targetNotifier = ValueNotifier<String?>(null);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMapping();
+  }
+
+  @override
+  void dispose() {
+    _beforeController.dispose();
+    _afterController.dispose();
+    _sourceNotifier.dispose();
+    _targetNotifier.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadMapping() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final mapping = await InterfaceMappingService.loadMappingForEnvironment(_selectedEnvironment);
+      final interfaces = InterfaceMappingService.getInterfaces(mapping);
+      
+      setState(() {
+        _currentMapping = mapping;
+        _interfaces = interfaces;
+        _isLoading = false;
+        
+        // Reset interface selections
+        _sourceNotifier.value = interfaces.isNotEmpty ? interfaces.first : null;
+        _targetNotifier.value = interfaces.length > 1 ? interfaces[1] : (interfaces.isNotEmpty ? interfaces.first : null);
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading mapping: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final mapping = loadHrMapping();
-    final interfaces = (mapping['interfaces'] as Map<String, dynamic>).keys.toList();
+    if (_isLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Loading interface mappings...'),
+          ],
+        ),
+      );
+    }
 
-    // controllers for before/after editors
-    final beforeController = TextEditingController();
-    final afterController = TextEditingController();
-    final sourceNotifier = ValueNotifier<String?>(interfaces.isNotEmpty ? interfaces.first : null);
-    final targetNotifier = ValueNotifier<String?>(interfaces.length > 1 ? interfaces[1] : (interfaces.isNotEmpty ? interfaces.first : null));
+    if (_currentMapping == null) {
+      return const Center(
+        child: Text('Failed to load interface mappings'),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Controls row
+        // Environment selection and controls row
         Padding(
           padding: const EdgeInsets.all(12),
-          child: Row(
+          child: Column(
             children: [
-              const Text('Source interface: '),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _InterfaceSelector(interfaces: interfaces, isSource: true, notifier: sourceNotifier),
+              // Environment selector row
+              Row(
+                children: [
+                  const Text('Environment: '),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      value: _selectedEnvironment,
+                      items: InterfaceMappingService.getAvailableEnvironments()
+                          .map((env) => DropdownMenuItem(
+                                value: env,
+                                child: Text(InterfaceMappingService.getEnvironmentDisplayName(env)),
+                              ))
+                          .toList(),
+                      onChanged: (newEnvironment) {
+                        if (newEnvironment != null && newEnvironment != _selectedEnvironment) {
+                          setState(() {
+                            _selectedEnvironment = newEnvironment;
+                          });
+                          _loadMapping();
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: _loadMapping,
+                    tooltip: 'Reload mapping',
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              const Text('Target interface: '),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _InterfaceSelector(interfaces: interfaces, isSource: false, notifier: targetNotifier),
-              ),
-              const SizedBox(width: 12),
-              ElevatedButton.icon(
-                onPressed: () => _convertAndShow(context, mapping, beforeController, afterController, sourceNotifier.value, targetNotifier.value),
-                icon: const Icon(Icons.swap_horiz),
-                label: const Text('Translate'),
+              const SizedBox(height: 12),
+              // Interface selection row
+              Row(
+                children: [
+                  const Text('Source interface: '),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _InterfaceSelector(interfaces: _interfaces, isSource: true, notifier: _sourceNotifier),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text('Target interface: '),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _InterfaceSelector(interfaces: _interfaces, isSource: false, notifier: _targetNotifier),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: () => _convertAndShow(context, _currentMapping!, _beforeController, _afterController, _sourceNotifier.value, _targetNotifier.value),
+                    icon: const Icon(Icons.swap_horiz),
+                    label: const Text('Translate'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -89,7 +202,7 @@ class _TaskInterfaceConverterBody extends StatelessWidget {
                     title: 'Before',
                     showToolbar: true,
                     splitView: true,
-                    controller: beforeController,
+                    controller: _beforeController,
                   ),
                 ),
                 const VerticalDivider(width: 12),
@@ -98,7 +211,7 @@ class _TaskInterfaceConverterBody extends StatelessWidget {
                     title: 'After',
                     showToolbar: true,
                     splitView: true,
-                    controller: afterController,
+                    controller: _afterController,
                   ),
                 ),
               ],
@@ -164,7 +277,7 @@ void _convertAndShow(BuildContext context, Map<String, dynamic> mapping, TextEdi
   }
 
   // Perform a traversal and replace method names according to mapping.
-  final methodMappings = mapping['method_mappings'] as Map<String, dynamic>;
+  final methodMappings = InterfaceMappingService.getMethodMappings(mapping);
   
   // Track changes for summary
   final translatedMethods = <String, String>{};

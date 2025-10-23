@@ -1,0 +1,419 @@
+{
+  "environment": "hr_talent_management",
+  "description": "Method mappings between different interfaces for HR Talent Management environment.",
+  "version": "1.0",
+  "last_updated": "2025-10-23",
+  "interface_count": 5,
+  "total_methods_per_interface": 35,
+  "is_audit_log": true,
+  "method_categories": {
+    "management_operations": {
+      "description": "CRUD operations for various HR talent management entities",
+      "is_crud": true
+    },
+    "discovery_operations": {
+      "description": "Search and query operations for finding talent-related entities",
+      "is_crud": false
+    },
+    "approval_operations": {
+      "description": "Approval workflow validation and processing for talent operations",
+      "is_crud": false
+    },
+    "human_transfer": {
+      "description": "Operations to transfer control to human agents",
+      "is_crud": false
+    }
+  },
+  "interfaces": {
+    "interface_1": {
+      "prefix_patterns": {
+        "management": "Manage",
+        "discovery": "Discover",
+        "approval": "Check",
+        "human_transfer": "TransferTo"
+      }
+    },
+    "interface_2": {
+      "prefix_patterns": {
+        "management": "Handle",
+        "discovery": "Search",
+        "approval": "Validate",
+        "human_transfer": "SwitchTo"
+      }
+    },
+    "interface_3": {
+      "prefix_patterns": {
+        "management": "Process",
+        "discovery": "Find",
+        "approval": "Verify",
+        "human_transfer": "EscalateTo"
+      }
+    },
+    "interface_4": {
+      "prefix_patterns": {
+        "management": "Administer",
+        "discovery": "Lookup",
+        "approval": "Confirm",
+        "human_transfer": "HandOverTo"
+      }
+    },
+    "interface_5": {
+      "prefix_patterns": {
+        "management": "Execute",
+        "discovery": "Retrieve",
+        "approval": "Authenticate",
+        "human_transfer": "RouteTo"
+      }
+    }
+  },
+  "method_mappings": {
+    "manage_application_operations": {
+      "category": "management_operations",
+      "description": "Manage job applications from candidates",
+      "interface_1": "manage_application_operations",
+      "interface_2": "handle_application_operations",
+      "interface_3": "process_application_operations",
+      "interface_4": "administer_application_operations",
+      "interface_5": "execute_application_operations"
+    },
+    "manage_benefit_enrollment_operations": {
+      "category": "management_operations",
+      "description": "Manage employee benefit enrollment processes",
+      "interface_1": "manage_benefit_enrollment_operations",
+      "interface_2": "handle_benefit_enrollment_operations",
+      "interface_3": "process_benefit_enrollment_operations",
+      "interface_4": "administer_benefit_enrollment_operations",
+      "interface_5": "execute_benefit_enrollment_operations"
+    },
+    "manage_benefit_plan_operations": {
+      "category": "management_operations",
+      "description": "Manage benefit plans and configurations",
+      "interface_1": "manage_benefit_plan_operations",
+      "interface_2": "handle_benefit_plan_operations",
+      "interface_3": "process_benefit_plan_operations",
+      "interface_4": "administer_benefit_plan_operations",
+      "interface_5": "execute_benefit_plan_operations"
+    },
+    "manage_candidate_operations": {
+      "category": "management_operations",
+      "description": "Manage candidate profiles and information",
+      "interface_1": "manage_candidate_operations",
+      "interface_2": "handle_candidate_operations",
+      "interface_3": "process_candidate_operations",
+      "interface_4": "administer_candidate_operations",
+      "interface_5": "execute_candidate_operations"
+    },
+    "manage_department_operations": {
+      "category": "management_operations",
+      "description": "Manage organizational departments",
+      "interface_1": "manage_department_operations",
+      "interface_2": "handle_department_operations",
+      "interface_3": "process_department_operations",
+      "interface_4": "administer_department_operations",
+      "interface_5": "execute_department_operations"
+    },
+    "manage_document_operations": {
+      "category": "management_operations",
+      "description": "Manage document storage and operations",
+      "interface_1": "manage_document_operations",
+      "interface_2": "handle_document_operations",
+      "interface_3": "process_document_operations",
+      "interface_4": "administer_document_operations",
+      "interface_5": "execute_document_operations"
+    },
+    "manage_employee_exit_operations": {
+      "category": "management_operations",
+      "description": "Manage employee exit and offboarding processes",
+      "interface_1": "manage_employee_exit_operations",
+      "interface_2": "handle_employee_exit_operations",
+      "interface_3": "process_employee_exit_operations",
+      "interface_4": "administer_employee_exit_operations",
+      "interface_5": "execute_employee_exit_operations"
+    },
+    "manage_employee_operations": {
+      "category": "management_operations",
+      "description": "Manage employee records and information",
+      "interface_1": "manage_employee_operations",
+      "interface_2": "handle_employee_operations",
+      "interface_3": "process_employee_operations",
+      "interface_4": "administer_employee_operations",
+      "interface_5": "execute_employee_operations"
+    },
+    "manage_interview_operations": {
+      "category": "management_operations",
+      "description": "Manage recruitment interviews and scheduling",
+      "interface_1": "manage_interview_operations",
+      "interface_2": "handle_interview_operations",
+      "interface_3": "process_interview_operations",
+      "interface_4": "administer_interview_operations",
+      "interface_5": "execute_interview_operations"
+    },
+    "manage_it_provisioning_operations": {
+      "category": "management_operations",
+      "description": "Manage IT provisioning for new hires",
+      "interface_1": "manage_it_provisioning_operations",
+      "interface_2": "handle_it_provisioning_operations",
+      "interface_3": "process_it_provisioning_operations",
+      "interface_4": "administer_it_provisioning_operations",
+      "interface_5": "execute_it_provisioning_operations"
+    },
+    "manage_job_operations": {
+      "category": "management_operations",
+      "description": "Manage job requisitions, postings, and positions",
+      "interface_1": "manage_job_operations",
+      "interface_2": "handle_job_operations",
+      "interface_3": "process_job_operations",
+      "interface_4": "administer_job_operations",
+      "interface_5": "execute_job_operations"
+    },
+    "manage_location_operations": {
+      "category": "management_operations",
+      "description": "Manage office locations and facilities",
+      "interface_1": "manage_location_operations",
+      "interface_2": "handle_location_operations",
+      "interface_3": "process_location_operations",
+      "interface_4": "administer_location_operations",
+      "interface_5": "execute_location_operations"
+    },
+    "manage_notification_operations": {
+      "category": "management_operations",
+      "description": "Manage notification and communication operations",
+      "interface_1": "manage_notification_operations",
+      "interface_2": "handle_notification_operations",
+      "interface_3": "process_notification_operations",
+      "interface_4": "administer_notification_operations",
+      "interface_5": "execute_notification_operations"
+    },
+    "manage_offer_operations": {
+      "category": "management_operations",
+      "description": "Manage job offers and negotiations",
+      "interface_1": "manage_offer_operations",
+      "interface_2": "handle_offer_operations",
+      "interface_3": "process_offer_operations",
+      "interface_4": "administer_offer_operations",
+      "interface_5": "execute_offer_operations"
+    },
+    "manage_onboarding_operations": {
+      "category": "management_operations",
+      "description": "Manage new hire onboarding processes",
+      "interface_1": "manage_onboarding_operations",
+      "interface_2": "handle_onboarding_operations",
+      "interface_3": "process_onboarding_operations",
+      "interface_4": "administer_onboarding_operations",
+      "interface_5": "execute_onboarding_operations"
+    },
+    "manage_payment_operations": {
+      "category": "management_operations",
+      "description": "Manage payment and compensation operations",
+      "interface_1": "manage_payment_operations",
+      "interface_2": "handle_payment_operations",
+      "interface_3": "process_payment_operations",
+      "interface_4": "administer_payment_operations",
+      "interface_5": "execute_payment_operations"
+    },
+    "manage_payroll_cycle_operations": {
+      "category": "management_operations",
+      "description": "Manage payroll cycle and processing",
+      "interface_1": "manage_payroll_cycle_operations",
+      "interface_2": "handle_payroll_cycle_operations",
+      "interface_3": "process_payroll_cycle_operations",
+      "interface_4": "administer_payroll_cycle_operations",
+      "interface_5": "execute_payroll_cycle_operations"
+    },
+    "manage_payroll_earning_operations": {
+      "category": "management_operations",
+      "description": "Manage payroll earnings and calculations",
+      "interface_1": "manage_payroll_earning_operations",
+      "interface_2": "handle_payroll_earning_operations",
+      "interface_3": "process_payroll_earning_operations",
+      "interface_4": "administer_payroll_earning_operations",
+      "interface_5": "execute_payroll_earning_operations"
+    },
+    "manage_payroll_input_operations": {
+      "category": "management_operations",
+      "description": "Manage payroll input data and validations",
+      "interface_1": "manage_payroll_input_operations",
+      "interface_2": "handle_payroll_input_operations",
+      "interface_3": "process_payroll_input_operations",
+      "interface_4": "administer_payroll_input_operations",
+      "interface_5": "execute_payroll_input_operations"
+    },
+    "manage_payslip_operations": {
+      "category": "management_operations",
+      "description": "Manage payslip generation and distribution",
+      "interface_1": "manage_payslip_operations",
+      "interface_2": "handle_payslip_operations",
+      "interface_3": "process_payslip_operations",
+      "interface_4": "administer_payslip_operations",
+      "interface_5": "execute_payslip_operations"
+    },
+    "manage_user_operations": {
+      "category": "management_operations",
+      "description": "Manage user accounts and access control",
+      "interface_1": "manage_user_operations",
+      "interface_2": "handle_user_operations",
+      "interface_3": "process_user_operations",
+      "interface_4": "administer_user_operations",
+      "interface_5": "execute_user_operations"
+    },
+    "discover_benefit_entities": {
+      "category": "discovery_operations",
+      "description": "Search and discover benefit-related entities",
+      "interface_1": "discover_benefit_entities",
+      "interface_2": "search_benefit_entities",
+      "interface_3": "find_benefit_entities",
+      "interface_4": "lookup_benefit_entities",
+      "interface_5": "retrieve_benefit_entities"
+    },
+    "discover_candidate_entities": {
+      "category": "discovery_operations",
+      "description": "Search and discover candidate profiles",
+      "interface_1": "discover_candidate_entities",
+      "interface_2": "search_candidate_entities",
+      "interface_3": "find_candidate_entities",
+      "interface_4": "lookup_candidate_entities",
+      "interface_5": "retrieve_candidate_entities"
+    },
+    "discover_document_task_entities": {
+      "category": "discovery_operations",
+      "description": "Search and discover document and task entities",
+      "interface_1": "discover_document_task_entities",
+      "interface_2": "search_document_task_entities",
+      "interface_3": "find_document_task_entities",
+      "interface_4": "lookup_document_task_entities",
+      "interface_5": "retrieve_document_task_entities"
+    },
+    "discover_employee_entities": {
+      "category": "discovery_operations",
+      "description": "Search and discover employee information",
+      "interface_1": "discover_employee_entities",
+      "interface_2": "search_employee_entities",
+      "interface_3": "find_employee_entities",
+      "interface_4": "lookup_employee_entities",
+      "interface_5": "retrieve_employee_entities"
+    },
+    "discover_interview_offer_entities": {
+      "category": "discovery_operations",
+      "description": "Search and discover interview and offer entities",
+      "interface_1": "discover_interview_offer_entities",
+      "interface_2": "search_interview_offer_entities",
+      "interface_3": "find_interview_offer_entities",
+      "interface_4": "lookup_interview_offer_entities",
+      "interface_5": "retrieve_interview_offer_entities"
+    },
+    "discover_job_entities": {
+      "category": "discovery_operations",
+      "description": "Search and discover job-related entities",
+      "interface_1": "discover_job_entities",
+      "interface_2": "search_job_entities",
+      "interface_3": "find_job_entities",
+      "interface_4": "lookup_job_entities",
+      "interface_5": "retrieve_job_entities"
+    },
+    "discover_payment_entities": {
+      "category": "discovery_operations",
+      "description": "Search and discover payment-related entities",
+      "interface_1": "discover_payment_entities",
+      "interface_2": "search_payment_entities",
+      "interface_3": "find_payment_entities",
+      "interface_4": "lookup_payment_entities",
+      "interface_5": "retrieve_payment_entities"
+    },
+    "discover_payroll_entities": {
+      "category": "discovery_operations",
+      "description": "Search and discover payroll-related entities",
+      "interface_1": "discover_payroll_entities",
+      "interface_2": "search_payroll_entities",
+      "interface_3": "find_payroll_entities",
+      "interface_4": "lookup_payroll_entities",
+      "interface_5": "retrieve_payroll_entities"
+    },
+    "discover_reference_entities": {
+      "category": "discovery_operations",
+      "description": "Search and discover reference entities",
+      "interface_1": "discover_reference_entities",
+      "interface_2": "search_reference_entities",
+      "interface_3": "find_reference_entities",
+      "interface_4": "lookup_reference_entities",
+      "interface_5": "retrieve_reference_entities"
+    },
+    "discover_system_entities": {
+      "category": "discovery_operations",
+      "description": "Search and discover system-related entities",
+      "interface_1": "discover_system_entities",
+      "interface_2": "search_system_entities",
+      "interface_3": "find_system_entities",
+      "interface_4": "lookup_system_entities",
+      "interface_5": "retrieve_system_entities"
+    },
+    "create_audit_entry": {
+      "category": "approval_operations",
+      "description": "Create audit entries for compliance tracking",
+      "interface_1": "create_audit_entry",
+      "interface_2": "validate_audit_entry",
+      "interface_3": "verify_audit_entry",
+      "interface_4": "confirm_audit_entry",
+      "interface_5": "authenticate_audit_entry"
+    },
+    "transfer_to_human": {
+      "category": "human_transfer",
+      "description": "Transfer control to human agents",
+      "interface_1": "transfer_to_human",
+      "interface_2": "switch_to_human",
+      "interface_3": "escalate_to_human",
+      "interface_4": "handover_to_human",
+      "interface_5": "route_to_human"
+    }
+  },
+  "functional_equivalence": {
+    "statement": "⚠️ ABSOLUTE EQUIVALENCE: All methods across all interfaces are 100% functionally identical. The ONLY difference is the method name itself.",
+    "what_is_identical": [
+      "Business logic and processing rules",
+      "Input parameters (names, types, validation)",
+      "Return values (structure, content, format)",
+      "Error handling and error messages",
+      "Policy enforcement (same policy.md with method names swapped)",
+      "Approval requirements and workflow",
+      "Audit logging behavior",
+      "Database operations and queries",
+      "Validation rules and constraints",
+      "Halt conditions and error states",
+      "Role-based access control logic",
+      "All Standard Operating Procedures (SOPs)"
+    ],
+    "what_differs": [
+      "Method/function names ONLY"
+    ],
+    "example": {
+      "functionality": "Create a job requisition - IDENTICAL implementation across all interfaces",
+      "interface_1_call": "manage_job_operations(operation_type='create_requisition', job_title='Senior Engineer', department_id='2', location_id='1', employment_type='full_time')",
+      "interface_2_call": "handle_job_operations(operation_type='create_requisition', job_title='Senior Engineer', department_id='2', location_id='1', employment_type='full_time')",
+      "interface_3_call": "process_job_operations(operation_type='create_requisition', job_title='Senior Engineer', department_id='2', location_id='1', employment_type='full_time')",
+      "interface_4_call": "administer_job_operations(operation_type='create_requisition', job_title='Senior Engineer', department_id='2', location_id='1', employment_type='full_time')",
+      "interface_5_call": "execute_job_operations(operation_type='create_requisition', job_title='Senior Engineer', department_id='2', location_id='1', employment_type='full_time')",
+      "result": "ALL calls produce IDENTICAL results - same success response, same error messages, same audit logs, same database changes"
+    },
+    "policy_files": {
+      "note": "Each interface has its own policy.md file, but they contain THE EXACT SAME content with only method names changed",
+      "verified": true,
+      "example_difference": "Interface 1 uses 'manage_job_operations', Interface 2 uses 'handle_job_operations', Interface 3 uses 'process_job_operations', Interface 4 uses 'administer_job_operations', Interface 5 uses 'execute_job_operations' - but ALL call the same underlying job management logic"
+    }
+  },
+  "usage_guidelines": {
+    "interface_selection": "Interface selection is ARBITRARY - choose any interface based on naming preference or testing requirements. Functionality is IDENTICAL.",
+    "interchangeability": "Methods are 100% interchangeable - you can switch from one interface to another at any time by simply changing method names",
+    "parameter_consistency": "ALL interfaces accept EXACTLY the same parameters with EXACTLY the same names, types, and validation rules",
+    "return_format": "ALL interfaces return IDENTICAL JSON-formatted responses with IDENTICAL structure and content",
+    "error_handling": "Error codes, error messages, and error handling logic are IDENTICAL across all interfaces",
+    "policy_enforcement": "All interfaces follow the SAME Standard Operating Procedures (SOPs) with IDENTICAL halt conditions and approval requirements",
+    "translation_rule": "To translate from one interface to another, simply replace the method name prefix - all other code remains unchanged"
+  },
+  "statistics": {
+    "management_operations": 21,
+    "discovery_operations": 11,
+    "approval_operations": 1,
+    "human_transfer_operations": 1,
+    "total_unique_operations": 34,
+    "total_methods_across_all_interfaces": 170
+  }
+}

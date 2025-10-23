@@ -107,11 +107,11 @@ class _MainScreenState extends State<MainScreen>
               );
             },
           ),
-          // Always-visible HR Interface Changer button
+          // Always-visible Interface Changer button
           IconButton(
             icon: const Icon(Icons.swap_horiz),
             onPressed: () => _navigateToOtherTools(),
-            tooltip: 'HR Expert Interface Changer',
+            tooltip: 'Interface Changer',
           ),
           // Web-style navigation for desktop
           if (isDesktop) ...[
@@ -127,7 +127,7 @@ class _MainScreenState extends State<MainScreen>
             TextButton.icon(
               onPressed: () => _navigateToOtherTools(),
               icon: const Icon(Icons.swap_horiz),
-              label: const Text('HR Interface Changer'),
+              label: const Text('Interface Changer'),
               style: TextButton.styleFrom(
                 foregroundColor: const Color(0xFF667eea),
               ),
@@ -149,7 +149,7 @@ class _MainScreenState extends State<MainScreen>
                 ),
                 const PopupMenuItem(
                   value: 'hr_interface_changer',
-                  child: Text('HR Interface Changer'),
+                  child: Text('Interface Changer'),
                 ),
                 const PopupMenuItem(
                   value: 'merge_edges',

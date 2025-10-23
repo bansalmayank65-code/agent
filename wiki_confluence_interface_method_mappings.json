@@ -1,0 +1,367 @@
+{
+  "environment": "wiki_confluence",
+  "description": "Method mappings between different interfaces for Wiki Confluence environment.",
+  "version": "1.0",
+  "last_updated": "2025-10-23",
+  "interface_count": 5,
+  "total_methods_per_interface": 25,
+  "is_audit_log": true,
+  "method_categories": {
+    "management_operations": {
+      "description": "CRUD operations for various wiki and confluence entities",
+      "is_crud": true
+    },
+    "retrieval_operations": {
+      "description": "Get and retrieve operations for accessing existing entities",
+      "is_crud": false
+    },
+    "approval_operations": {
+      "description": "Approval workflow validation and processing for wiki operations",
+      "is_crud": false
+    },
+    "audit_operations": {
+      "description": "Audit logging and configuration tracking operations",
+      "is_crud": false
+    },
+    "notification_operations": {
+      "description": "Notification and communication operations",
+      "is_crud": false
+    },
+    "human_transfer": {
+      "description": "Operations to transfer control to human agents",
+      "is_crud": false
+    }
+  },
+  "interfaces": {
+    "interface_1": {
+      "prefix_patterns": {
+        "management": "Manage",
+        "retrieval": "Get",
+        "approval": "Create",
+        "audit": "Record",
+        "notification": "Send",
+        "human_transfer": "TransferTo"
+      }
+    },
+    "interface_2": {
+      "prefix_patterns": {
+        "management": "Handle",
+        "retrieval": "Fetch",
+        "approval": "Submit",
+        "audit": "Log",
+        "notification": "Dispatch",
+        "human_transfer": "SwitchTo"
+      }
+    },
+    "interface_3": {
+      "prefix_patterns": {
+        "management": "Process",
+        "retrieval": "Retrieve",
+        "approval": "Request",
+        "audit": "Track",
+        "notification": "Broadcast",
+        "human_transfer": "EscalateTo"
+      }
+    },
+    "interface_4": {
+      "prefix_patterns": {
+        "management": "Administer",
+        "retrieval": "Obtain",
+        "approval": "Initiate",
+        "audit": "Document",
+        "notification": "Announce",
+        "human_transfer": "HandOverTo"
+      }
+    },
+    "interface_5": {
+      "prefix_patterns": {
+        "management": "Execute",
+        "retrieval": "Access",
+        "approval": "Generate",
+        "audit": "Capture",
+        "notification": "Communicate",
+        "human_transfer": "RouteTo"
+      }
+    }
+  },
+  "method_mappings": {
+    "manage_spaces": {
+      "category": "management_operations",
+      "description": "Manage wiki spaces creation, modification, and deletion",
+      "interface_1": "manage_spaces",
+      "interface_2": "handle_spaces",
+      "interface_3": "process_spaces",
+      "interface_4": "administer_spaces",
+      "interface_5": "execute_spaces"
+    },
+    "manage_pages": {
+      "category": "management_operations",
+      "description": "Manage wiki pages creation, editing, and organization",
+      "interface_1": "manage_pages",
+      "interface_2": "handle_pages",
+      "interface_3": "process_pages",
+      "interface_4": "administer_pages",
+      "interface_5": "execute_pages"
+    },
+    "manage_page_versions": {
+      "category": "management_operations",
+      "description": "Manage page version control and history",
+      "interface_1": "manage_page_versions",
+      "interface_2": "handle_page_versions",
+      "interface_3": "process_page_versions",
+      "interface_4": "administer_page_versions",
+      "interface_5": "execute_page_versions"
+    },
+    "manage_permissions": {
+      "category": "management_operations",
+      "description": "Manage access permissions for spaces and pages",
+      "interface_1": "manage_permissions",
+      "interface_2": "handle_permissions",
+      "interface_3": "process_permissions",
+      "interface_4": "administer_permissions",
+      "interface_5": "execute_permissions"
+    },
+    "manage_users": {
+      "category": "management_operations",
+      "description": "Manage user accounts and profiles",
+      "interface_1": "manage_users",
+      "interface_2": "handle_users",
+      "interface_3": "process_users",
+      "interface_4": "administer_users",
+      "interface_5": "execute_users"
+    },
+    "manage_groups": {
+      "category": "management_operations",
+      "description": "Manage user groups and group settings",
+      "interface_1": "manage_groups",
+      "interface_2": "handle_groups",
+      "interface_3": "process_groups",
+      "interface_4": "administer_groups",
+      "interface_5": "execute_groups"
+    },
+    "manage_group_memberships": {
+      "category": "management_operations",
+      "description": "Manage user memberships in groups",
+      "interface_1": "manage_group_memberships",
+      "interface_2": "handle_group_memberships",
+      "interface_3": "process_group_memberships",
+      "interface_4": "administer_group_memberships",
+      "interface_5": "execute_group_memberships"
+    },
+    "manage_space_features": {
+      "category": "management_operations",
+      "description": "Manage space-specific features and configurations",
+      "interface_1": "manage_space_features",
+      "interface_2": "handle_space_features",
+      "interface_3": "process_space_features",
+      "interface_4": "administer_space_features",
+      "interface_5": "execute_space_features"
+    },
+    "manage_watchers": {
+      "category": "management_operations",
+      "description": "Manage page and space watchers and subscriptions",
+      "interface_1": "manage_watchers",
+      "interface_2": "handle_watchers",
+      "interface_3": "process_watchers",
+      "interface_4": "administer_watchers",
+      "interface_5": "execute_watchers"
+    },
+    "manage_exports": {
+      "category": "management_operations",
+      "description": "Manage content export operations and formats",
+      "interface_1": "manage_exports",
+      "interface_2": "handle_exports",
+      "interface_3": "process_exports",
+      "interface_4": "administer_exports",
+      "interface_5": "execute_exports"
+    },
+    "get_space": {
+      "category": "retrieval_operations",
+      "description": "Retrieve space information and metadata",
+      "interface_1": "get_space",
+      "interface_2": "fetch_space",
+      "interface_3": "retrieve_space",
+      "interface_4": "obtain_space",
+      "interface_5": "access_space"
+    },
+    "get_page": {
+      "category": "retrieval_operations",
+      "description": "Retrieve page content and metadata",
+      "interface_1": "get_page",
+      "interface_2": "fetch_page",
+      "interface_3": "retrieve_page",
+      "interface_4": "obtain_page",
+      "interface_5": "access_page"
+    },
+    "get_user": {
+      "category": "retrieval_operations",
+      "description": "Retrieve user account information",
+      "interface_1": "get_user",
+      "interface_2": "fetch_user",
+      "interface_3": "retrieve_user",
+      "interface_4": "obtain_user",
+      "interface_5": "access_user"
+    },
+    "get_group": {
+      "category": "retrieval_operations",
+      "description": "Retrieve group information and membership",
+      "interface_1": "get_group",
+      "interface_2": "fetch_group",
+      "interface_3": "retrieve_group",
+      "interface_4": "obtain_group",
+      "interface_5": "access_group"
+    },
+    "get_permissions": {
+      "category": "retrieval_operations",
+      "description": "Retrieve permission settings and access rights",
+      "interface_1": "get_permissions",
+      "interface_2": "fetch_permissions",
+      "interface_3": "retrieve_permissions",
+      "interface_4": "obtain_permissions",
+      "interface_5": "access_permissions"
+    },
+    "get_watchers": {
+      "category": "retrieval_operations",
+      "description": "Retrieve watcher lists and subscription information",
+      "interface_1": "get_watchers",
+      "interface_2": "fetch_watchers",
+      "interface_3": "retrieve_watchers",
+      "interface_4": "obtain_watchers",
+      "interface_5": "access_watchers"
+    },
+    "get_notifications": {
+      "category": "retrieval_operations",
+      "description": "Retrieve notification history and settings",
+      "interface_1": "get_notifications",
+      "interface_2": "fetch_notifications",
+      "interface_3": "retrieve_notifications",
+      "interface_4": "obtain_notifications",
+      "interface_5": "access_notifications"
+    },
+    "get_config_history": {
+      "category": "retrieval_operations",
+      "description": "Retrieve configuration change history",
+      "interface_1": "get_config_history",
+      "interface_2": "fetch_config_history",
+      "interface_3": "retrieve_config_history",
+      "interface_4": "obtain_config_history",
+      "interface_5": "access_config_history"
+    },
+    "create_approval_request": {
+      "category": "approval_operations",
+      "description": "Create approval requests for workflow processes",
+      "interface_1": "create_approval_request",
+      "interface_2": "submit_approval_request",
+      "interface_3": "request_approval_request",
+      "interface_4": "initiate_approval_request",
+      "interface_5": "generate_approval_request"
+    },
+    "get_approval_request": {
+      "category": "approval_operations",
+      "description": "Retrieve approval request status and details",
+      "interface_1": "get_approval_request",
+      "interface_2": "fetch_approval_request",
+      "interface_3": "retrieve_approval_request",
+      "interface_4": "obtain_approval_request",
+      "interface_5": "access_approval_request"
+    },
+    "decide_approval_step": {
+      "category": "approval_operations",
+      "description": "Process approval decisions and workflow steps",
+      "interface_1": "decide_approval_step",
+      "interface_2": "validate_approval_step",
+      "interface_3": "verify_approval_step",
+      "interface_4": "confirm_approval_step",
+      "interface_5": "authenticate_approval_step"
+    },
+    "record_audit_log": {
+      "category": "audit_operations",
+      "description": "Record audit log entries for compliance tracking",
+      "interface_1": "record_audit_log",
+      "interface_2": "log_audit_log",
+      "interface_3": "track_audit_log",
+      "interface_4": "document_audit_log",
+      "interface_5": "capture_audit_log"
+    },
+    "record_config_change": {
+      "category": "audit_operations",
+      "description": "Record configuration changes for audit purposes",
+      "interface_1": "record_config_change",
+      "interface_2": "log_config_change",
+      "interface_3": "track_config_change",
+      "interface_4": "document_config_change",
+      "interface_5": "capture_config_change"
+    },
+    "send_notification": {
+      "category": "notification_operations",
+      "description": "Send notifications to users and groups",
+      "interface_1": "send_notification",
+      "interface_2": "dispatch_notification",
+      "interface_3": "broadcast_notification",
+      "interface_4": "announce_notification",
+      "interface_5": "communicate_notification"
+    },
+    "transfer_to_human": {
+      "category": "human_transfer",
+      "description": "Transfer control to human agents",
+      "interface_1": "transfer_to_human",
+      "interface_2": "switch_to_human",
+      "interface_3": "escalate_to_human",
+      "interface_4": "handover_to_human",
+      "interface_5": "route_to_human"
+    }
+  },
+  "functional_equivalence": {
+    "statement": "⚠️ ABSOLUTE EQUIVALENCE: All methods across all interfaces are 100% functionally identical. The ONLY difference is the method name itself.",
+    "what_is_identical": [
+      "Business logic and processing rules",
+      "Input parameters (names, types, validation)",
+      "Return values (structure, content, format)",
+      "Error handling and error messages",
+      "Policy enforcement (same policy.md with method names swapped)",
+      "Approval requirements and workflow",
+      "Audit logging behavior",
+      "Database operations and queries",
+      "Validation rules and constraints",
+      "Halt conditions and error states",
+      "Role-based access control logic",
+      "All Standard Operating Procedures (SOPs)"
+    ],
+    "what_differs": [
+      "Method/function names ONLY"
+    ],
+    "example": {
+      "functionality": "Create a new wiki space - IDENTICAL implementation across all interfaces",
+      "interface_1_call": "manage_spaces(action='create', space_key='DEMO2025', space_name='Demo Space', space_purpose='Documentation space', created_by_user_id='1')",
+      "interface_2_call": "handle_spaces(action='create', space_key='DEMO2025', space_name='Demo Space', space_purpose='Documentation space', created_by_user_id='1')",
+      "interface_3_call": "process_spaces(action='create', space_key='DEMO2025', space_name='Demo Space', space_purpose='Documentation space', created_by_user_id='1')",
+      "interface_4_call": "administer_spaces(action='create', space_key='DEMO2025', space_name='Demo Space', space_purpose='Documentation space', created_by_user_id='1')",
+      "interface_5_call": "execute_spaces(action='create', space_key='DEMO2025', space_name='Demo Space', space_purpose='Documentation space', created_by_user_id='1')",
+      "result": "ALL calls produce IDENTICAL results - same success response, same error messages, same audit logs, same database changes"
+    },
+    "policy_files": {
+      "note": "Each interface has its own policy.md file, but they contain THE EXACT SAME content with only method names changed",
+      "verified": true,
+      "example_difference": "Interface 1 uses 'manage_spaces', Interface 2 uses 'handle_spaces', Interface 3 uses 'process_spaces', Interface 4 uses 'administer_spaces', Interface 5 uses 'execute_spaces' - but ALL call the same underlying space management logic"
+    }
+  },
+  "usage_guidelines": {
+    "interface_selection": "Interface selection is ARBITRARY - choose any interface based on naming preference or testing requirements. Functionality is IDENTICAL.",
+    "interchangeability": "Methods are 100% interchangeable - you can switch from one interface to another at any time by simply changing method names",
+    "parameter_consistency": "ALL interfaces accept EXACTLY the same parameters with EXACTLY the same names, types, and validation rules",
+    "return_format": "ALL interfaces return IDENTICAL JSON-formatted responses with IDENTICAL structure and content",
+    "error_handling": "Error codes, error messages, and error handling logic are IDENTICAL across all interfaces",
+    "policy_enforcement": "All interfaces follow the SAME Standard Operating Procedures (SOPs) with IDENTICAL halt conditions and approval requirements",
+    "translation_rule": "To translate from one interface to another, simply replace the method name prefix - all other code remains unchanged"
+  },
+  "statistics": {
+    "management_operations": 10,
+    "retrieval_operations": 8,
+    "approval_operations": 3,
+    "audit_operations": 2,
+    "notification_operations": 1,
+    "human_transfer_operations": 1,
+    "total_unique_operations": 25,
+    "total_methods_across_all_interfaces": 125
+  }
+}
