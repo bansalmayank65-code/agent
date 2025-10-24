@@ -87,8 +87,10 @@ public class EdgeGeneratorUtility {
 	public static final String ACTOR_USER_ID = "actor_user_id";
 	public static final String FUND_MANAGER_APPROVAL = "fund_manager_approval";
 	public static final String APPROVAL = "approval";
-	public static final String RESULTS = "results";
-	public static final String ENTITIES = "entities";
+
+	// env specific
+	public static final String RESULTS = "results"; // hr_experts
+	public static final String ENTITIES = "entities"; // hr_talent_management
 
 	// ========== Fields that MUST come from instruction ==========
 	public static final List<String> INSTRUCTION_ONLY_FIELDS = List.of(ENTITY_TYPE, IDENTIFIER_TYPE, OPERATION_TYPE,

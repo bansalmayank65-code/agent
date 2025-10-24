@@ -1,0 +1,6 @@
+mvn spring-boot:run
+flutter run -d web-server
+mvn spring-boot:run
+.\build-single-service.bat
+
+.\build-single-service.bat;git add .;git commit -m "fixes";git push;

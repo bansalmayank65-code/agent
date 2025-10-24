@@ -7,95 +7,76 @@ const String _hrTalentManagementMappingJson = r'''
   "version": "1.0",
   "last_updated": "2025-10-23",
   "interface_count": 5,
-  "total_methods_per_interface": 35,
-  "is_audit_log": true,
-  "method_categories": {
-    "management_operations": {
-      "description": "CRUD operations for various HR talent management entities",
-      "is_crud": true
-    },
-    "discovery_operations": {
-      "description": "Search and query operations for finding talent-related entities",
-      "is_crud": false
-    },
-    "approval_operations": {
-      "description": "Approval workflow validation and processing for talent operations",
-      "is_crud": false
-    },
-    "human_transfer": {
-      "description": "Operations to transfer control to human agents",
-      "is_crud": false
-    }
-  },
   "interfaces": {
-    "interface_1": {
-      "prefix_patterns": {
-        "management": "Manage",
-        "discovery": "Discover",
-        "approval": "Check",
-        "human_transfer": "TransferTo"
-      }
-    },
-    "interface_2": {
-      "prefix_patterns": {
-        "management": "Handle",
-        "discovery": "Search",
-        "approval": "Validate",
-        "human_transfer": "SwitchTo"
-      }
-    },
-    "interface_3": {
-      "prefix_patterns": {
-        "management": "Process",
-        "discovery": "Find",
-        "approval": "Verify",
-        "human_transfer": "EscalateTo"
-      }
-    },
-    "interface_4": {
-      "prefix_patterns": {
-        "management": "Administer",
-        "discovery": "Lookup",
-        "approval": "Confirm",
-        "human_transfer": "HandOverTo"
-      }
-    },
-    "interface_5": {
-      "prefix_patterns": {
-        "management": "Execute",
-        "discovery": "Retrieve",
-        "approval": "Authenticate",
-        "human_transfer": "RouteTo"
-      }
-    }
+    "interface_1": {},
+    "interface_2": {},
+    "interface_3": {},
+    "interface_4": {},
+    "interface_5": {}
   },
   "method_mappings": {
-    "manage_application_operations": {
+    "manage_job_operations": {
       "category": "management_operations",
-      "description": "Manage job applications from candidates",
-      "interface_1": "manage_application_operations",
-      "interface_2": "handle_application_operations",
-      "interface_3": "process_application_operations",
-      "interface_4": "administer_application_operations",
-      "interface_5": "execute_application_operations"
+      "description": "Manage job requisitions, postings, and positions",
+      "interface_1": "manage_job_operations",
+      "interface_2": "administer_job_operations",
+      "interface_3": "execute_job_operations",
+      "interface_4": "process_job_operations",
+      "interface_5": "handle_job_operations"
     },
-    "manage_benefit_enrollment_operations": {
-      "category": "management_operations",
-      "description": "Manage employee benefit enrollment processes",
-      "interface_1": "manage_benefit_enrollment_operations",
-      "interface_2": "handle_benefit_enrollment_operations",
-      "interface_3": "process_benefit_enrollment_operations",
-      "interface_4": "administer_benefit_enrollment_operations",
-      "interface_5": "execute_benefit_enrollment_operations"
+    "discover_reference_entities": {
+      "category": "discovery_operations",
+      "description": "Search and discover reference entities",
+      "interface_1": "discover_reference_entities",
+      "interface_2": "fetch_reference_entities",
+      "interface_3": "lookup_reference_entities",
+      "interface_4": "get_reference_entities",
+      "interface_5": "retrieve_reference_entities"
     },
-    "manage_benefit_plan_operations": {
+    "discover_job_entities": {
+      "category": "discovery_operations",
+      "description": "Search and discover job-related entities",
+      "interface_1": "discover_job_entities",
+      "interface_2": "fetch_job_entities",
+      "interface_3": "lookup_job_entities",
+      "interface_4": "get_job_entities",
+      "interface_5": "retrieve_job_entities"
+    },
+    "create_audit_entry": {
+      "category": "approval_operations",
+      "description": "Create audit entries for compliance tracking",
+      "interface_1": "create_audit_entry",
+      "interface_2": "add_audit_entry",
+      "interface_3": "make_audit_entry",
+      "interface_4": "build_audit_entry",
+      "interface_5": "open_audit_entry"
+    },
+    "manage_user_operations": {
       "category": "management_operations",
-      "description": "Manage benefit plans and configurations",
-      "interface_1": "manage_benefit_plan_operations",
-      "interface_2": "handle_benefit_plan_operations",
-      "interface_3": "process_benefit_plan_operations",
-      "interface_4": "administer_benefit_plan_operations",
-      "interface_5": "execute_benefit_plan_operations"
+      "description": "Manage user accounts and access control",
+      "interface_1": "manage_user_operations",
+      "interface_2": "administer_user_operations",
+      "interface_3": "execute_user_operations",
+      "interface_4": "process_user_operations",
+      "interface_5": "handle_user_operations"
+    },
+    "manage_employee_operations": {
+      "category": "management_operations",
+      "description": "Manage employee records and information",
+      "interface_1": "manage_employee_operations",
+      "interface_2": "administer_employee_operations",
+      "interface_3": "execute_employee_operations",
+      "interface_4": "process_employee_operations",
+      "interface_5": "handle_employee_operations"
+    },
+    "discover_employee_entities": {
+      "category": "discovery_operations",
+      "description": "Search and discover employee information",
+      "interface_1": "discover_employee_entities",
+      "interface_2": "fetch_employee_entities",
+      "interface_3": "lookup_employee_entities",
+      "interface_4": "get_employee_entities",
+      "interface_5": "retrieve_employee_entities"
     }
   }
 }

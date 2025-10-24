@@ -35,52 +35,52 @@
   "interfaces": {
     "interface_1": {
       "prefix_patterns": {
-        "management": "Manage",
-        "retrieval": "Get",
-        "approval": "Create",
-        "audit": "Record",
-        "notification": "Send",
-        "human_transfer": "TransferTo"
+        "management": "manage",
+        "retrieval": "get",
+        "approval": "create_approval_request",
+        "audit": "record",
+        "notification": "send",
+        "human_transfer": "transfer_to"
       }
     },
     "interface_2": {
       "prefix_patterns": {
-        "management": "Handle",
-        "retrieval": "Fetch",
-        "approval": "Submit",
-        "audit": "Log",
-        "notification": "Dispatch",
-        "human_transfer": "SwitchTo"
+        "management": "set",
+        "retrieval": "fetch",
+        "approval": "set_approval_request",
+        "audit": "create_new_audit_trail",
+        "notification": "dispatch",
+        "human_transfer": "switch_to"
       }
     },
     "interface_3": {
       "prefix_patterns": {
-        "management": "Process",
-        "retrieval": "Retrieve",
-        "approval": "Request",
-        "audit": "Track",
-        "notification": "Broadcast",
-        "human_transfer": "EscalateTo"
+        "management": "manipulate",
+        "retrieval": "retrieve",
+        "approval": "generate_approval_request",
+        "audit": "register_new_audit_trail",
+        "notification": "transmit",
+        "human_transfer": "escalate_to"
       }
     },
     "interface_4": {
       "prefix_patterns": {
-        "management": "Administer",
-        "retrieval": "Obtain",
-        "approval": "Initiate",
-        "audit": "Document",
-        "notification": "Announce",
-        "human_transfer": "HandOverTo"
+        "management": "address",
+        "retrieval": "lookup",
+        "approval": "establish_approval_request",
+        "audit": "record_new_audit_trail",
+        "notification": "deliver",
+        "human_transfer": "handover_to"
       }
     },
     "interface_5": {
       "prefix_patterns": {
-        "management": "Execute",
-        "retrieval": "Access",
-        "approval": "Generate",
-        "audit": "Capture",
-        "notification": "Communicate",
-        "human_transfer": "RouteTo"
+        "management": "process",
+        "retrieval": "access",
+        "approval": "submit_approval_request",
+        "audit": "generate_new_audit_trail",
+        "notification": "broadcast",
+        "human_transfer": "route_to"
       }
     }
   },
@@ -89,91 +89,91 @@
       "category": "management_operations",
       "description": "Manage wiki spaces creation, modification, and deletion",
       "interface_1": "manage_spaces",
-      "interface_2": "handle_spaces",
-      "interface_3": "process_spaces",
-      "interface_4": "administer_spaces",
-      "interface_5": "execute_spaces"
+      "interface_2": "set_spaces",
+      "interface_3": "manipulate_spaces",
+      "interface_4": "address_spaces",
+      "interface_5": "process_spaces"
     },
     "manage_pages": {
       "category": "management_operations",
       "description": "Manage wiki pages creation, editing, and organization",
       "interface_1": "manage_pages",
-      "interface_2": "handle_pages",
-      "interface_3": "process_pages",
-      "interface_4": "administer_pages",
-      "interface_5": "execute_pages"
+      "interface_2": "set_pages",
+      "interface_3": "manipulate_pages",
+      "interface_4": "address_pages",
+      "interface_5": "process_pages"
     },
     "manage_page_versions": {
       "category": "management_operations",
       "description": "Manage page version control and history",
       "interface_1": "manage_page_versions",
-      "interface_2": "handle_page_versions",
-      "interface_3": "process_page_versions",
-      "interface_4": "administer_page_versions",
-      "interface_5": "execute_page_versions"
+      "interface_2": "set_page_versions",
+      "interface_3": "manipulate_page_versions",
+      "interface_4": "address_page_versions",
+      "interface_5": "process_page_versions"
     },
     "manage_permissions": {
       "category": "management_operations",
       "description": "Manage access permissions for spaces and pages",
       "interface_1": "manage_permissions",
-      "interface_2": "handle_permissions",
-      "interface_3": "process_permissions",
-      "interface_4": "administer_permissions",
-      "interface_5": "execute_permissions"
+      "interface_2": "set_permissions",
+      "interface_3": "manipulate_permissions",
+      "interface_4": "address_permissions",
+      "interface_5": "process_permissions"
     },
     "manage_users": {
       "category": "management_operations",
       "description": "Manage user accounts and profiles",
       "interface_1": "manage_users",
-      "interface_2": "handle_users",
-      "interface_3": "process_users",
-      "interface_4": "administer_users",
-      "interface_5": "execute_users"
+      "interface_2": "set_users",
+      "interface_3": "manipulate_users",
+      "interface_4": "address_users",
+      "interface_5": "process_users"
     },
     "manage_groups": {
       "category": "management_operations",
       "description": "Manage user groups and group settings",
       "interface_1": "manage_groups",
-      "interface_2": "handle_groups",
-      "interface_3": "process_groups",
-      "interface_4": "administer_groups",
-      "interface_5": "execute_groups"
+      "interface_2": "set_groups",
+      "interface_3": "manipulate_groups",
+      "interface_4": "address_groups",
+      "interface_5": "process_groups"
     },
     "manage_group_memberships": {
       "category": "management_operations",
       "description": "Manage user memberships in groups",
       "interface_1": "manage_group_memberships",
-      "interface_2": "handle_group_memberships",
-      "interface_3": "process_group_memberships",
-      "interface_4": "administer_group_memberships",
-      "interface_5": "execute_group_memberships"
+      "interface_2": "set_group_memberships",
+      "interface_3": "manipulate_group_memberships",
+      "interface_4": "address_group_memberships",
+      "interface_5": "process_group_memberships"
     },
     "manage_space_features": {
       "category": "management_operations",
       "description": "Manage space-specific features and configurations",
       "interface_1": "manage_space_features",
-      "interface_2": "handle_space_features",
-      "interface_3": "process_space_features",
-      "interface_4": "administer_space_features",
-      "interface_5": "execute_space_features"
+      "interface_2": "set_space_features",
+      "interface_3": "manipulate_space_features",
+      "interface_4": "address_space_features",
+      "interface_5": "process_space_features"
     },
     "manage_watchers": {
       "category": "management_operations",
       "description": "Manage page and space watchers and subscriptions",
       "interface_1": "manage_watchers",
-      "interface_2": "handle_watchers",
-      "interface_3": "process_watchers",
-      "interface_4": "administer_watchers",
-      "interface_5": "execute_watchers"
+      "interface_2": "set_watchers",
+      "interface_3": "manipulate_watchers",
+      "interface_4": "address_watchers",
+      "interface_5": "process_watchers"
     },
     "manage_exports": {
       "category": "management_operations",
       "description": "Manage content export operations and formats",
       "interface_1": "manage_exports",
-      "interface_2": "handle_exports",
-      "interface_3": "process_exports",
-      "interface_4": "administer_exports",
-      "interface_5": "execute_exports"
+      "interface_2": "set_exports",
+      "interface_3": "manipulate_exports",
+      "interface_4": "address_exports",
+      "interface_5": "process_exports"
     },
     "get_space": {
       "category": "retrieval_operations",
@@ -181,7 +181,7 @@
       "interface_1": "get_space",
       "interface_2": "fetch_space",
       "interface_3": "retrieve_space",
-      "interface_4": "obtain_space",
+      "interface_4": "lookup_space",
       "interface_5": "access_space"
     },
     "get_page": {
@@ -190,7 +190,7 @@
       "interface_1": "get_page",
       "interface_2": "fetch_page",
       "interface_3": "retrieve_page",
-      "interface_4": "obtain_page",
+      "interface_4": "lookup_page",
       "interface_5": "access_page"
     },
     "get_user": {
@@ -199,7 +199,7 @@
       "interface_1": "get_user",
       "interface_2": "fetch_user",
       "interface_3": "retrieve_user",
-      "interface_4": "obtain_user",
+      "interface_4": "lookup_user",
       "interface_5": "access_user"
     },
     "get_group": {
@@ -208,7 +208,7 @@
       "interface_1": "get_group",
       "interface_2": "fetch_group",
       "interface_3": "retrieve_group",
-      "interface_4": "obtain_group",
+      "interface_4": "lookup_group",
       "interface_5": "access_group"
     },
     "get_permissions": {
@@ -217,7 +217,7 @@
       "interface_1": "get_permissions",
       "interface_2": "fetch_permissions",
       "interface_3": "retrieve_permissions",
-      "interface_4": "obtain_permissions",
+      "interface_4": "lookup_permissions",
       "interface_5": "access_permissions"
     },
     "get_watchers": {
@@ -226,7 +226,7 @@
       "interface_1": "get_watchers",
       "interface_2": "fetch_watchers",
       "interface_3": "retrieve_watchers",
-      "interface_4": "obtain_watchers",
+      "interface_4": "lookup_watchers",
       "interface_5": "access_watchers"
     },
     "get_notifications": {
@@ -235,7 +235,7 @@
       "interface_1": "get_notifications",
       "interface_2": "fetch_notifications",
       "interface_3": "retrieve_notifications",
-      "interface_4": "obtain_notifications",
+      "interface_4": "lookup_notifications",
       "interface_5": "access_notifications"
     },
     "get_config_history": {
@@ -244,17 +244,17 @@
       "interface_1": "get_config_history",
       "interface_2": "fetch_config_history",
       "interface_3": "retrieve_config_history",
-      "interface_4": "obtain_config_history",
+      "interface_4": "lookup_config_history",
       "interface_5": "access_config_history"
     },
     "create_approval_request": {
       "category": "approval_operations",
       "description": "Create approval requests for workflow processes",
       "interface_1": "create_approval_request",
-      "interface_2": "submit_approval_request",
-      "interface_3": "request_approval_request",
-      "interface_4": "initiate_approval_request",
-      "interface_5": "generate_approval_request"
+      "interface_2": "set_approval_request",
+      "interface_3": "generate_approval_request",
+      "interface_4": "establish_approval_request",
+      "interface_5": "submit_approval_request"
     },
     "get_approval_request": {
       "category": "approval_operations",
@@ -262,26 +262,26 @@
       "interface_1": "get_approval_request",
       "interface_2": "fetch_approval_request",
       "interface_3": "retrieve_approval_request",
-      "interface_4": "obtain_approval_request",
+      "interface_4": "lookup_approval_request",
       "interface_5": "access_approval_request"
     },
     "decide_approval_step": {
       "category": "approval_operations",
       "description": "Process approval decisions and workflow steps",
       "interface_1": "decide_approval_step",
-      "interface_2": "validate_approval_step",
-      "interface_3": "verify_approval_step",
-      "interface_4": "confirm_approval_step",
-      "interface_5": "authenticate_approval_step"
+      "interface_2": "set_approval_decision",
+      "interface_3": "handle_approval_step",
+      "interface_4": "execute_approval_step",
+      "interface_5": "resolve_approval_step"
     },
     "record_audit_log": {
       "category": "audit_operations",
       "description": "Record audit log entries for compliance tracking",
       "interface_1": "record_audit_log",
-      "interface_2": "log_audit_log",
-      "interface_3": "track_audit_log",
-      "interface_4": "document_audit_log",
-      "interface_5": "capture_audit_log"
+      "interface_2": "create_new_audit_trail",
+      "interface_3": "register_new_audit_trail",
+      "interface_4": "record_new_audit_trail",
+      "interface_5": "generate_new_audit_trail"
     },
     "record_config_change": {
       "category": "audit_operations",
@@ -289,17 +289,17 @@
       "interface_1": "record_config_change",
       "interface_2": "log_config_change",
       "interface_3": "track_config_change",
-      "interface_4": "document_config_change",
-      "interface_5": "capture_config_change"
+      "interface_4": "capture_config_change",
+      "interface_5": "store_config_change"
     },
     "send_notification": {
       "category": "notification_operations",
       "description": "Send notifications to users and groups",
       "interface_1": "send_notification",
       "interface_2": "dispatch_notification",
-      "interface_3": "broadcast_notification",
-      "interface_4": "announce_notification",
-      "interface_5": "communicate_notification"
+      "interface_3": "transmit_notification",
+      "interface_4": "deliver_notification",
+      "interface_5": "broadcast_notification"
     },
     "transfer_to_human": {
       "category": "human_transfer",
@@ -333,16 +333,16 @@
     "example": {
       "functionality": "Create a new wiki space - IDENTICAL implementation across all interfaces",
       "interface_1_call": "manage_spaces(action='create', space_key='DEMO2025', space_name='Demo Space', space_purpose='Documentation space', created_by_user_id='1')",
-      "interface_2_call": "handle_spaces(action='create', space_key='DEMO2025', space_name='Demo Space', space_purpose='Documentation space', created_by_user_id='1')",
-      "interface_3_call": "process_spaces(action='create', space_key='DEMO2025', space_name='Demo Space', space_purpose='Documentation space', created_by_user_id='1')",
-      "interface_4_call": "administer_spaces(action='create', space_key='DEMO2025', space_name='Demo Space', space_purpose='Documentation space', created_by_user_id='1')",
-      "interface_5_call": "execute_spaces(action='create', space_key='DEMO2025', space_name='Demo Space', space_purpose='Documentation space', created_by_user_id='1')",
+      "interface_2_call": "set_spaces(action='create', space_key='DEMO2025', space_name='Demo Space', space_purpose='Documentation space', created_by_user_id='1')",
+      "interface_3_call": "manipulate_spaces(action='create', space_key='DEMO2025', space_name='Demo Space', space_purpose='Documentation space', created_by_user_id='1')",
+      "interface_4_call": "address_spaces(action='create', space_key='DEMO2025', space_name='Demo Space', space_purpose='Documentation space', created_by_user_id='1')",
+      "interface_5_call": "process_spaces(action='create', space_key='DEMO2025', space_name='Demo Space', space_purpose='Documentation space', created_by_user_id='1')",
       "result": "ALL calls produce IDENTICAL results - same success response, same error messages, same audit logs, same database changes"
     },
     "policy_files": {
       "note": "Each interface has its own policy.md file, but they contain THE EXACT SAME content with only method names changed",
       "verified": true,
-      "example_difference": "Interface 1 uses 'manage_spaces', Interface 2 uses 'handle_spaces', Interface 3 uses 'process_spaces', Interface 4 uses 'administer_spaces', Interface 5 uses 'execute_spaces' - but ALL call the same underlying space management logic"
+      "example_difference": "Interface 1 uses 'manage_spaces', Interface 2 uses 'set_spaces', Interface 3 uses 'manipulate_spaces', Interface 4 uses 'address_spaces', Interface 5 uses 'process_spaces' - but ALL call the same underlying space management logic"
     }
   },
   "usage_guidelines": {

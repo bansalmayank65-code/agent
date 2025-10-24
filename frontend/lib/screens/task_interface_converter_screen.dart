@@ -23,7 +23,7 @@ class TaskInterfaceConverterScreen extends StatelessWidget {
     if (standalone) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Interface Changer'),
+          title: const Text('Interface Translator'),
           backgroundColor: Colors.white,
           foregroundColor: const Color(0xFF2d3748),
         ),
@@ -42,7 +42,7 @@ class _TaskInterfaceConverterBody extends StatefulWidget {
 }
 
 class _TaskInterfaceConverterBodyState extends State<_TaskInterfaceConverterBody> {
-  String _selectedEnvironment = 'hr_experts';
+  String _selectedEnvironment = 'hr_talent_management'; // Default to hr_talent_management for testing
   Map<String, dynamic>? _currentMapping;
   List<String> _interfaces = [];
   bool _isLoading = true;
@@ -73,8 +73,12 @@ class _TaskInterfaceConverterBodyState extends State<_TaskInterfaceConverterBody
     });
 
     try {
+      print('DEBUG: Loading mapping for environment: $_selectedEnvironment');
       final mapping = await InterfaceMappingService.loadMappingForEnvironment(_selectedEnvironment);
       final interfaces = InterfaceMappingService.getInterfaces(mapping);
+      
+      print('DEBUG: Loaded mapping with ${interfaces.length} interfaces: $interfaces');
+      print('DEBUG: Environment from mapping: ${InterfaceMappingService.getEnvironmentName(mapping)}');
       
       setState(() {
         _currentMapping = mapping;
@@ -85,7 +89,10 @@ class _TaskInterfaceConverterBodyState extends State<_TaskInterfaceConverterBody
         _sourceNotifier.value = interfaces.isNotEmpty ? interfaces.first : null;
         _targetNotifier.value = interfaces.length > 1 ? interfaces[1] : (interfaces.isNotEmpty ? interfaces.first : null);
       });
+      
+      print('DEBUG: Interface selections - Source: ${_sourceNotifier.value}, Target: ${_targetNotifier.value}');
     } catch (e) {
+      print('DEBUG: Error loading mapping: $e');
       setState(() {
         _isLoading = false;
       });
@@ -279,18 +286,60 @@ void _convertAndShow(BuildContext context, Map<String, dynamic> mapping, TextEdi
   // Perform a traversal and replace method names according to mapping.
   final methodMappings = InterfaceMappingService.getMethodMappings(mapping);
   
+  // Debug: Print mapping info
+  print('DEBUG: Method mappings count: ${methodMappings.length}');
+  print('DEBUG: Source interface: $sourceInterface, Target interface: $targetInterface');
+  print('DEBUG: Available interfaces: ${InterfaceMappingService.getInterfaces(mapping)}');
+  
   // Track changes for summary
   final translatedMethods = <String, String>{};
   int totalReplacements = 0;
 
+  // Helper to check if a method matches a pattern (e.g., fetch_reference_entities matches discover_reference_entities pattern)
+  bool matchesMethodPattern(String methodName, String patternMethod, String baseKey) {
+    // Try to extract the operation type from both method and pattern
+    final methodParts = methodName.split('_');
+    final patternParts = patternMethod.split('_');
+    
+    if (methodParts.length >= 2 && patternParts.length >= 2) {
+      // Check if they have the same suffix pattern (e.g., both end with "reference_entities")
+      final methodSuffix = methodParts.skip(1).join('_');
+      final patternSuffix = patternParts.skip(1).join('_');
+      
+      return methodSuffix == patternSuffix;
+    }
+    
+    return false;
+  }
+
+  // Helper to convert a method name from source pattern to target pattern
+  String convertMethodPattern(String methodName, String sourcePattern, String targetPattern) {
+    final methodParts = methodName.split('_');
+    final sourceParts = sourcePattern.split('_');
+    final targetParts = targetPattern.split('_');
+    
+    if (methodParts.length >= 2 && sourceParts.length >= 2 && targetParts.length >= 2) {
+      // Replace the prefix with the target prefix, keep the rest the same
+      final methodSuffix = methodParts.skip(1).join('_');
+      final targetPrefix = targetParts.first;
+      
+      return '${targetPrefix}_$methodSuffix';
+    }
+    
+    return methodName;
+  }
+
   // Helper to map a single method name from source interface to target interface
   String mapMethodName(String methodName, String sourceInterface, String targetInterface) {
-    // methodName is expected like "manage_user" etc. We'll find it in the values of method_mappings for sourceInterface and replace with corresponding targetInterface entry.
+    print('DEBUG: Trying to map "$methodName" from $sourceInterface to $targetInterface');
+    
+    // First try exact match
     for (final entry in methodMappings.entries) {
       final mapEntry = entry.value as Map<String, dynamic>;
       final sourceVal = mapEntry[sourceInterface];
       final targetVal = mapEntry[targetInterface];
       if (sourceVal != null && sourceVal == methodName && targetVal != null) {
+        print('DEBUG: Exact match found - $methodName -> ${targetVal.toString()}');
         // Only count as a translation if the names are actually different
         if (sourceVal != targetVal) {
           translatedMethods[methodName] = targetVal.toString();
@@ -299,6 +348,29 @@ void _convertAndShow(BuildContext context, Map<String, dynamic> mapping, TextEdi
         return targetVal.toString();
       }
     }
+    
+    // If exact match not found, try to match by operation type patterns
+    print('DEBUG: No exact match, trying pattern matching for "$methodName"');
+    for (final entry in methodMappings.entries) {
+      final mapEntry = entry.value as Map<String, dynamic>;
+      final sourceVal = mapEntry[sourceInterface]?.toString();
+      final targetVal = mapEntry[targetInterface]?.toString();
+      
+      if (sourceVal != null && targetVal != null) {
+        // Check if methodName matches the pattern for the source interface
+        if (matchesMethodPattern(methodName, sourceVal, entry.key)) {
+          final newMethodName = convertMethodPattern(methodName, sourceVal, targetVal);
+          print('DEBUG: Pattern match found - $methodName -> $newMethodName (via pattern $sourceVal -> $targetVal)');
+          if (newMethodName != methodName) {
+            translatedMethods[methodName] = newMethodName;
+            totalReplacements++;
+          }
+          return newMethodName;
+        }
+      }
+    }
+    
+    print('DEBUG: No match found for "$methodName"');
     // If not found, return original
     return methodName;
   }
@@ -313,8 +385,18 @@ void _convertAndShow(BuildContext context, Map<String, dynamic> mapping, TextEdi
       final keys = List<String>.from(node.keys);
       for (final k in keys) {
         final v = node[k];
-          if (v is String) {
-          node[k] = mapMethodName(v, src, tgt);
+        if (v is String) {
+          // Debug: Check if this might be a method name
+          if (v.contains('_') && (v.startsWith('fetch_') || v.startsWith('administer_') || v.startsWith('add_') || v.startsWith('manage_') || v.startsWith('discover_') || v.startsWith('create_'))) {
+            print('DEBUG: Found potential method name: "$v" in key "$k"');
+            final newValue = mapMethodName(v, src, tgt);
+            if (newValue != v) {
+              print('DEBUG: Replaced "$v" with "$newValue"');
+            }
+            node[k] = newValue;
+          } else {
+            node[k] = v; // Keep original for non-method strings
+          }
         } else {
           traverseAndReplace(v);
         }
@@ -323,7 +405,17 @@ void _convertAndShow(BuildContext context, Map<String, dynamic> mapping, TextEdi
       for (var i = 0; i < node.length; i++) {
         final v = node[i];
         if (v is String) {
-          node[i] = mapMethodName(v, src, tgt);
+          // Debug: Check if this might be a method name
+          if (v.contains('_') && (v.startsWith('fetch_') || v.startsWith('administer_') || v.startsWith('add_') || v.startsWith('manage_') || v.startsWith('discover_') || v.startsWith('create_'))) {
+            print('DEBUG: Found potential method name in array: "$v"');
+            final newValue = mapMethodName(v, src, tgt);
+            if (newValue != v) {
+              print('DEBUG: Replaced "$v" with "$newValue"');
+            }
+            node[i] = newValue;
+          } else {
+            node[i] = v; // Keep original for non-method strings
+          }
         } else {
           traverseAndReplace(v);
         }

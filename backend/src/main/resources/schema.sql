@@ -148,5 +148,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+ALTER TABLE "policy_actions"
+ADD COLUMN "status" text DEFAULT draft NOT NULL;
+
 INSERT INTO login (user_id, password) VALUES 
 ('mayank', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
