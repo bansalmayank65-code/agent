@@ -7,95 +7,103 @@ const String _wikiConfluenceMappingJson = r'''
   "version": "1.0",
   "last_updated": "2025-10-23",
   "interface_count": 5,
-  "total_methods_per_interface": 25,
-  "is_audit_log": true,
-  "method_categories": {
-    "management_operations": {
-      "description": "CRUD operations for wiki and confluence entities",
-      "is_crud": true
-    },
-    "discovery_operations": {
-      "description": "Search and query operations for finding wiki content",
-      "is_crud": false
-    },
-    "approval_operations": {
-      "description": "Approval workflow validation and processing for wiki operations",
-      "is_crud": false
-    },
-    "human_transfer": {
-      "description": "Operations to transfer control to human agents",
-      "is_crud": false
-    }
-  },
   "interfaces": {
-    "interface_1": {
-      "prefix_patterns": {
-        "management": "Manage",
-        "discovery": "Discover",
-        "approval": "Check",
-        "human_transfer": "TransferTo"
-      }
-    },
-    "interface_2": {
-      "prefix_patterns": {
-        "management": "Handle",
-        "discovery": "Search",
-        "approval": "Validate",
-        "human_transfer": "SwitchTo"
-      }
-    },
-    "interface_3": {
-      "prefix_patterns": {
-        "management": "Process",
-        "discovery": "Find",
-        "approval": "Verify",
-        "human_transfer": "EscalateTo"
-      }
-    },
-    "interface_4": {
-      "prefix_patterns": {
-        "management": "Administer",
-        "discovery": "Lookup",
-        "approval": "Confirm",
-        "human_transfer": "HandOverTo"
-      }
-    },
-    "interface_5": {
-      "prefix_patterns": {
-        "management": "Execute",
-        "discovery": "Retrieve",
-        "approval": "Authenticate",
-        "human_transfer": "RouteTo"
-      }
-    }
+    "interface_1": {},
+    "interface_2": {},
+    "interface_3": {},
+    "interface_4": {},
+    "interface_5": {}
   },
   "method_mappings": {
-    "manage_wiki_page": {
+    "manage_groups": {
       "category": "management_operations",
-      "description": "Manage wiki pages and content",
-      "interface_1": "manage_wiki_page",
-      "interface_2": "handle_wiki_page",
-      "interface_3": "process_wiki_page",
-      "interface_4": "administer_wiki_page",
-      "interface_5": "execute_wiki_page"
+      "description": "Manage user groups and group settings",
+      "interface_1": "manage_groups",
+      "interface_2": "set_groups",
+      "interface_3": "manipulate_groups",
+      "interface_4": "address_groups",
+      "interface_5": "process_groups"
     },
-    "manage_confluence_space": {
+    "manage_group_memberships": {
       "category": "management_operations",
-      "description": "Manage confluence spaces and permissions",
-      "interface_1": "manage_confluence_space",
-      "interface_2": "handle_confluence_space",
-      "interface_3": "process_confluence_space",
-      "interface_4": "administer_confluence_space",
-      "interface_5": "execute_confluence_space"
+      "description": "Manage user memberships in groups",
+      "interface_1": "manage_group_memberships",
+      "interface_2": "set_group_memberships",
+      "interface_3": "manipulate_group_memberships",
+      "interface_4": "address_group_memberships",
+      "interface_5": "process_group_memberships"
     },
-    "discover_wiki_content": {
-      "category": "discovery_operations",
-      "description": "Search and discover wiki content",
-      "interface_1": "discover_wiki_content",
-      "interface_2": "search_wiki_content",
-      "interface_3": "find_wiki_content",
-      "interface_4": "lookup_wiki_content",
-      "interface_5": "retrieve_wiki_content"
+    "get_user": {
+      "category": "retrieval_operations",
+      "description": "Retrieve user account information",
+      "interface_1": "get_user",
+      "interface_2": "fetch_user",
+      "interface_3": "retrieve_user",
+      "interface_4": "lookup_user",
+      "interface_5": "access_user"
+    },
+    "get_group": {
+      "category": "retrieval_operations",
+      "description": "Retrieve group information and membership",
+      "interface_1": "get_group",
+      "interface_2": "fetch_group",
+      "interface_3": "retrieve_group",
+      "interface_4": "lookup_group",
+      "interface_5": "access_group"
+    },
+    "send_notification": {
+      "category": "notification_operations",
+      "description": "Send notifications to users and groups",
+      "interface_1": "send_notification",
+      "interface_2": "dispatch_notification",
+      "interface_3": "transmit_notification",
+      "interface_4": "deliver_notification",
+      "interface_5": "broadcast_notification"
+    },
+    "record_audit_log": {
+      "category": "audit_operations",
+      "description": "Record audit log entries for compliance tracking",
+      "interface_1": "record_audit_log",
+      "interface_2": "create_new_audit_trail",
+      "interface_3": "register_new_audit_trail",
+      "interface_4": "record_new_audit_trail",
+      "interface_5": "generate_new_audit_trail"
+    },
+    "manage_spaces": {
+      "category": "management_operations",
+      "description": "Manage wiki spaces creation, modification, and deletion",
+      "interface_1": "manage_spaces",
+      "interface_2": "set_spaces",
+      "interface_3": "manipulate_spaces",
+      "interface_4": "address_spaces",
+      "interface_5": "process_spaces"
+    },
+    "manage_pages": {
+      "category": "management_operations",
+      "description": "Manage wiki pages creation, editing, and organization",
+      "interface_1": "manage_pages",
+      "interface_2": "set_pages",
+      "interface_3": "manipulate_pages",
+      "interface_4": "address_pages",
+      "interface_5": "process_pages"
+    },
+    "manage_permissions": {
+      "category": "management_operations",
+      "description": "Manage access permissions for spaces and pages",
+      "interface_1": "manage_permissions",
+      "interface_2": "set_permissions",
+      "interface_3": "manipulate_permissions",
+      "interface_4": "address_permissions",
+      "interface_5": "process_permissions"
+    },
+    "get_permissions": {
+      "category": "retrieval_operations",
+      "description": "Retrieve permission settings and access rights",
+      "interface_1": "get_permissions",
+      "interface_2": "fetch_permissions",
+      "interface_3": "retrieve_permissions",
+      "interface_4": "lookup_permissions",
+      "interface_5": "access_permissions"
     }
   }
 }

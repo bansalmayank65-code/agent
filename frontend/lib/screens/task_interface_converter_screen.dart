@@ -42,7 +42,7 @@ class _TaskInterfaceConverterBody extends StatefulWidget {
 }
 
 class _TaskInterfaceConverterBodyState extends State<_TaskInterfaceConverterBody> {
-  String _selectedEnvironment = 'hr_talent_management'; // Default to hr_talent_management for testing
+  String _selectedEnvironment = 'wiki_confluence'; // Default to wiki_confluence for testing
   Map<String, dynamic>? _currentMapping;
   List<String> _interfaces = [];
   bool _isLoading = true;
@@ -379,46 +379,33 @@ void _convertAndShow(BuildContext context, Map<String, dynamic> mapping, TextEdi
   final src = sourceInterface ?? 'interface_1';
   final tgt = targetInterface ?? 'interface_2';
 
-  // Walk decoded object and replace any string values that match known method names
-  void traverseAndReplace(dynamic node) {
+  // Walk decoded object and replace only actual API method names in "name" fields
+  void traverseAndReplace(dynamic node, [String? parentKey]) {
     if (node is Map<String, dynamic>) {
       final keys = List<String>.from(node.keys);
       for (final k in keys) {
         final v = node[k];
         if (v is String) {
-          // Debug: Check if this might be a method name
-          if (v.contains('_') && (v.startsWith('fetch_') || v.startsWith('administer_') || v.startsWith('add_') || v.startsWith('manage_') || v.startsWith('discover_') || v.startsWith('create_'))) {
-            print('DEBUG: Found potential method name: "$v" in key "$k"');
+          // Only translate method names in "name" fields (actual API method names)
+          if (k == 'name' && v.contains('_')) {
+            print('DEBUG: Found API method name: "$v" in action');
             final newValue = mapMethodName(v, src, tgt);
             if (newValue != v) {
-              print('DEBUG: Replaced "$v" with "$newValue"');
+              print('DEBUG: Replaced method "$v" with "$newValue"');
             }
             node[k] = newValue;
           } else {
-            node[k] = v; // Keep original for non-method strings
+            // Keep original for all other string values (like action_type values)
+            node[k] = v;
           }
         } else {
-          traverseAndReplace(v);
+          traverseAndReplace(v, k);
         }
       }
     } else if (node is List) {
       for (var i = 0; i < node.length; i++) {
         final v = node[i];
-        if (v is String) {
-          // Debug: Check if this might be a method name
-          if (v.contains('_') && (v.startsWith('fetch_') || v.startsWith('administer_') || v.startsWith('add_') || v.startsWith('manage_') || v.startsWith('discover_') || v.startsWith('create_'))) {
-            print('DEBUG: Found potential method name in array: "$v"');
-            final newValue = mapMethodName(v, src, tgt);
-            if (newValue != v) {
-              print('DEBUG: Replaced "$v" with "$newValue"');
-            }
-            node[i] = newValue;
-          } else {
-            node[i] = v; // Keep original for non-method strings
-          }
-        } else {
-          traverseAndReplace(v);
-        }
+        traverseAndReplace(v, parentKey);
       }
     }
   }

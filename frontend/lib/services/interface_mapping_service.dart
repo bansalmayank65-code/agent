@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../data/hr_experts_interface_method_mappings.dart';
 import '../data/hr_talent_management_interface_method_mappings.dart';
+import '../data/wiki_confluence_interface_method_mappings.dart';
 
 class InterfaceMappingService {
   static const Map<String, String> _environmentFileMapping = {
@@ -37,9 +38,15 @@ class InterfaceMappingService {
     }
 
     if (environment == 'hr_talent_management') {
-      // Use the in-memory mapping for hr_talent_management for now
+      // Use the in-memory mapping for hr_talent_management
       print('DEBUG SERVICE: Using in-memory mapping for hr_talent_management');
       return loadHrTalentManagementMapping();
+    }
+
+    if (environment == 'wiki_confluence') {
+      // Use the in-memory mapping for wiki_confluence
+      print('DEBUG SERVICE: Using in-memory mapping for wiki_confluence');
+      return loadWikiConfluenceMapping();
     }
 
     // For other environments, load from JSON files in workspace root
