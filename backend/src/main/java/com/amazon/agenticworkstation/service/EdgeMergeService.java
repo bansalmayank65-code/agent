@@ -16,14 +16,77 @@ import com.amazon.agenticworkstation.dto.TaskDto;
  * Service for merging and deduplicating edges. Contains common logic used by
  * both EdgeGenerator and EdgeMergerController.
  * 
- * Merge algorithm: 1. Remove exact duplicate edges 2. Merge edges with same
- * "from" and "to" values 3. Collect instruction-provided inputs 4. Remove
- * redundant action->action connections when instruction provides same input
+ * Merge algorithm: 
+ * 1. Remove exact duplicate edges 
+ * 2. Merge edges with same "from" and "to" values (controlled by allowMergeDifferentActionFields flag)
+ * 3. Collect instruction-provided inputs 
+ * 4. Remove redundant action->action connections when instruction provides same input
+ * 
+ * Merge Control:
+ * The allowMergeDifferentActionFields flag controls whether edges from different actions
+ * with different field names should be merged:
+ * 
+ * - When true (default): Full merging - edges are merged completely if they have the same from/to
+ * - When false: Partial merging - only compatible field pairs are merged, incompatible pairs 
+ *   remain as separate edges
+ * 
+ * Partial Merging Example:
+ * Edge 1: input="field1,field2", output="result1,result2"
+ * Edge 2: input="field1,field3", output="result1,result3"
+ * Result: 
+ * - Merged edge: input="field1,field2", output="result1,result2" (compatible pairs)
+ * - Remaining edge: input="field3", output="result3" (incompatible pairs)
+ * 
+ * Usage example:
+ * EdgeMergeService service = new EdgeMergeService();
+ * service.setAllowMergeDifferentActionFields(false); // Enable partial merging
+ * List<EdgeDto> merged = service.mergeAndDeduplicateEdges(edges, utility);
  */
 @Service
 public class EdgeMergeService {
 
 	private static final Logger logger = LoggerFactory.getLogger(EdgeMergeService.class);
+	
+	/**
+	 * Flag to control whether edges from different actions with different field names should be merged.
+	 * When true (default), allows merging edges even if they're from different actions with different field names.
+	 * When false, prevents merging when actions are different and field names don't match.
+	 */
+	private boolean allowMergeDifferentActionFields = false;
+	
+	/**
+	 * Default constructor with default merge behavior (allows merging different action fields).
+	 */
+	public EdgeMergeService() {
+		this.allowMergeDifferentActionFields = false;
+	}
+	
+	/**
+	 * Constructor that allows setting the merge behavior flag.
+	 * 
+	 * @param allowMergeDifferentActionFields true to allow merging different action fields, false to prevent it
+	 */
+	public EdgeMergeService(boolean allowMergeDifferentActionFields) {
+		this.allowMergeDifferentActionFields = allowMergeDifferentActionFields;
+	}
+	
+	/**
+	 * Get the flag that controls merging behavior for different actions with different field names.
+	 * 
+	 * @return true if merging is allowed, false otherwise
+	 */
+	public boolean isAllowMergeDifferentActionFields() {
+		return allowMergeDifferentActionFields;
+	}
+	
+	/**
+	 * Set the flag that controls merging behavior for different actions with different field names.
+	 * 
+	 * @param allowMergeDifferentActionFields true to allow merging, false to prevent it
+	 */
+	public void setAllowMergeDifferentActionFields(boolean allowMergeDifferentActionFields) {
+		this.allowMergeDifferentActionFields = allowMergeDifferentActionFields;
+	}
 
 	/**
 	 * Detailed result of edge merge operation
@@ -72,6 +135,52 @@ public class EdgeMergeService {
 
 		public int getTotalRemoved() {
 			return originalCount - finalCount;
+		}
+	}
+
+	/**
+	 * Result of partial merge operation for compatible and incompatible fields
+	 */
+	public static class PartialMergeResult {
+		private final String mergedInput;
+		private final String mergedOutput;
+		private final String remainingInput;
+		private final String remainingOutput;
+		private final boolean hasCompatibleFields;
+		private final boolean hasRemainingFields;
+
+		public PartialMergeResult(String mergedInput, String mergedOutput, String remainingInput, String remainingOutput,
+				boolean hasCompatibleFields, boolean hasRemainingFields) {
+			this.mergedInput = mergedInput;
+			this.mergedOutput = mergedOutput;
+			this.remainingInput = remainingInput;
+			this.remainingOutput = remainingOutput;
+			this.hasCompatibleFields = hasCompatibleFields;
+			this.hasRemainingFields = hasRemainingFields;
+		}
+
+		public String getMergedInput() {
+			return mergedInput;
+		}
+
+		public String getMergedOutput() {
+			return mergedOutput;
+		}
+
+		public String getRemainingInput() {
+			return remainingInput;
+		}
+
+		public String getRemainingOutput() {
+			return remainingOutput;
+		}
+
+		public boolean hasCompatibleFields() {
+			return hasCompatibleFields;
+		}
+
+		public boolean hasRemainingFields() {
+			return hasRemainingFields;
 		}
 	}
 
@@ -212,7 +321,7 @@ public class EdgeMergeService {
 
 	/**
 	 * Merge edges that have the same "from" and "to" values by combining their
-	 * connections, with detailed tracking.
+	 * connections, with detailed tracking. Supports partial merging when allowMergeDifferentActionFields is false.
 	 * 
 	 * @param edges List of edges to merge
 	 * @return Result with merged edges and count of merge operations
@@ -222,24 +331,241 @@ public class EdgeMergeService {
 		int mergeOperationsPerformed = 0;
 
 		for (TaskDto.EdgeDto edge : edges) {
-			boolean merged = false;
+			boolean processed = false;
 
 			for (TaskDto.EdgeDto existingEdge : mergedEdges) {
 				if (java.util.Objects.equals(edge.getFrom(), existingEdge.getFrom())
 						&& java.util.Objects.equals(edge.getTo(), existingEdge.getTo())) {
-					mergeConnections(existingEdge, edge);
-					merged = true;
-					mergeOperationsPerformed++;
-					break;
+					
+					// Check if merging should be allowed based on the flag and field differences
+					if (shouldAllowMerge(existingEdge, edge)) {
+						if (allowMergeDifferentActionFields) {
+							// Full merge - existing behavior
+							mergeConnections(existingEdge, edge);
+							processed = true;
+							mergeOperationsPerformed++;
+							break;
+						} else {
+							// Partial merge - only merge compatible fields
+							PartialMergeResult partialResult = performPartialMerge(existingEdge, edge);
+							if (partialResult.hasCompatibleFields()) {
+								// Update existing edge with merged compatible fields
+								existingEdge.getConnection().setInput(partialResult.getMergedInput());
+								existingEdge.getConnection().setOutput(partialResult.getMergedOutput());
+								
+								// Add remaining incompatible fields as a new edge if any
+								if (partialResult.hasRemainingFields()) {
+									TaskDto.EdgeDto remainingEdge = createEdgeWithRemainingFields(edge, partialResult);
+									mergedEdges.add(remainingEdge);
+									logger.debug("Partial merge: compatible fields merged, incompatible fields preserved in separate edge from '{}' to '{}'", 
+											edge.getFrom(), edge.getTo());
+								} else {
+									logger.debug("Full compatible merge: all fields from '{}' to '{}' were compatible", 
+											edge.getFrom(), edge.getTo());
+								}
+								processed = true;
+								mergeOperationsPerformed++;
+								break;
+							}
+						}
+					}
 				}
 			}
 
-			if (!merged) {
+			if (!processed) {
 				mergedEdges.add(edge);
 			}
 		}
 
 		return new SameFromToMergeResult(mergedEdges, mergeOperationsPerformed);
+	}
+
+	/**
+	 * Determine if two edges should be allowed to merge based on the class flag and field differences.
+	 * When allowMergeDifferentActionFields is false, prevents merging if the edges are from different
+	 * actions and have different field names.
+	 * 
+	 * @param existingEdge The existing edge in the merged list
+	 * @param newEdge The new edge being considered for merging
+	 * @return true if merging should be allowed, false otherwise
+	 */
+	private boolean shouldAllowMerge(TaskDto.EdgeDto existingEdge, TaskDto.EdgeDto newEdge) {
+		// Always allow merging if the flag is true
+		if (allowMergeDifferentActionFields) {
+			return true;
+		}
+		
+		// If flag is false, check if we're dealing with different actions
+		String existingFrom = existingEdge.getFrom();
+		String newFrom = newEdge.getFrom();
+		
+		// If both edges are from the same action, allow merging
+		if (java.util.Objects.equals(existingFrom, newFrom)) {
+			return true;
+		}
+		
+		// If edges are from different actions, check if field names are compatible
+		boolean compatible = areFieldNamesCompatible(existingEdge, newEdge);
+		if (!compatible) {
+			logger.debug("Merge prevented: edges from different actions '{}' and '{}' have incompatible field names", 
+					existingFrom, newFrom);
+		}
+		return compatible;
+	}
+	
+	/**
+	 * Check if the field names in two edges are compatible for merging.
+	 * This compares the input and output field names to determine if they have matching fields
+	 * in both inputs AND outputs.
+	 * 
+	 * @param edge1 First edge to compare
+	 * @param edge2 Second edge to compare
+	 * @return true if field names are compatible (have matching fields in both inputs and outputs), false otherwise
+	 */
+	private boolean areFieldNamesCompatible(TaskDto.EdgeDto edge1, TaskDto.EdgeDto edge2) {
+		TaskDto.ConnectionDto conn1 = edge1.getConnection();
+		TaskDto.ConnectionDto conn2 = edge2.getConnection();
+		
+		// If either edge has no connection, consider them compatible
+		if (conn1 == null || conn2 == null) {
+			return true;
+		}
+		
+		// Parse field names from both edges
+		List<String> fields1Input = parseFields(conn1.getInput());
+		List<String> fields1Output = parseFields(conn1.getOutput());
+		List<String> fields2Input = parseFields(conn2.getInput());
+		List<String> fields2Output = parseFields(conn2.getOutput());
+		
+		// Check for matching field names in inputs
+		boolean hasMatchingInput = false;
+		for (String field1 : fields1Input) {
+			for (String field2 : fields2Input) {
+				if (field1.equals(field2)) {
+					hasMatchingInput = true;
+					break;
+				}
+			}
+			if (hasMatchingInput) break;
+		}
+		
+		// Check for matching field names in outputs
+		boolean hasMatchingOutput = false;
+		for (String field1 : fields1Output) {
+			for (String field2 : fields2Output) {
+				if (field1.equals(field2)) {
+					hasMatchingOutput = true;
+					break;
+				}
+			}
+			if (hasMatchingOutput) break;
+		}
+		
+		// Both inputs and outputs must have matching field names
+		return hasMatchingInput && hasMatchingOutput;
+	}
+
+	/**
+	 * Perform partial merge of two edges, separating compatible and incompatible field pairs.
+	 * 
+	 * @param existingEdge The existing edge
+	 * @param newEdge The new edge to merge
+	 * @return PartialMergeResult containing merged and remaining field information
+	 */
+	private PartialMergeResult performPartialMerge(TaskDto.EdgeDto existingEdge, TaskDto.EdgeDto newEdge) {
+		TaskDto.ConnectionDto existingConn = existingEdge.getConnection();
+		TaskDto.ConnectionDto newConn = newEdge.getConnection();
+		
+		if (existingConn == null || newConn == null) {
+			// If either has no connection, no partial merge possible
+			return new PartialMergeResult("", "", "", "", false, false);
+		}
+		
+		List<String> existingInputs = parseFields(existingConn.getInput());
+		List<String> existingOutputs = parseFields(existingConn.getOutput());
+		List<String> newInputs = parseFields(newConn.getInput());
+		List<String> newOutputs = parseFields(newConn.getOutput());
+		
+		// Find compatible field pairs (input-output pairs that match in both edges)
+		List<String> mergedInputs = new ArrayList<>(existingInputs);
+		List<String> mergedOutputs = new ArrayList<>(existingOutputs);
+		List<String> remainingInputs = new ArrayList<>();
+		List<String> remainingOutputs = new ArrayList<>();
+		
+		// Check each input-output pair from the new edge
+		int newSize = Math.min(newInputs.size(), newOutputs.size());
+		for (int i = 0; i < newSize; i++) {
+			String newInput = newInputs.get(i);
+			String newOutput = newOutputs.get(i);
+			
+			// Check if this input-output pair is compatible (both input and output match existing pairs)
+			boolean isCompatible = false;
+			int existingSize = Math.min(existingInputs.size(), existingOutputs.size());
+			
+			for (int j = 0; j < existingSize; j++) {
+				if (existingInputs.get(j).equals(newInput) && existingOutputs.get(j).equals(newOutput)) {
+					isCompatible = true;
+					break;
+				}
+			}
+			
+			if (!isCompatible) {
+				// Check if we can add this as a new compatible pair (input matches any existing input, output matches any existing output)
+				boolean inputMatches = existingInputs.contains(newInput);
+				boolean outputMatches = existingOutputs.contains(newOutput);
+				
+				if (inputMatches && outputMatches) {
+					// Add to merged if not already present
+					boolean pairExists = false;
+					int mergedSize = Math.min(mergedInputs.size(), mergedOutputs.size());
+					for (int k = 0; k < mergedSize; k++) {
+						if (mergedInputs.get(k).equals(newInput) && mergedOutputs.get(k).equals(newOutput)) {
+							pairExists = true;
+							break;
+						}
+					}
+					if (!pairExists) {
+						mergedInputs.add(newInput);
+						mergedOutputs.add(newOutput);
+					}
+				} else {
+					// This pair is incompatible, add to remaining
+					remainingInputs.add(newInput);
+					remainingOutputs.add(newOutput);
+				}
+			}
+		}
+		
+		String mergedInputStr = String.join(EdgeGeneratorUtility.FIELD_DELIMITER, mergedInputs);
+		String mergedOutputStr = String.join(EdgeGeneratorUtility.FIELD_DELIMITER, mergedOutputs);
+		String remainingInputStr = String.join(EdgeGeneratorUtility.FIELD_DELIMITER, remainingInputs);
+		String remainingOutputStr = String.join(EdgeGeneratorUtility.FIELD_DELIMITER, remainingOutputs);
+		
+		boolean hasCompatible = !mergedInputs.isEmpty();
+		boolean hasRemaining = !remainingInputs.isEmpty();
+		
+		return new PartialMergeResult(mergedInputStr, mergedOutputStr, remainingInputStr, remainingOutputStr, 
+				hasCompatible, hasRemaining);
+	}
+	
+	/**
+	 * Create a new edge with the remaining incompatible fields from a partial merge.
+	 * 
+	 * @param originalEdge The original edge to copy structure from
+	 * @param partialResult The partial merge result containing remaining fields
+	 * @return New edge with remaining fields
+	 */
+	private TaskDto.EdgeDto createEdgeWithRemainingFields(TaskDto.EdgeDto originalEdge, PartialMergeResult partialResult) {
+		TaskDto.EdgeDto remainingEdge = new TaskDto.EdgeDto();
+		remainingEdge.setFrom(originalEdge.getFrom());
+		remainingEdge.setTo(originalEdge.getTo());
+		
+		TaskDto.ConnectionDto remainingConnection = new TaskDto.ConnectionDto();
+		remainingConnection.setInput(partialResult.getRemainingInput());
+		remainingConnection.setOutput(partialResult.getRemainingOutput());
+		remainingEdge.setConnection(remainingConnection);
+		
+		return remainingEdge;
 	}
 
 	/**

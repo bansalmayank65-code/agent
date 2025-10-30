@@ -4,11 +4,13 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 /**
  * Complete DTO representing the full task.json structure
  * Based on the Amazon Tau Bench task format
  */
+@JsonPropertyOrder({"env", "model_provider", "model", "num_trials", "temperature", "interface_num", "task"})
 public class TaskDto {
     // Top-level configuration fields
     private String env;
@@ -32,6 +34,7 @@ public class TaskDto {
     /**
      * Inner class representing the main task details
      */
+    @JsonPropertyOrder({"user_id", "instruction", "actions", "edges", "outputs", "num_edges"})
     public static class TaskDetails {
         @JsonProperty("user_id")
         private String userId;
@@ -67,6 +70,7 @@ public class TaskDto {
     /**
      * DTO representing an action within a task
      */
+    @JsonPropertyOrder({"name", "arguments", "output"})
     public static class ActionDto {
         private String name;
         private Map<String, Object> arguments;
@@ -86,6 +90,7 @@ public class TaskDto {
     /**
      * DTO representing an edge connection between actions
      */
+    @JsonPropertyOrder({"from", "to", "connection"})
     public static class EdgeDto {
         private String from;
         private String to;
@@ -105,6 +110,7 @@ public class TaskDto {
     /**
      * DTO representing the connection details within an edge
      */
+    @JsonPropertyOrder({"output", "input"})
     public static class ConnectionDto {
         private String output;
         private String input;

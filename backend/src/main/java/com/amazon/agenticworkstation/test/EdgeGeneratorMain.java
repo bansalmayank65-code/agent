@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 public class EdgeGeneratorMain {
 	// Set this to a task.json path string to use it instead of passing as a
 	// command-line arg.
-	public static String TASK_JSON_PATH = "C:\\Users\\bansa\\Downloads\\task (6).json";
+	public static String TASK_JSON_PATH = "C:\\Users\\bansa\\Downloads\\task (9).json";
 
 	public static void main(String[] args) {
 		if (TASK_JSON_PATH != null && !TASK_JSON_PATH.isBlank()) {
