@@ -14,17 +14,39 @@ class EdgesSectionWidget extends StatelessWidget {
   List<Map<String, dynamic>> _convertEdgesToDisplayFormat(List<Map<String, String>> edges) {
     return edges.map((edge) {
       final result = <String, dynamic>{};
-      edge.forEach((key, value) {
-        if (key == 'connection' && value.isNotEmpty && (value.startsWith('{') || value.startsWith('['))) {
-          // Try to parse connection JSON strings back to objects
-          try {
-            result[key] = jsonDecode(value);
-          } catch (_) {
-            // If parsing fails, keep as string
-            result[key] = value;
+      // Preserve order: from, to, connection
+      final orderedKeys = ['from', 'to', 'connection'];
+      
+      // Process ordered keys first
+      for (final key in orderedKeys) {
+        if (edge.containsKey(key)) {
+          final value = edge[key]!;
+          if (key == 'connection' && value.isNotEmpty && (value.startsWith('{') || value.startsWith('['))) {
+            // Try to parse connection JSON strings back to objects
+            try {
+              result[key] = jsonDecode(value);
+            } catch (_) {
+              // If parsing fails, keep as string
+              result[key] = value;
+            }
+          } else {
+            // For other fields, keep as strings or try to parse if they look like JSON
+            if (value.isNotEmpty && (value.startsWith('{') || value.startsWith('['))) {
+              try {
+                result[key] = jsonDecode(value);
+              } catch (_) {
+                result[key] = value;
+              }
+            } else {
+              result[key] = value;
+            }
           }
-        } else {
-          // For other fields, keep as strings or try to parse if they look like JSON
+        }
+      }
+      
+      // Process any remaining keys not in ordered list
+      edge.forEach((key, value) {
+        if (!orderedKeys.contains(key)) {
           if (value.isNotEmpty && (value.startsWith('{') || value.startsWith('['))) {
             try {
               result[key] = jsonDecode(value);
@@ -36,6 +58,7 @@ class EdgesSectionWidget extends StatelessWidget {
           }
         }
       });
+      
       return result;
     }).toList();
   }

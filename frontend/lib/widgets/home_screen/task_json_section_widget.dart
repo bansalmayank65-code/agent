@@ -12,41 +12,61 @@ class TaskJsonSectionWidget extends StatelessWidget {
 
   /// Build the complete task.json structure from current provider data
   Future<String> _buildTaskJson(TaskProvider provider) {
-    // Process edges to handle connection objects properly
+    // Process edges to handle connection objects properly with correct order
     final processedEdges = provider.task.edges.map((edge) {
       final processedEdge = <String, dynamic>{};
-      edge.forEach((key, value) {
-        if (key == 'connection') {
-          // Try to parse the connection string as JSON object
-          try {
-            processedEdge[key] = jsonDecode(value);
-          } catch (e) {
-            // If parsing fails, keep as string
+      // Preserve order: from, to, connection
+      final orderedKeys = ['from', 'to', 'connection'];
+      
+      // Process ordered keys first
+      for (final key in orderedKeys) {
+        if (edge.containsKey(key)) {
+          final value = edge[key]!;
+          if (key == 'connection') {
+            // Try to parse the connection string as JSON object
+            try {
+              processedEdge[key] = jsonDecode(value);
+            } catch (e) {
+              // If parsing fails, keep as string
+              processedEdge[key] = value;
+            }
+          } else {
             processedEdge[key] = value;
           }
-        } else {
+        }
+      }
+      
+      // Process any remaining keys not in ordered list
+      edge.forEach((key, value) {
+        if (!orderedKeys.contains(key)) {
           processedEdge[key] = value;
         }
       });
+      
       return processedEdge;
     }).toList();
 
-    final taskJson = {
-      'env': provider.task.env,
-      'model_provider': 'fireworks', // Default value
-      'model': 'qwen3-coder-480b-a35b-instruct', // Default value
-      'num_trials': 3, // Default value
-      'temperature': 1, // Default value
-      'interface_num': provider.task.interfaceNum,
-      'task': {
-        'user_id': provider.task.userId,
-        'instruction': provider.task.instruction,
-        'actions': provider.task.actionObjects ?? provider.task.actions.map((name) => {'name': name}).toList(),
-        'outputs': provider.task.outputs,
-        'edges': processedEdges,
-        'num_edges': processedEdges.length,
-      }
-    };
+    // Build task JSON with correct property order as per TaskDto.java
+    final taskJson = <String, dynamic>{};
+    
+    // Main TaskDto order: env, model_provider, model, num_trials, temperature, interface_num, task
+    taskJson['env'] = provider.task.env;
+    taskJson['model_provider'] = 'fireworks'; // Default value
+    taskJson['model'] = 'qwen3-coder-480b-a35b-instruct'; // Default value
+    taskJson['num_trials'] = 3; // Default value
+    taskJson['temperature'] = 1; // Default value
+    taskJson['interface_num'] = provider.task.interfaceNum;
+    
+    // TaskDetails order: user_id, instruction, actions, edges, outputs, num_edges
+    final taskDetails = <String, dynamic>{};
+    taskDetails['user_id'] = provider.task.userId;
+    taskDetails['instruction'] = provider.task.instruction;
+    taskDetails['actions'] = provider.task.actionObjects ?? provider.task.actions.map((name) => {'name': name}).toList();
+    taskDetails['edges'] = processedEdges;
+    taskDetails['outputs'] = provider.task.outputs;
+    taskDetails['num_edges'] = processedEdges.length;
+    
+    taskJson['task'] = taskDetails;
     
     return Future.value(const JsonEncoder.withIndent('  ').convert(taskJson));
   }

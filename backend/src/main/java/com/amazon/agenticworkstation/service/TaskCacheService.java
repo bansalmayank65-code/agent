@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -360,7 +361,7 @@ public class TaskCacheService {
 			entry.edges.clear();
 			// Clean up connection fields when receiving edges from frontend
 			for (Map<String, Object> edge : req.getEdges()) {
-				Map<String, Object> cleanedEdge = new HashMap<>(edge);
+				Map<String, Object> cleanedEdge = new LinkedHashMap<>(edge);
 				Object connectionObj = cleanedEdge.get("connection");
 				if (connectionObj instanceof String) {
 					String connStr = (String) connectionObj;
@@ -1023,7 +1024,7 @@ public class TaskCacheService {
 					entry.actions.add(action.getName());
 
 					// Store full action objects separately
-					Map<String, Object> actionMap = new HashMap<>();
+					Map<String, Object> actionMap = new LinkedHashMap<>();
 					actionMap.put("name", action.getName());
 					if (action.getArguments() != null) {
 						actionMap.put("arguments", action.getArguments());
@@ -1043,11 +1044,11 @@ public class TaskCacheService {
 			// Convert edges
 			if (taskDto.getTask().getEdges() != null) {
 				for (TaskDto.EdgeDto edge : taskDto.getTask().getEdges()) {
-					Map<String, Object> edgeMap = new HashMap<>();
+					Map<String, Object> edgeMap = new LinkedHashMap<>();
 					edgeMap.put("from", edge.getFrom());
 					edgeMap.put("to", edge.getTo());
 					if (edge.getConnection() != null) {
-						Map<String, Object> connectionMap = new HashMap<>();
+						Map<String, Object> connectionMap = new LinkedHashMap<>();
 						connectionMap.put("output", edge.getConnection().getOutput());
 						connectionMap.put("input", edge.getConnection().getInput());
 						edgeMap.put("connection", connectionMap);

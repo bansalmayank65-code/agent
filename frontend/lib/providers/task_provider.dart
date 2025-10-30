@@ -518,24 +518,42 @@ class TaskProvider extends ChangeNotifier {
       return edgesList.map((edge) {
         if (edge is Map) {
           final result = <String,String>{};
+          // Preserve order: from, to, connection
+          final orderedKeys = ['from', 'to', 'connection'];
+          
+          // Process ordered keys first
+          for (final key in orderedKeys) {
+            if (edge.containsKey(key)) {
+              final v = edge[key];
+              if (key == 'connection' && v is Map) {
+                // Special handling for connection objects - store as minimal JSON without extra escaping
+                result[key] = jsonEncode(v);
+              } else if (v is Map || v is List) {
+                // For other nested structures, encode normally
+                result[key] = jsonEncode(v);
+              } else if (v is String && key == 'connection' && (v.startsWith('{') || v.startsWith('['))) {
+                // If connection is already a JSON string, validate and keep it
+                try {
+                  jsonDecode(v); // Validate it's valid JSON
+                  result[key] = v; // Keep the original string
+                } catch (_) {
+                  result[key] = v; // If invalid, keep as-is for user to fix
+                }
+              } else {
+                result[key] = v?.toString() ?? '';
+              }
+            }
+          }
+          
+          // Process any remaining keys not in ordered list
           edge.forEach((k,v){
             final key = k.toString();
-            if (key == 'connection' && v is Map) {
-              // Special handling for connection objects - store as minimal JSON without extra escaping
-              result[key] = jsonEncode(v);
-            } else if (v is Map || v is List) {
-              // For other nested structures, encode normally
-              result[key] = jsonEncode(v);
-            } else if (v is String && key == 'connection' && (v.startsWith('{') || v.startsWith('['))) {
-              // If connection is already a JSON string, validate and keep it
-              try {
-                jsonDecode(v); // Validate it's valid JSON
-                result[key] = v; // Keep the original string
-              } catch (_) {
-                result[key] = v; // If invalid, keep as-is for user to fix
+            if (!orderedKeys.contains(key)) {
+              if (v is Map || v is List) {
+                result[key] = jsonEncode(v);
+              } else {
+                result[key] = v?.toString() ?? '';
               }
-            } else {
-              result[key] = v?.toString() ?? '';
             }
           });
           return result;
@@ -778,38 +796,57 @@ class TaskProvider extends ChangeNotifier {
           edges = eds.map((e){ 
             if (e is Map){ 
               final out = <String,String>{};
-              e.forEach((k,v){
-                final key = k.toString();
-                if (key == 'connection' && v is Map) {
-                  // Special handling for connection objects - store as minimal JSON without extra escaping
-                  out[key] = jsonEncode(v);
-                } else if (v is Map || v is List) {
-                  // For other nested structures, encode normally
-                  out[key] = jsonEncode(v);
-                } else if (v is String && key == 'connection' && (v.startsWith('{') || v.startsWith('['))) {
-                  // If connection is already a JSON string, validate and clean up potential double-escaping
-                  try {
-                    // First try to parse as-is
-                    final parsed = jsonDecode(v);
-                    // Re-encode to ensure clean format
-                    out[key] = jsonEncode(parsed);
-                  } catch (_) {
-                    // If parsing fails, check if it's double-escaped
+              // Preserve order: from, to, connection
+              final orderedKeys = ['from', 'to', 'connection'];
+              
+              // Process ordered keys first
+              for (final key in orderedKeys) {
+                if (e.containsKey(key)) {
+                  final v = e[key];
+                  if (key == 'connection' && v is Map) {
+                    // Special handling for connection objects - store as minimal JSON without extra escaping
+                    out[key] = jsonEncode(v);
+                  } else if (v is Map || v is List) {
+                    // For other nested structures, encode normally
+                    out[key] = jsonEncode(v);
+                  } else if (v is String && key == 'connection' && (v.startsWith('{') || v.startsWith('['))) {
+                    // If connection is already a JSON string, validate and clean up potential double-escaping
                     try {
-                      // Try to fix common double-escaping patterns
-                      String cleaned = v
-                          .replaceAll(r'\"', '"')  // Fix double-escaped quotes
-                          .replaceAll(r'\\', '\\'); // Fix double-escaped backslashes
-                      final parsed = jsonDecode(cleaned);
+                      // First try to parse as-is
+                      final parsed = jsonDecode(v);
+                      // Re-encode to ensure clean format
                       out[key] = jsonEncode(parsed);
                     } catch (_) {
-                      out[key] = v; // If all fails, keep as-is for user to fix
+                      // If parsing fails, check if it's double-escaped
+                      try {
+                        // Try to fix common double-escaping patterns
+                        String cleaned = v
+                            .replaceAll(r'\"', '"')  // Fix double-escaped quotes
+                            .replaceAll(r'\\', '\\'); // Fix double-escaped backslashes
+                        final parsed = jsonDecode(cleaned);
+                        out[key] = jsonEncode(parsed);
+                      } catch (_) {
+                        out[key] = v; // If all fails, keep as-is for user to fix
+                      }
                     }
+                  } else {
+                    out[key] = v?.toString() ?? '';
                   }
-                } else {
-                  out[key] = v?.toString() ?? '';
+                }
+              }
+              
+              // Process any remaining keys not in ordered list
+              e.forEach((k,v){
+                final key = k.toString();
+                if (!orderedKeys.contains(key)) {
+                  if (v is Map || v is List) {
+                    out[key] = jsonEncode(v);
+                  } else {
+                    out[key] = v?.toString() ?? '';
+                  }
                 }
               });
+              
               return out; 
             } 
             return <String,String>{}; 
@@ -1147,22 +1184,37 @@ class TaskProvider extends ChangeNotifier {
     if (_task.edges.isNotEmpty) {
       processedEdges = _task.edges.map((edge) {
         final result = <String, Object>{};
-        edge.forEach((key, value) {
-          if (key == 'connection' && value.trim().startsWith('{')) {
-            try {
-              // Parse connection JSON string back to Map for backend
-              final parsed = jsonDecode(value);
-              result[key] = parsed;
-              print('DEBUG: Converted connection string to object: $parsed');
-            } catch (_) {
-              // If parsing fails, keep as string
+        // Preserve order: from, to, connection
+        final orderedKeys = ['from', 'to', 'connection'];
+        
+        // Process ordered keys first
+        for (final key in orderedKeys) {
+          if (edge.containsKey(key)) {
+            final value = edge[key]!;
+            if (key == 'connection' && value.trim().startsWith('{')) {
+              try {
+                // Parse connection JSON string back to Map for backend
+                final parsed = jsonDecode(value);
+                result[key] = parsed;
+                print('DEBUG: Converted connection string to object: $parsed');
+              } catch (_) {
+                // If parsing fails, keep as string
+                result[key] = value;
+                print('DEBUG: Failed to parse connection, keeping as string: $value');
+              }
+            } else {
               result[key] = value;
-              print('DEBUG: Failed to parse connection, keeping as string: $value');
             }
-          } else {
+          }
+        }
+        
+        // Process any remaining keys not in ordered list
+        edge.forEach((key, value) {
+          if (!orderedKeys.contains(key)) {
             result[key] = value;
           }
         });
+        
         return result;
       }).toList();
       
@@ -1443,21 +1495,42 @@ class TaskProvider extends ChangeNotifier {
       final result = await _apiService.generateEdges(taskFilePath);
       
       if (result['success'] == true && result['edges'] != null) {
-        // Update the edges in the task
+        // Update the edges in the task with proper order preservation
         final newEdges = (result['edges'] as List).map((edge) {
           if (edge is Map<String, dynamic>) {
-            return edge.map((key, value) {
-              if (key == 'connection' && value is Map) {
-                // For connection objects, encode as proper JSON
-                return MapEntry(key, jsonEncode(value));
-              } else if (value is Map || value is List) {
-                // For other complex objects, encode as JSON
-                return MapEntry(key, jsonEncode(value));
-              } else {
-                // For simple values, convert to string
-                return MapEntry(key, value.toString());
+            final orderedEdge = <String, String>{};
+            // Preserve order: from, to, connection
+            final orderedKeys = ['from', 'to', 'connection'];
+            
+            // Process ordered keys first
+            for (final key in orderedKeys) {
+              if (edge.containsKey(key)) {
+                final value = edge[key];
+                if (key == 'connection' && value is Map) {
+                  // For connection objects, encode as proper JSON
+                  orderedEdge[key] = jsonEncode(value);
+                } else if (value is Map || value is List) {
+                  // For other complex objects, encode as JSON
+                  orderedEdge[key] = jsonEncode(value);
+                } else {
+                  // For simple values, convert to string
+                  orderedEdge[key] = value.toString();
+                }
+              }
+            }
+            
+            // Process any remaining keys not in ordered list
+            edge.forEach((key, value) {
+              if (!orderedKeys.contains(key)) {
+                if (value is Map || value is List) {
+                  orderedEdge[key] = jsonEncode(value);
+                } else {
+                  orderedEdge[key] = value.toString();
+                }
               }
             });
+            
+            return orderedEdge;
           }
           return <String, String>{};
         }).toList();

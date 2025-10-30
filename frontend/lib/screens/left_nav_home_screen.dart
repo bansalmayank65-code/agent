@@ -1061,23 +1061,27 @@ class _LeftNavHomeScreenState extends State<LeftNavHomeScreen> {
   }
 
   Future<String?> _futureAggregated(TaskProvider provider) {
-    // Build the complete task.json structure from current provider data
-    final taskJson = {
-      'env': provider.task.env,
-      'model_provider': 'fireworks', // Default value
-      'model': 'qwen3-coder-480b-a35b-instruct', // Default value
-      'num_trials': 3, // Default value
-      'temperature': 1, // Default value
-      'interface_num': provider.task.interfaceNum,
-      'task': {
-        'user_id': provider.task.userId,
-        'instruction': provider.task.instruction,
-        'actions': provider.task.actionObjects ?? provider.task.actions.map((name) => {'name': name}).toList(),
-        'outputs': provider.task.outputs,
-        'edges': provider.task.edges,
-        'num_edges': provider.task.edges.length,
-      }
-    };
+    // Build the complete task.json structure from current provider data with correct property order
+    final taskJson = <String, dynamic>{};
+    
+    // Main TaskDto order: env, model_provider, model, num_trials, temperature, interface_num, task
+    taskJson['env'] = provider.task.env;
+    taskJson['model_provider'] = 'fireworks'; // Default value
+    taskJson['model'] = 'qwen3-coder-480b-a35b-instruct'; // Default value
+    taskJson['num_trials'] = 3; // Default value
+    taskJson['temperature'] = 1; // Default value
+    taskJson['interface_num'] = provider.task.interfaceNum;
+    
+    // TaskDetails order: user_id, instruction, actions, edges, outputs, num_edges
+    final taskDetails = <String, dynamic>{};
+    taskDetails['user_id'] = provider.task.userId;
+    taskDetails['instruction'] = provider.task.instruction;
+    taskDetails['actions'] = provider.task.actionObjects ?? provider.task.actions.map((name) => {'name': name}).toList();
+    taskDetails['edges'] = provider.task.edges;
+    taskDetails['outputs'] = provider.task.outputs;
+    taskDetails['num_edges'] = provider.task.edges.length;
+    
+    taskJson['task'] = taskDetails;
     
     return Future.value(const JsonEncoder.withIndent('  ').convert(taskJson));
   }
