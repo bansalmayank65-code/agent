@@ -687,6 +687,8 @@ public class EdgeMergeService {
 
 	/**
 	 * Check if two edges are exactly equal in all aspects.
+	 * This comparison is order-agnostic for JSON property ordering - it compares 
+	 * the logical content regardless of how the JSON was structured.
 	 * 
 	 * @param edge1 First edge
 	 * @param edge2 Second edge
@@ -700,7 +702,7 @@ public class EdgeMergeService {
 			return false;
 		}
 
-		// Compare from and to
+		// Compare from and to (null-safe)
 		if (!java.util.Objects.equals(edge1.getFrom(), edge2.getFrom())
 				|| !java.util.Objects.equals(edge1.getTo(), edge2.getTo())) {
 			return false;
@@ -717,7 +719,7 @@ public class EdgeMergeService {
 			return false;
 		}
 
-		// Compare connection output and input
+		// Compare connection output and input (null-safe)
 		return java.util.Objects.equals(conn1.getOutput(), conn2.getOutput())
 				&& java.util.Objects.equals(conn1.getInput(), conn2.getInput());
 	}

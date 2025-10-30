@@ -1045,31 +1045,36 @@ class TaskProvider extends ChangeNotifier {
         edges = eds.map((e){ 
           if (e is Map){ 
             final out = <String,String>{};
-            e.forEach((k,v){
-              final key = k.toString();
-              if (key == 'connection' && v is Map) {
-                out[key] = jsonEncode(v);
-              } else if (v is Map || v is List) {
-                out[key] = jsonEncode(v);
-              } else if (v is String && key == 'connection' && (v.startsWith('{') || v.startsWith('['))) {
-                try {
-                  final parsed = jsonDecode(v);
-                  out[key] = jsonEncode(parsed);
-                } catch (_) {
+            // Use explicit key ordering: from, to, connection (matches EdgeDto @JsonPropertyOrder)
+            final orderedKeys = ['from', 'to', 'connection'];
+            
+            for (final key in orderedKeys) {
+              final v = e[key];
+              if (v != null) {
+                if (key == 'connection' && v is Map) {
+                  out[key] = jsonEncode(v);
+                } else if (v is Map || v is List) {
+                  out[key] = jsonEncode(v);
+                } else if (v is String && key == 'connection' && (v.startsWith('{') || v.startsWith('['))) {
                   try {
-                    String cleaned = v
-                        .replaceAll(r'\"', '"')
-                        .replaceAll(r'\\', '\\');
-                    final parsed = jsonDecode(cleaned);
+                    final parsed = jsonDecode(v);
                     out[key] = jsonEncode(parsed);
                   } catch (_) {
-                    out[key] = v;
+                    try {
+                      String cleaned = v
+                          .replaceAll(r'\"', '"')
+                          .replaceAll(r'\\', '\\');
+                      final parsed = jsonDecode(cleaned);
+                      out[key] = jsonEncode(parsed);
+                    } catch (_) {
+                      out[key] = v;
+                    }
                   }
+                } else {
+                  out[key] = v?.toString() ?? '';
                 }
-              } else {
-                out[key] = v?.toString() ?? '';
               }
-            });
+            }
             return out; 
           } 
           return <String,String>{}; 
